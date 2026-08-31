@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EFEEE8">
+<title>Logbook</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23EFEEE8'/><rect x='3' y='4' width='10' height='1.6' fill='%231A1E1C'/><rect x='3' y='7.2' width='10' height='1.6' fill='%231A1E1C'/><rect x='3' y='10.4' width='7' height='1.6' fill='%233F6B3A'/></svg>">
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SETUP — edit after deploying the Apps Script.
+     ══════════════════════════════════════════════════════════════════ -->
+<script>
+const ENDPOINT = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+const SECRET   = 'PASTE_THE_SAME_SECRET_YOU_PUT_IN_Code.gs';
+
+const MAX_HR = { ikarus: 182, johanna: 185 };   // used for zones and % of max
+const SET_WINDOW_S = 90;                        // seconds before a tick counted as "the set"
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     PROGRAM — the only thing you edit when the block changes.
+     ══════════════════════════════════════════════════════════════════ -->
+<script>
+const PROGRAM = {
+
+  ikarus: {
+    label: 'Ikarus',
+    sessions: {
+      'Lower 1': [
+        { name: 'Jumps',               target: '3-4 × 3-5',  sets: 3, hint: 'log box height, reps' },
+        { name: 'Perfect Squat',       target: '3 × 6-10',   sets: 3 },
+        { name: 'Hip Thrust',          target: '3 × 8-12',   sets: 3 },
+        { name: 'Leg Press',           target: '3 × 8-12',   sets: 3, hint: 'deep, feet low, shoulder-width, toes out' },
+        { name: 'Seated Leg Curl',     target: '4 × 8-12',   sets: 4 },
+        { name: 'Standing Calf Raise', target: '3 × 8-12',   sets: 3 },
+        { name: 'Carries',             target: '2 sets',     sets: 2, hint: 'log seconds in the reps box' },
+      ],
+      'Upper A': [
+        { name: 'Pull-ups',             target: '3 × AMRAP', sets: 3, hint: 'RIR 1, full rest' },
+        { name: 'Incline DB Press',     target: '3 × 8-12',  sets: 3, pair: 'A' },
+        { name: 'Chest-Supported Row',  target: '3 × 8-12',  sets: 3, pair: 'A' },
+        { name: 'Flat DB Press',        target: '3 × 8-12',  sets: 3, pair: 'B' },
+        { name: 'Rear Delt Fly',        target: '3 × 12-20', sets: 3, pair: 'B' },
+        { name: 'Incline DB Curl',      target: '3 × 8-12',  sets: 3, pair: 'C' },
+        { name: 'Overhead Triceps Ext', target: '3 × 10-15', sets: 3, pair: 'C' },
+        { name: 'Lateral Raise',        target: '4 × 12-20', sets: 4 },
+      ],
+      'Lower 2': [
+        { name: 'Belt Squat',         target: '3 × 8-12',  sets: 3 },
+        { name: '45° Back Extension', target: '3 × 10-15', sets: 3, hint: 'DB at chest, round-back' },
+        { name: 'Leg Extension',      target: '3 × 12-15', sets: 3 },
+        { name: 'Seated Leg Curl',    target: '4 × 8-12',  sets: 4 },
+        { name: 'Seated Calf Raise',  target: '2 × 10-15', sets: 2 },
+        { name: 'Copenhagen Plank',   target: '2 × 10-15', sets: 2 },
+        { name: 'Carries',            target: '2 sets',    sets: 2, hint: 'log seconds in the reps box' },
+      ],
+      'Upper B': [
+        { name: 'Pull-ups',          target: '3 × AMRAP', sets: 3, hint: 'RIR 2-3, volume' },
+        { name: 'Lat Pulldown',      target: '3 × 8-12',  sets: 3, pair: 'A' },
+        { name: 'Incline DB Press',  target: '3 × 8-12',  sets: 3, pair: 'A' },
+        { name: 'Single-Arm DB Row', target: '3 × 8-12',  sets: 3, pair: 'B' },
+        { name: 'DB Fly',            target: '3 × 10-15', sets: 3, pair: 'B' },
+        { name: 'DB Curl',           target: '3 × 10-15', sets: 3, pair: 'C' },
+        { name: 'Skullcrusher',      target: '3 × 10-15', sets: 3, pair: 'C' },
+        { name: 'Lateral Raise',     target: '4 × 12-20', sets: 4 },
+      ],
+      'Other': [],
+    }
+  },
+
+  // ── PLACEHOLDER. Replace with Johanna's actual program. ──────────
+  johanna: {
+    label: 'Johanna',
+    sessions: {
+      'Lower 1': [
+        { name: 'Leg Press',       target: '3 × 8-12',  sets: 3 },
+        { name: 'Hip Thrust',      target: '3 × 8-12',  sets: 3 },
+        { name: 'Seated Leg Curl', target: '3 × 8-12',  sets: 3 },
+        { name: 'Leg Extension',   target: '3 × 12-15', sets: 3 },
+      ],
+      'Upper A': [
+        { name: 'Lat Pulldown',     target: '3 × 8-12',  sets: 3 },
+        { name: 'Incline DB Press', target: '3 × 8-12',  sets: 3 },
+        { name: 'Seated Row',       target: '3 × 8-12',  sets: 3 },
+        { name: 'Lateral Raise',    target: '3 × 12-20', sets: 3 },
+      ],
+      'Lower 2': [
+        { name: 'Belt Squat',          target: '3 × 8-12',  sets: 3 },
+        { name: 'Back Extension',      target: '3 × 10-15', sets: 3 },
+        { name: 'Seated Leg Curl',     target: '3 × 8-12',  sets: 3 },
+        { name: 'Standing Calf Raise', target: '3 × 8-12',  sets: 3 },
+      ],
+      'Upper B': [
+        { name: 'Chest-Supported Row',  target: '3 × 8-12',  sets: 3 },
+        { name: 'Flat DB Press',        target: '3 × 8-12',  sets: 3 },
+        { name: 'DB Curl',              target: '3 × 10-15', sets: 3 },
+        { name: 'Overhead Triceps Ext', target: '3 × 10-15', sets: 3 },
+      ],
+      'Other': [],
+    }
+  },
+};
+
+const WEEKDAY_SESSION = { 1:'Lower 1', 2:'Upper A', 4:'Lower 2', 5:'Upper B' };
+</script>
+
+<style>
+:root{
+  --paper:#EFEEE8; --surface:#F8F7F2; --ink:#1A1E1C; --ink-2:#4C534E;
+  --ghost:#A0A299; --rule:#D4D3CA; --gain:#3F6B3A; --pending:#8A6216; --danger:#8C3A2B;
+  --z1:#BFC5C0; --z2:#8FA894; --z3:#5F8A6B; --z4:#B08A3C; --z5:#9A4A33;
+  --tap:44px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font:400 15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-text-size-adjust:100%;padding-bottom:calc(96px + env(safe-area-inset-bottom));
+}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.wrap{max-width:540px;margin:0 auto;padding:0 16px}
+
+/* header */
+.top{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--rule);padding-top:env(safe-area-inset-top)}
+.top-in{display:flex;align-items:center;gap:10px;padding:10px 16px;max-width:540px;margin:0 auto}
+.who{display:flex;border:1px solid var(--ink);border-radius:7px;overflow:hidden;flex:0 0 auto}
+.who button{appearance:none;border:0;background:transparent;color:var(--ink-2);font:500 14px/1 inherit;padding:0 13px;height:34px;cursor:pointer}
+.who button[aria-pressed="true"]{background:var(--ink);color:var(--paper);font-weight:600}
+.who button+button{border-left:1px solid var(--rule)}
+.who button[aria-pressed="true"]+button{border-left-color:var(--ink)}
+.sess{flex:1 1 auto;min-width:0;appearance:none;border:1px solid var(--rule);border-radius:7px;background:var(--surface);
+  color:var(--ink);font:600 15px/1 inherit;height:34px;padding:0 28px 0 10px;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%234C534E' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center}
+.date{font-size:13px;color:var(--ink-2);white-space:nowrap}
+
+/* exercise */
+.ex{border-bottom:1px solid var(--rule);padding:16px 0}
+.ex-head{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+.ex-name{font-size:17px;font-weight:600;letter-spacing:-.01em;flex:1 1 auto}
+.ex-target{font-size:13px;color:var(--ink-2);white-space:nowrap}
+.ex-sub{font-size:13px;color:var(--ink-2);margin-bottom:10px;max-width:46ch}
+.ex-sub.fresh{color:var(--pending)}
+.ex[data-pair]{position:relative;padding-left:13px}
+.ex[data-pair]::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:2px;background:var(--rule);border-radius:1px}
+.ex[data-pair-first]::before{top:24px}
+.ex[data-pair-last]::before{bottom:24px}
+
+/* ledger */
+.cols{display:grid;grid-template-columns:20px 1fr 1fr 1fr 46px;gap:6px;font-size:12px;color:var(--ink-2);margin-bottom:5px}
+.cols span:nth-child(1){grid-column:2}
+.row{display:grid;grid-template-columns:20px 1fr 1fr 1fr 46px;gap:6px;align-items:center}
+.idx{font-size:13px;color:var(--ghost);text-align:center}
+.row input{
+  width:100%;height:var(--tap);min-width:0;border:1px solid var(--rule);border-radius:7px;
+  background:var(--surface);color:var(--ghost);font:500 20px/1 inherit;text-align:center;
+  font-variant-numeric:tabular-nums;padding:0 2px;
+}
+.row.done input{color:var(--ink);font-weight:600}
+.row input:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:var(--ink);background:#fff;color:var(--ink)}
+.row input::placeholder{color:#C6C7BE;font-weight:400}
+.row.done.beat input:first-of-type{border-left:3px solid var(--gain)}
+
+.tick{
+  appearance:none;height:var(--tap);width:44px;cursor:pointer;
+  border:1px solid var(--rule);border-radius:7px;background:var(--surface);
+  color:var(--ghost);font-size:19px;line-height:1;padding:0;
+}
+.row.done .tick{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.tick:focus-visible{outline:2px solid var(--gain);outline-offset:2px}
+
+.meta{display:grid;grid-template-columns:20px 1fr 1fr 1fr 46px;gap:6px;font-size:12px;color:var(--ghost);
+  text-align:center;font-variant-numeric:tabular-nums;margin:2px 0 8px;min-height:14px}
+.meta .hr{color:var(--ink-2);white-space:nowrap;font-size:11px}
+
+.setbtns{display:flex;gap:8px;margin-top:8px}
+.setbtns button{appearance:none;background:transparent;border:1px dashed var(--rule);border-radius:7px;
+  color:var(--ink-2);font:500 14px/1 inherit;height:36px;padding:0 14px;cursor:pointer}
+.setbtns button:hover{border-color:var(--ink-2);color:var(--ink)}
+.setbtns button:disabled{opacity:.4;cursor:default}
+
+/* heart rate */
+.hrbox{border-top:1px solid var(--rule);padding:18px 0 4px}
+.hrbox h2{font:600 17px/1 inherit;margin:0 0 4px}
+.hrbox p{font-size:13px;color:var(--ink-2);margin:0 0 12px;max-width:46ch}
+.filebtn{display:block;width:100%;height:var(--tap);line-height:calc(var(--tap) - 2px);text-align:center;
+  border:1px dashed var(--rule);border-radius:7px;color:var(--ink-2);font-weight:500;cursor:pointer}
+.filebtn:hover{border-color:var(--ink-2);color:var(--ink)}
+.hrbox input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.hrsum{display:none}
+.hrsum.on{display:block}
+.hrfigs{display:flex;flex-wrap:wrap;gap:0 22px;margin-bottom:12px}
+.fig{padding:2px 0}
+.fig b{display:block;font:600 22px/1.1 inherit;font-variant-numeric:tabular-nums}
+.fig span{font-size:12px;color:var(--ink-2)}
+.zones{display:flex;height:9px;border-radius:5px;overflow:hidden;background:var(--surface);margin-bottom:7px}
+.zones i{display:block}
+.zkey{display:flex;flex-wrap:wrap;gap:0 14px;font-size:12px;color:var(--ink-2);margin-bottom:12px}
+.zkey span{display:flex;align-items:center;gap:5px}
+.zkey em{width:9px;height:9px;border-radius:2px;font-style:normal}
+.hrdrop{appearance:none;background:transparent;border:0;color:var(--danger);font:500 14px/1 inherit;cursor:pointer;padding:6px 0;text-decoration:underline}
+.hrwarn{font-size:13px;color:var(--pending);margin-bottom:10px}
+
+/* tail */
+.tail{padding:18px 0 8px;border-top:1px solid var(--rule)}
+.tail label{display:block;font-size:13px;color:var(--ink-2);margin-bottom:6px}
+.tail textarea{width:100%;min-height:64px;resize:vertical;border:1px solid var(--rule);border-radius:7px;
+  background:var(--surface);color:var(--ink);font:400 15px/1.45 inherit;padding:10px}
+.tail textarea:focus{outline:2px solid var(--ink);outline-offset:-1px;background:#fff}
+.addex{appearance:none;width:100%;margin-top:12px;background:transparent;border:1px dashed var(--rule);
+  border-radius:7px;color:var(--ink-2);font:500 15px/1 inherit;height:var(--tap);cursor:pointer}
+.addex:hover{border-color:var(--ink-2);color:var(--ink)}
+
+/* save bar */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--paper);border-top:1px solid var(--rule);
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+.bar-in{max-width:540px;margin:0 auto;display:flex;flex-direction:column;gap:7px}
+.save{appearance:none;width:100%;height:52px;border:0;border-radius:9px;background:var(--ink);
+  color:var(--paper);font:600 17px/1 inherit;cursor:pointer}
+.save:disabled{background:var(--rule);color:var(--ink-2);cursor:default}
+.save:focus-visible{outline:3px solid var(--gain);outline-offset:2px}
+.status{font-size:13px;color:var(--ink-2);min-height:18px;text-align:center}
+.status[data-tone="ok"]{color:var(--gain)}
+.status[data-tone="pending"]{color:var(--pending)}
+.status[data-tone="bad"]{color:var(--danger)}
+
+.setup{margin:16px 0;padding:14px;border:1px solid var(--pending);border-radius:9px;background:#FAF6EC;font-size:14px;line-height:1.5}
+.setup b{display:block;margin-bottom:4px}
+.setup code{font:400 13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surface);padding:1px 4px;border-radius:4px}
+
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="who" id="who" role="group" aria-label="Who is training"></div>
+    <select class="sess" id="sess" aria-label="Session"></select>
+    <span class="date num" id="today"></span>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="setup" hidden class="setup">
+    <b>Not connected yet</b>
+    Open <code>index.html</code> and set <code>ENDPOINT</code> and <code>SECRET</code> near the top.
+    You can still log a session — it is held on this device until the connection works.
+  </div>
+
+  <div id="list"></div>
+
+  <section class="hrbox">
+    <h2>Heart rate</h2>
+    <p id="hrblurb">Export this workout from your watch and pick the file here. Peak heart rate is matched to each set you ticked.</p>
+    <label class="filebtn" for="hrfile" id="hrlabel">Choose a workout file</label>
+    <input type="file" id="hrfile" accept=".csv,.tcx,.gpx,.json,.txt,text/csv,application/json,text/xml">
+    <div class="hrsum" id="hrsum">
+      <div class="hrwarn" id="hrwarn" hidden></div>
+      <div class="hrfigs" id="hrfigs"></div>
+      <div class="zones" id="zones"></div>
+      <div class="zkey" id="zkey"></div>
+      <button class="hrdrop" id="hrdrop" type="button">Remove this file</button>
+    </div>
+  </section>
+
+  <div class="tail">
+    <label for="notes">Session notes</label>
+    <textarea id="notes" placeholder="Sleep, energy, niggles, anything that explains the numbers later."></textarea>
+    <button class="addex" id="addex" type="button">Add an exercise</button>
+  </div>
+</main>
+
+<div class="bar">
+  <div class="bar-in">
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+    <button class="save" id="save" type="button">Save session</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const store = (() => {
+  let ok = false;
+  try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); ok = true; } catch(e){}
+  const mem = {};
+  return {
+    get(k){ try { return ok ? localStorage.getItem(k) : (mem[k] ?? null); } catch(e){ return mem[k] ?? null; } },
+    set(k,v){ try { ok ? localStorage.setItem(k,v) : (mem[k]=v); } catch(e){ mem[k]=v; } },
+    del(k){ try { ok ? localStorage.removeItem(k) : (delete mem[k]); } catch(e){ delete mem[k]; } },
+  };
+})();
+
+const $  = s => document.querySelector(s);
+const el = (t,c) => { const n = document.createElement(t); if(c) n.className = c; return n; };
+const localDate = () => new Date().toLocaleDateString('en-CA');
+const configured = () => ENDPOINT.startsWith('http') && !SECRET.startsWith('PASTE');
+const maxHR = () => MAX_HR[state.user] || 180;
+
+const state = {
+  user: store.get('lb.user') || 'ikarus',
+  session: null,
+  rows: [],     // {name,target,hint,pair,sets:[{w,r,rir,done,ts,carried}]}
+  last: {},     // exercise -> {date, sets:[{w,r,rir}]}
+  hr: null,     // {file, samples:[{t,hr}], sum:{...}}
+};
+
+/* ══ render ══════════════════════════════════════════════ */
+
+function renderWho(){
+  const w = $('#who'); w.innerHTML = '';
+  for (const key of Object.keys(PROGRAM)) {
+    const b = el('button'); b.type = 'button';
+    b.textContent = PROGRAM[key].label;
+    b.setAttribute('aria-pressed', String(key === state.user));
+    b.onclick = () => { if (key === state.user) return; saveDraft(); state.user = key; store.set('lb.user', key); boot(); };
+    w.appendChild(b);
+  }
+}
+
+function renderSessions(){
+  const s = $('#sess'); s.innerHTML = '';
+  for (const name of Object.keys(PROGRAM[state.user].sessions)) {
+    const o = el('option'); o.value = name; o.textContent = name; s.appendChild(o);
+  }
+  s.value = state.session;
+  s.onchange = () => { saveDraft(); state.session = s.value; loadRows(); renderList(); };
+}
+
+const lastSet = (name, i) => (state.last[name] && state.last[name].sets[i]) || null;
+
+function renderList(){
+  const list = $('#list'); list.innerHTML = '';
+
+  state.rows.forEach((ex, xi) => {
+    const box = el('div','ex');
+    if (ex.pair) {
+      box.dataset.pair = ex.pair;
+      const prev = state.rows[xi-1], next = state.rows[xi+1];
+      if (!prev || prev.pair !== ex.pair) box.dataset.pairFirst = '1';
+      if (!next || next.pair !== ex.pair) box.dataset.pairLast  = '1';
+    }
+
+    const head = el('div','ex-head');
+    const nm = el('div','ex-name'); nm.textContent = ex.name;
+    const tg = el('div','ex-target'); tg.textContent = ex.target || '';
+    head.append(nm, tg); box.appendChild(head);
+
+    const sub = el('div','ex-sub');
+    const L = state.last[ex.name];
+    if (ex.hint) sub.textContent = ex.hint;
+    else if (L) sub.textContent = 'Carried over from ' + fmtDate(L.date);
+    else { sub.textContent = 'First time — nothing to carry over'; sub.className = 'ex-sub fresh'; }
+    box.appendChild(sub);
+
+    const cols = el('div','cols');
+    ['kg','reps','RIR'].forEach(t => { const s = el('span'); s.textContent = t; cols.appendChild(s); });
+    box.appendChild(cols);
+
+    ex.sets.forEach((set, si) => {
+      const row  = el('div','row');
+      const meta = el('div','meta');
+
+      const idx = el('div','idx num'); idx.textContent = String(si+1);
+      row.appendChild(idx);
+
+      ['w','r','rir'].forEach((f, k) => {
+        const inp = el('input');
+        inp.type = 'text';
+        inp.inputMode = f === 'w' ? 'decimal' : 'numeric';
+        inp.placeholder = ['kg','reps','RIR'][k];
+        inp.value = set[f] ?? '';
+        inp.setAttribute('aria-label', ex.name + ' set ' + (si+1) + ' ' + inp.placeholder);
+        inp.oninput = () => {
+          set[f] = inp.value;
+          set.carried = false;
+          if (!set.done) confirmSet(set);
+          paint(); saveDraft(); updateSave();
+        };
+        row.appendChild(inp);
+      });
+
+      const tick = el('button','tick'); tick.type = 'button'; tick.textContent = '✓';
+      tick.setAttribute('aria-label', 'Mark set ' + (si+1) + ' of ' + ex.name + ' as done');
+      tick.onclick = () => {
+        if (set.done) { set.done = false; set.ts = null; } else confirmSet(set);
+        paint(); saveDraft(); updateSave();
+      };
+      row.appendChild(tick);
+
+      function paint(){
+        row.classList.toggle('done', !!set.done);
+        const g = lastSet(ex.name, si);
+        const now  = parseFloat(set.w) * parseFloat(set.r);
+        const then = g ? parseFloat(g.w) * parseFloat(g.r) : NaN;
+        row.classList.toggle('beat', !!set.done && Number.isFinite(now) && Number.isFinite(then) && now > then);
+
+        meta.innerHTML = '';
+        meta.appendChild(el('span'));
+        ['w','r','rir'].forEach(f => {
+          const s = el('span');
+          const prev = g ? g[f] : '';
+          s.textContent = (prev !== '' && prev != null && String(prev) !== String(set[f] ?? '')) ? String(prev) : '';
+          meta.appendChild(s);
+        });
+        const h = el('span','hr');
+        const stat = setHR(set);
+        h.textContent = stat ? stat.peak : '';
+        if (stat) h.title = 'peak bpm during this set';
+        meta.appendChild(h);
+      }
+      paint();
+      set._paint = paint;
+
+      box.appendChild(row);
+      box.appendChild(meta);
+    });
+
+    const btns = el('div','setbtns');
+    const add = el('button'); add.type = 'button'; add.textContent = 'Add set';
+    add.onclick = () => {
+      const p = ex.sets[ex.sets.length-1];
+      ex.sets.push({ w: p ? p.w : '', r: p ? p.r : '', rir: p ? p.rir : '', done:false, ts:null, carried:true });
+      saveDraft(); renderList(); updateSave();
+    };
+    const rm = el('button'); rm.type = 'button'; rm.textContent = 'Remove set';
+    rm.disabled = ex.sets.length <= 1;
+    rm.onclick = () => { ex.sets.pop(); saveDraft(); renderList(); updateSave(); };
+    btns.append(add, rm);
+    box.appendChild(btns);
+
+    list.appendChild(box);
+  });
+
+  updateSave();
+}
+
+function confirmSet(set){ set.done = true; set.ts = set.ts || Date.now(); }
+function repaintAll(){ state.rows.forEach(ex => ex.sets.forEach(s => s._paint && s._paint())); }
+
+function fmtDate(d){
+  const t = new Date(d + 'T00:00:00');
+  return isNaN(t) ? d : t.toLocaleDateString(undefined, { day:'numeric', month:'short' });
+}
+
+/* ══ program / draft ═════════════════════════════════════ */
+
+function loadRows(){
+  const draft = readDraft();
+  if (draft) {
+    state.rows = draft.rows;
+    $('#notes').value = draft.notes || '';
+    if (draft.hr) { state.hr = draft.hr; renderHR(); } else clearHR();
+    return;
+  }
+  const plan = PROGRAM[state.user].sessions[state.session] || [];
+  state.rows = plan.map(p => ({
+    name: p.name, target: p.target, hint: p.hint, pair: p.pair,
+    sets: Array.from({length: p.sets || 3}, () => ({ w:'', r:'', rir:'', done:false, ts:null, carried:true })),
+  }));
+  $('#notes').value = '';
+  clearHR();
+  carryOver();
+}
+
+/* pre-fill weight, reps and RIR from the last time this exercise was done */
+function carryOver(){
+  state.rows.forEach(ex => {
+    const L = state.last[ex.name];
+    if (!L || !L.sets.length) return;
+    ex.sets.forEach((s, i) => {
+      if (s.done || !s.carried) return;
+      const g = L.sets[i] || L.sets[L.sets.length-1];
+      if (!g) return;
+      if (s.w === '' || s.w == null)     s.w   = g.w;
+      if (s.r === '' || s.r == null)     s.r   = g.r;
+      if (s.rir === '' || s.rir == null) s.rir = g.rir;
+    });
+  });
+}
+
+const draftKey = () => 'lb.draft.' + state.user + '.' + state.session + '.' + localDate();
+function saveDraft(){
+  try {
+    const rows = state.rows.map(ex => ({
+      name:ex.name, target:ex.target, hint:ex.hint, pair:ex.pair,
+      sets: ex.sets.map(s => ({ w:s.w, r:s.r, rir:s.rir, done:s.done, ts:s.ts, carried:s.carried })),
+    }));
+    store.set(draftKey(), JSON.stringify({ rows, notes: $('#notes').value, hr: state.hr }));
+  } catch(e){}
+}
+function readDraft(){ try { const r = store.get(draftKey()); return r ? JSON.parse(r) : null; } catch(e){ return null; } }
+
+async function fetchLast(){
+  if (!configured()) return;
+  try {
+    const u = ENDPOINT + '?action=last&user=' + encodeURIComponent(state.user) + '&secret=' + encodeURIComponent(SECRET);
+    const res = await fetch(u);
+    const data = await res.json();
+    if (data && data.ok) state.last = data.last || {};
+  } catch(e){}
+}
+
+/* ══ heart rate ══════════════════════════════════════════ */
+
+function clearHR(){
+  state.hr = null;
+  $('#hrsum').classList.remove('on');
+  $('#hrlabel').textContent = 'Choose a workout file';
+  $('#hrlabel').hidden = false;
+  $('#hrblurb').hidden = false;
+}
+
+async function parseHRFile(file){
+  const text = await file.text();
+  const head = text.slice(0, 400).trim();
+  if (head.startsWith('<')) return parseXMLHR(text);
+  if (head.startsWith('{') || head.startsWith('[')) return parseJSONHR(text);
+  return parseCSVHR(text);
+}
+
+function pushSample(out, t, hr){
+  const ms = typeof t === 'number' ? (t < 1e12 ? t * 1000 : t) : Date.parse(String(t).replace(' ', 'T'));
+  const v = Number(hr);
+  if (Number.isFinite(ms) && Number.isFinite(v) && v > 20 && v < 260) out.push({ t: ms, hr: v });
+}
+
+function parseXMLHR(text){
+  const doc = new DOMParser().parseFromString(text, 'application/xml');
+  const out = [];
+  doc.querySelectorAll('Trackpoint').forEach(tp => {                 // TCX
+    const t = tp.querySelector('Time');
+    const h = tp.querySelector('HeartRateBpm Value') || tp.querySelector('HeartRateBpm');
+    if (t && h) pushSample(out, t.textContent.trim(), h.textContent.trim());
+  });
+  if (!out.length) {                                                 // GPX with hr extension
+    doc.querySelectorAll('trkpt').forEach(pt => {
+      const t = pt.querySelector('time');
+      let h = null;
+      pt.querySelectorAll('*').forEach(n => { if (/(^|:)hr$/i.test(n.nodeName)) h = n; });
+      if (t && h) pushSample(out, t.textContent.trim(), h.textContent.trim());
+    });
+  }
+  return out.sort((a,b) => a.t - b.t);
+}
+
+function parseJSONHR(text){
+  const j = JSON.parse(text);
+  const out = [];
+  (function walk(node){
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) { node.forEach(walk); return; }
+    const keys = Object.keys(node);
+    const tk = keys.find(k => /^(date|time|timestamp|startdate|start)$/i.test(k));
+    const hk = keys.find(k => /^(qty|value|avg|hr|bpm|heartrate|heart_rate)$/i.test(k));
+    if (tk && hk && node[hk] !== null && !isNaN(Number(node[hk]))) pushSample(out, node[tk], node[hk]);
+    keys.forEach(k => walk(node[k]));
+  })(j);
+  return out.sort((a,b) => a.t - b.t);
+}
+
+function parseCSVHR(text){
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (!lines.length) return [];
+  const semis = (lines[0].match(/;/g) || []).length, commas = (lines[0].match(/,/g) || []).length;
+  const delim = semis > commas ? ';' : ',';
+  const split = l => l.split(delim).map(c => c.trim().replace(/^"|"$/g, ''));
+
+  let hi = -1, ti = -1, vi = -1;
+  for (let i = 0; i < Math.min(lines.length, 15); i++) {
+    const cells = split(lines[i]).map(c => c.toLowerCase());
+    const t = cells.findIndex(c => /date|time|timestamp|start/.test(c));
+    const v = cells.findIndex(c => /heart|bpm|(^|[^a-z])hr([^a-z]|$)/.test(c));
+    if (t >= 0 && v >= 0) { hi = i; ti = t; vi = v; break; }
+  }
+  if (hi < 0) return [];
+  const out = [];
+  for (let i = hi + 1; i < lines.length; i++) {
+    const c = split(lines[i]);
+    if (c.length <= Math.max(ti, vi)) continue;
+    pushSample(out, c[ti], c[vi]);
+  }
+  return out.sort((a,b) => a.t - b.t);
+}
+
+function summarise(s){
+  const m = maxHR();
+  const bounds = [0.60, 0.70, 0.80, 0.90].map(f => f * m);
+  const zone = hr => hr < bounds[0] ? 0 : hr < bounds[1] ? 1 : hr < bounds[2] ? 2 : hr < bounds[3] ? 3 : 4;
+
+  let sum = 0, total = 0, peak = 0, above80 = 0;
+  const zsec = [0,0,0,0,0];
+  for (let i = 0; i < s.length; i++) {
+    const dt = i < s.length - 1 ? Math.min((s[i+1].t - s[i].t) / 1000, 30) : 1;
+    sum += s[i].hr * dt; total += dt;
+    zsec[zone(s[i].hr)] += dt;
+    if (s[i].hr >= bounds[2]) above80 += dt;
+    if (s[i].hr > peak) peak = s[i].hr;
+  }
+
+  // one value per 10 s, keeping the peak in each bucket, so the shape fits in one cell
+  const start = s[0].t, series = [];
+  s.forEach(p => {
+    const b = Math.floor((p.t - start) / 10000);
+    series[b] = Math.max(series[b] || 0, p.hr);
+  });
+  for (let i = 0; i < series.length; i++) if (!series[i]) series[i] = '';
+
+  return {
+    start: s[0].t, end: s[s.length-1].t,
+    durationMin: Math.round((s[s.length-1].t - s[0].t) / 60000),
+    avg: Math.round(sum / Math.max(total, 1)),
+    peak, pctMax: Math.round(peak / m * 100),
+    above80Min: Math.round(above80 / 60),
+    zoneMin: zsec.map(v => Math.round(v / 60)),
+    samples: s.length,
+    series10s: series.join(','),
+  };
+}
+
+/* peak and mean bpm in the window ending when the set was ticked */
+function setHR(set){
+  if (!state.hr || !set.done || !set.ts) return null;
+  const a = set.ts - SET_WINDOW_S * 1000, b = set.ts;
+  let peak = 0, sum = 0, n = 0;
+  for (const p of state.hr.samples) {
+    if (p.t < a) continue;
+    if (p.t > b) break;
+    if (p.hr > peak) peak = p.hr;
+    sum += p.hr; n++;
+  }
+  return n ? { peak, avg: Math.round(sum / n) } : null;
+}
+
+function renderHR(){
+  if (!state.hr) return clearHR();
+  const s = state.hr.sum;
+  $('#hrsum').classList.add('on');
+  $('#hrlabel').hidden = true;
+  $('#hrblurb').hidden = true;
+
+  const warn = $('#hrwarn');
+  const fileDate = new Date(s.start).toLocaleDateString('en-CA');
+  if (fileDate !== localDate()) {
+    warn.hidden = false;
+    warn.textContent = 'This file is from ' + fmtDate(fileDate) + ', not today. It is still saved against today\u2019s session.';
+  } else warn.hidden = true;
+
+  const figs = $('#hrfigs'); figs.innerHTML = '';
+  [['Duration', s.durationMin + ' min'],
+   ['Average', s.avg + ' bpm'],
+   ['Peak', s.peak + ' bpm'],
+   ['Of max', s.pctMax + '%'],
+   ['Above 80%', s.above80Min + ' min']].forEach(([label, val]) => {
+    const f = el('div','fig');
+    const b = el('b'); b.textContent = val;
+    const sp = el('span'); sp.textContent = label;
+    f.append(b, sp); figs.appendChild(f);
+  });
+
+  const total = s.zoneMin.reduce((a,b) => a+b, 0) || 1;
+  const zbar = $('#zones'); zbar.innerHTML = '';
+  const key  = $('#zkey');  key.innerHTML  = '';
+  s.zoneMin.forEach((min, i) => {
+    const seg = el('i');
+    seg.style.width = (min / total * 100) + '%';
+    seg.style.background = 'var(--z' + (i+1) + ')';
+    zbar.appendChild(seg);
+    if (min > 0) {
+      const k = el('span');
+      const sw = el('em'); sw.style.background = 'var(--z' + (i+1) + ')';
+      k.append(sw, document.createTextNode('Zone ' + (i+1) + ', ' + min + ' min'));
+      key.appendChild(k);
+    }
+  });
+}
+
+/* ══ save ════════════════════════════════════════════════ */
+
+function collect(){
+  const date = localDate();
+  const notes = $('#notes').value.trim();
+  const out = [];
+  state.rows.forEach(ex => {
+    ex.sets.forEach((s, i) => {
+      if (!s.done) return;                            // only ticked sets are logged
+      const h = setHR(s);
+      out.push({
+        date, user: state.user, session: state.session, exercise: ex.name,
+        set: i+1, weight: s.w, reps: s.r, rir: s.rir, notes,
+        set_ts: s.ts ? new Date(s.ts).toISOString() : '',
+        hr_avg: h ? h.avg : '', hr_peak: h ? h.peak : '',
+      });
+    });
+  });
+  return out;
+}
+
+function hrPayload(){
+  if (!state.hr) return null;
+  const s = state.hr.sum;
+  return {
+    date: localDate(), user: state.user, session: state.session, source: state.hr.file,
+    start: new Date(s.start).toISOString(), end: new Date(s.end).toISOString(),
+    duration_min: s.durationMin, avg_hr: s.avg, max_hr: s.peak, pct_max: s.pctMax,
+    min_above_80: s.above80Min,
+    z1: s.zoneMin[0], z2: s.zoneMin[1], z3: s.zoneMin[2], z4: s.zoneMin[3], z5: s.zoneMin[4],
+    samples: s.samples, series_10s: s.series10s,
+  };
+}
+
+function updateSave(){
+  const n = collect().length;
+  const b = $('#save');
+  b.disabled = n === 0 && !state.hr;
+  if (n === 0 && state.hr) { b.textContent = 'Save heart rate only'; return; }
+  b.textContent = n === 0
+    ? 'Tick the sets you did'
+    : 'Save ' + n + (n === 1 ? ' set' : ' sets') + (state.hr ? ' and heart rate' : '');
+}
+
+function setStatus(msg, tone){
+  const s = $('#status');
+  s.textContent = msg || '';
+  if (tone) s.dataset.tone = tone; else delete s.dataset.tone;
+}
+
+function readQueue(){ try { return JSON.parse(store.get('lb.queue') || '[]'); } catch(e){ return []; } }
+function writeQueue(q){ store.set('lb.queue', JSON.stringify(q)); }
+
+async function post(batch){
+  const res = await fetch(ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // avoids CORS preflight
+    body: JSON.stringify({ secret: SECRET, batchId: batch.id, rows: batch.rows, hr: batch.hr }),
+  });
+  const data = await res.json();
+  if (!data || !data.ok) throw new Error(data && data.error ? data.error : 'rejected by the sheet');
+  return data;
+}
+
+async function flush(){
+  const q = readQueue();
+  if (!q.length || !configured()) return 0;
+  let sent = 0;
+  while (q.length) {
+    try { await post(q[0]); q.shift(); sent++; writeQueue(q); }
+    catch(e){ writeQueue(q); break; }
+  }
+  return sent;
+}
+
+async function save(){
+  const rows = collect();
+  const hr = hrPayload();
+  if (!rows.length && !hr) return;
+
+  const batch = { id: batchId(), rows, hr };
+  $('#save').disabled = true;
+
+  if (!configured()) {
+    const q = readQueue(); q.push(batch); writeQueue(q);
+    setStatus('Held on this device — no connection set up yet.', 'pending');
+    return clearSession();
+  }
+
+  setStatus('Saving…');
+  try {
+    await post(batch);
+    const extra = await flush();
+    setStatus('Saved ' + rows.length + ' sets' + (hr ? ' and heart rate' : '') +
+              (extra ? ', plus ' + extra + ' from earlier' : '') + '.', 'ok');
+    clearSession();
+    fetchLast();
+  } catch(e){
+    const q = readQueue(); q.push(batch); writeQueue(q);
+    setStatus('No connection. Held ' + rows.length + ' sets — they go up next time you save.', 'pending');
+    clearSession();
+  }
+}
+
+const batchId = () => state.user + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,7);
+
+function clearSession(){
+  store.del(draftKey());
+  clearHR();
+  loadRows();
+  renderList();
+}
+
+/* ══ boot ════════════════════════════════════════════════ */
+
+async function boot(){
+  renderWho();
+  const sessions = Object.keys(PROGRAM[state.user].sessions);
+  const guess = WEEKDAY_SESSION[new Date().getDay()];
+  if (!state.session || !sessions.includes(state.session)) {
+    state.session = sessions.includes(guess) ? guess : sessions[0];
+  }
+  renderSessions();
+  loadRows();
+  renderList();
+
+  $('#setup').hidden = configured();
+  $('#today').textContent = new Date().toLocaleDateString(undefined, { weekday:'short', day:'numeric', month:'short' });
+
+  await fetchLast();
+  carryOver();
+  renderList();
+
+  const n = readQueue().length;
+  if (n) {
+    const sent = await flush();
+    if (sent) setStatus('Sent ' + sent + ' held ' + (sent === 1 ? 'session' : 'sessions') + '.', 'ok');
+    else setStatus(n + ' ' + (n === 1 ? 'session is' : 'sessions are') + ' still waiting to go up.', 'pending');
+  }
+}
+
+$('#hrfile').onchange = async (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  $('#hrlabel').textContent = 'Reading ' + f.name + '…';
+  try {
+    const samples = await parseHRFile(f);
+    if (!samples.length) throw new Error('No heart rate values in that file');
+    state.hr = { file: f.name, samples, sum: summarise(samples) };
+    renderHR(); repaintAll(); saveDraft(); updateSave();
+    setStatus('');
+  } catch (err) {
+    clearHR();
+    setStatus(String(err.message || err) + '. Export as CSV, TCX, GPX or JSON with heart rate included.', 'bad');
+  }
+  e.target.value = '';
+};
+
+$('#hrdrop').onclick = () => { clearHR(); repaintAll(); saveDraft(); updateSave(); };
+$('#save').onclick = save;
+$('#notes').oninput = saveDraft;
+
+$('#addex').onclick = () => {
+  const name = prompt('Exercise name');
+  if (!name || !name.trim()) return;
+  state.rows.push({
+    name: name.trim(), target: '',
+    sets: Array.from({length:3}, () => ({ w:'', r:'', rir:'', done:false, ts:null, carried:true })),
+  });
+  carryOver(); saveDraft(); renderList();
+  window.scrollTo({ top: document.body.scrollHeight });
+};
+
+window.addEventListener('online', flush);
+boot();
+</script>
+</body>
+</html>
