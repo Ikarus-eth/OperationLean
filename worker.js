@@ -4,6 +4,7 @@
  * Replaces the Google Apps Script. Speaks the same API, so index.html needs
  * no code change: only the ENDPOINT value.
  *
+ *   GET  /                                   health check                (open)
  *   GET  ?action=last&user=ikarus            last session per exercise   (open)
  *   GET  ?action=csv&table=sets              whole log as CSV            (open)
  *   POST { secret, batchId, rows[], hr }     append a session         (secret)
@@ -49,6 +50,37 @@ export default {
     // which hands back an object with an async get() instead of a string.
     let SECRET = env.LOGBOOK_SECRET;
     if (SECRET && typeof SECRET.get === 'function') SECRET = await SECRET.get();
+
+    // Health check on the bare URL, so setup can be verified by clicking it.
+    if (request.method === 'GET' && !url.searchParams.get('action')) {
+      const health = {
+        ok: true,
+        worker: 'logbook',
+        secret_set: !!SECRET,
+        d1_bound: !!env.DB,
+        tables: null,
+        rows: null,
+      };
+      if (env.DB) {
+        try {
+          const t = await env.DB.prepare(
+            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+          ).all();
+          health.tables = (t.results || []).map(r => r.name);
+          if (health.tables.includes('sets')) {
+            const n = await env.DB.prepare('SELECT COUNT(*) AS n FROM sets').first();
+            health.rows = n ? n.n : 0;
+          }
+        } catch (e) {
+          health.tables = 'query failed: ' + e.message;
+        }
+      }
+      health.ready = !!SECRET && !!env.DB
+        && Array.isArray(health.tables)
+        && health.tables.includes('sets') && health.tables.includes('hr');
+      return json(health);
+    }
+
     if (!SECRET) return json({
       ok: false,
       error: 'LOGBOOK_SECRET is not set. Add it under Settings > Variables and Secrets, then redeploy.'
