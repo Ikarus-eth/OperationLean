@@ -115,7 +115,37 @@ Apple can't export a single workout on its own. The built-in "Export All Health 
 
 Either works. The app reads **CSV, TCX, GPX and JSON**. FIT is binary and is not supported.
 
-### What to do after a session
+### Automatic, the way it normally runs
+
+The phone pushes finished workouts to the Worker on its own. You tick sets in the gym and press Save; the trace turns up later and the server matches it to the sets by timestamp. Nothing to export, nothing to attach.
+
+**Setting it up, once per phone.** Health Auto Export, Premium tier — automatic export to an outside service is the Premium feature; Basic only does manual exports. Then Automations ▸ New Automation ▸ REST API:
+
+| Field | Value |
+|---|---|
+| URL | `https://wild-haze-fac9.74vshck6t7.workers.dev/?user=ikarus` |
+| HTTP header | `X-Logbook-Secret` : the same string as `LOGBOOK_SECRET` |
+| Data Type | Workouts |
+| Include Workout Metrics | on |
+| Include Route Data | off |
+| Time Grouping | Seconds |
+| Export Format | JSON |
+| Export Version | 2 |
+| Date Range | Since Last Sync |
+| Batch Requests | on |
+| Sync Cadence | every 1 hour |
+
+Johanna's phone gets the same thing with `?user=johanna`. That query parameter is the only thing telling the Worker whose heart it is, so it has to be right.
+
+Use **Manual Export** in the automation screen to test it before trusting it. A good response looks like `{"ok":true,"seen":3,"written":1,"skipped":2,"attributed":14}`. Activity Logs in the same screen show every run.
+
+**What "automatic" actually means.** Apple does not let any app read health data while the phone is locked, and background runs depend on Background App Refresh. So the push happens the next time the phone is unlocked and iOS gives the app a slot — usually minutes after you pick it up, not the instant the workout ends. Adding the Health Auto Export widget to the home screen improves how often background runs succeed. Charging helps too. Nothing here is lost by waiting: the server re-matches the whole day every time either half arrives.
+
+**What gets stored.** Every workout of ten minutes or more, not only gym sessions — surfing, runs, walks long enough to count. `workout_type` holds what the watch called it, so filter on that. Shorter workouts and any workout with no heart rate trace are dropped. The same workout arriving again, which happens on every sync, updates its row instead of adding one.
+
+**Turn it off** by deleting the automation. The manual path below keeps working.
+
+### Manual, as a fallback
 
 1. Finish the workout on the watch so it closes and lands in Health.
 2. Open the export app on the phone and find that workout by date.
@@ -138,9 +168,15 @@ You get duration, average, peak, peak as a percentage of your max, minutes above
 
 `series_10s` holds the whole trace at ten-second resolution in one cell, so the shape of the curve survives into the sheet without several thousand rows per session.
 
-**How per-set heart rate is worked out, and its limits.** For each ticked set, the app takes the highest bpm in the 90 seconds before you tapped the tick. That assumes you tick shortly after racking the weight. Tick late and the number drifts toward rest heart rate; tick a batch of sets at the end and the numbers are meaningless. Treat it as a good indicator of which exercises drive heart rate, not as a precise measurement. Change `SET_WINDOW_S` if your habit differs.
+**How per-set heart rate is worked out, and its limits.** For each ticked set, the highest bpm in the 90 seconds before you tapped the tick. That assumes you tick shortly after racking the weight. Tick late and the number drifts toward rest heart rate; tick a batch of sets at the end and the numbers are meaningless. Treat it as a good indicator of which exercises drive heart rate, not as a precise measurement.
 
-It also needs the ticks and the trace to be on the same day, which is why a back-dated session gets a workout summary but no per-set numbers.
+**The matching happens on the server, not in the browser.** It has to: the watch data arrives long after the browser has gone. Every write — sets or heart rate, in either order — re-matches that whole day. So logging the session first and letting the trace turn up an hour later gives the same result as attaching a file by hand, and forgetting to attach a file costs nothing.
+
+The numbers are read back out of `series_10s`, which holds the peak of each ten-second bucket. The peak is therefore exact and the per-set average is a mean of about nine bucket peaks, a few bpm high. It is the same method whichever way the trace arrived, which is worth more than the last bpm of accuracy.
+
+It needs the ticks and the trace to be on the same day, which is why a back-dated session gets a workout summary but no per-set numbers.
+
+**Three constants live in two files.** `MAX_HR`, `SET_WINDOW_S` and the ten-minute workout floor are in `index.html` for the live display and in `worker.js` for the stored values. Change both together or the screen and the database will disagree.
 
 ## Changing the program
 
@@ -172,6 +208,8 @@ Johanna's program in the config is a placeholder, and she has no daily items yet
 
 **`hr` table** — one row per workout: duration, average, max, percentage of max, minutes above 80%, minutes in each of five zones, and `series_10s`, the whole trace at ten-second resolution in a single cell. Storing every sample as its own row would add several thousand rows per session; ten-second buckets keep the shape of the curve without that.
 
+`source` says where the row came from: a filename for a hand-attached export, `watch:<name>` for one the phone pushed. `workout_type` is what the watch called the activity. `session` is blank on a workout that arrived before its sets and is filled in when they land.
+
 Long format, not wide. This is why program changes are free: a new exercise is a new *value* in the `exercise` column, never a new column. A wide table would need a migration every time the block changes, and would break every query built on top of it.
 
 For analysis, pivot on `exercise` and `date`. Volume per set is `weight_kg × reps`.
@@ -196,4 +234,9 @@ For analysis, pivot on `exercise` and `date`. Volume per set is `weight_kg × re
 - **"Held on this device" instead of "Saved".** The Worker rejected the request or wasn't reachable. Open the Worker URL with `?action=last&user=ikarus` in a browser: `unauthorized` means the secret in `index.html` doesn't match `LOGBOOK_SECRET`, and a 500 usually means the `DB` binding is missing or you forgot to redeploy after adding bindings.
 - **Carried-over values are empty but saving works.** The `sets` table exists but the read query found nothing for that user. Check the `user` column values with `SELECT DISTINCT user FROM sets;`.
 - **"No heart rate values in that file."** The export didn't include heart rate, or it's a FIT file. Re-export as CSV or TCX with heart rate enabled.
-- **Every save is held on the device after a Worker update.** Usually a column the new Worker writes that the database doesn't have yet. Open the Worker URL and check `ready`, then run the ALTER at the bottom of `schema.sql` in the D1 console.
+- **Every save is held on the device after a Worker update.** Usually a column the new Worker writes that the database doesn't have yet. Open the Worker URL and check `ready`, then run the migrations at the bottom of `schema.sql` in the D1 console.
+- **The watch automation returns 401.** The `X-Logbook-Secret` header does not match `LOGBOOK_SECRET`.
+- **It returns 400 asking for a user.** `?user=ikarus` is missing from the automation URL.
+- **`{"ok":true,"written":0,"skipped":2}`.** It ran, found workouts, and dropped them: either under ten minutes or with no heart rate trace. Check that Include Workout Metrics is on and Time Grouping is Seconds.
+- **Nothing arrives for hours.** Expected if the phone stays locked; Apple blocks health reads on a locked device. Check Activity Logs in the automation screen, add the widget to the home screen, and confirm Background App Refresh is on for the app.
+- **Heart rate rows appear but per-set columns stay empty.** The ticks and the trace are on different days, or the set timestamps fall outside every workout window. Compare `sets.set_ts` with `hr.start` and `hr.finish`.

@@ -36,18 +36,25 @@ CREATE TABLE IF NOT EXISTS hr (
   min_above_80  REAL,
   z1 REAL, z2 REAL, z3 REAL, z4 REAL, z5 REAL,
   samples       INTEGER,
-  series_10s    TEXT    -- whole trace at 10 s resolution, comma separated
+  series_10s    TEXT,   -- whole trace at 10 s resolution, comma separated
+  workout_id    TEXT,   -- the watch's own id for the workout, when it sends one
+  workout_type  TEXT    -- 'Traditional Strength Training', 'Surfing', …
 );
 
 CREATE INDEX IF NOT EXISTS idx_sets_lookup  ON sets (user, exercise, date);
 CREATE INDEX IF NOT EXISTS idx_sets_batch   ON sets (batch_id);
 CREATE INDEX IF NOT EXISTS idx_sets_session ON sets (user, date);
 CREATE INDEX IF NOT EXISTS idx_hr_session   ON hr   (user, date);
+CREATE INDEX IF NOT EXISTS idx_hr_dedupe    ON hr   (user, start);
 
 -- ── Migrations, for a database that already has rows in it ──────────
 -- CREATE TABLE IF NOT EXISTS above will not add a column to an existing
--- table, and SQLite has no ADD COLUMN IF NOT EXISTS. Run this once, by
--- hand, before deploying the Worker version that writes ex_notes. It
--- errors harmlessly if the column is already there.
+-- table, and SQLite has no ADD COLUMN IF NOT EXISTS. Run these once, by
+-- hand, before deploying a Worker that writes them. Each errors harmlessly
+-- if the column is already there.
 --
---   ALTER TABLE sets ADD COLUMN ex_notes TEXT;
+--   ALTER TABLE sets ADD COLUMN ex_notes TEXT;      -- done Aug 2026
+--
+--   ALTER TABLE hr ADD COLUMN workout_id TEXT;
+--   ALTER TABLE hr ADD COLUMN workout_type TEXT;
+--   CREATE INDEX IF NOT EXISTS idx_hr_dedupe ON hr (user, start);

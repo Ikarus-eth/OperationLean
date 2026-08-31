@@ -237,6 +237,10 @@ body{
 .zkey{display:flex;flex-wrap:wrap;gap:0 14px;font-size:12px;color:var(--ink-2);margin-bottom:12px}
 .zkey span{display:flex;align-items:center;gap:5px}
 .zkey em{width:9px;height:9px;border-radius:2px;font-style:normal}
+.hrauto{margin:0 0 12px;padding:11px 13px;border:1px solid var(--gain);border-radius:9px;
+  background:#F1F5EF;font-size:13px;line-height:1.5;color:var(--ink-2)}
+.hrauto b{display:block;color:var(--gain);margin-bottom:3px}
+.hrauto .w{color:var(--ink);font-variant-numeric:tabular-nums}
 .hrdrop{appearance:none;background:transparent;border:0;color:var(--danger);font:500 14px/1 inherit;cursor:pointer;padding:6px 0;text-decoration:underline}
 .hrwarn{font-size:13px;color:var(--pending);margin-bottom:10px}
 
@@ -298,6 +302,7 @@ body{
 
   <section class="hrbox">
     <h2>Heart rate</h2>
+    <div class="hrauto" id="hrauto" hidden></div>
     <p id="hrblurb">Export this workout from your watch and pick the file here. Peak heart rate is matched to each set you ticked.</p>
     <label class="filebtn" for="hrfile" id="hrlabel">Choose a workout file</label>
     <input type="file" id="hrfile" accept=".csv,.tcx,.gpx,.json,.txt,text/csv,application/json,text/xml">
@@ -354,6 +359,7 @@ const state = {
   removed: [],  // program exercises taken off today's screen, so they stay off
   last: {},     // exercise -> {date, sets:[{w,r,rir}]}
   hr: null,     // {file, samples:[{t,hr}], sum:{...}}
+  day: [],      // hr rows the server already has for this person and date
 };
 
 /* ══ render ══════════════════════════════════════════════ */
@@ -685,6 +691,46 @@ async function fetchLast(){
   } catch(e){}
 }
 
+/* Anything the phone pushed for this date on its own. The Worker does the
+   per-set matching now, so there is nothing to attach when this is filled in.
+   Failing quietly is right: the manual picker below still works. */
+async function fetchDay(){
+  state.day = [];
+  if (configured()) {
+    try {
+      const u = ENDPOINT + '?action=day&user=' + encodeURIComponent(state.user) +
+                '&date=' + encodeURIComponent(state.date);
+      const res = await fetch(u);
+      const d = await res.json();
+      if (d && d.ok) state.day = d.hr || [];
+    } catch(e){}
+  }
+  renderAuto();
+}
+
+function renderAuto(){
+  const boxEl = $('#hrauto');
+  const watch = (state.day || []).filter(h => String(h.source || '').startsWith('watch:'));
+  boxEl.hidden = !watch.length;
+  if (!watch.length) return;
+
+  boxEl.innerHTML = '';
+  const b = el('b');
+  b.textContent = watch.length === 1 ? 'Already in from your watch' : watch.length + ' workouts in from your watch';
+  boxEl.appendChild(b);
+
+  watch.forEach(h => {
+    const line = el('div','w');
+    line.textContent = (h.workout_type || 'Workout') + ' — ' + h.duration_min + ' min, avg ' +
+      h.avg_hr + ', peak ' + h.max_hr + ' (' + h.pct_max + '% of max)';
+    boxEl.appendChild(line);
+  });
+
+  const note = el('div');
+  note.textContent = 'Per-set numbers are matched on the server. Nothing to attach unless you want to override it.';
+  boxEl.appendChild(note);
+}
+
 /* ══ heart rate ══════════════════════════════════════════ */
 
 function clearHR(){
@@ -876,6 +922,7 @@ function setDate(d){
   renderDate();
   loadRows();
   renderList();
+  fetchDay();
 }
 
 function renderDate(){
@@ -1000,6 +1047,7 @@ async function save(){
               (extra ? ', plus ' + extra + ' from earlier' : '') + '.', 'ok');
     clearSession();
     fetchLast();
+    fetchDay();
   } catch(e){
     const q = readQueue(); q.push(batch); writeQueue(q);
     setStatus('No connection. Held ' + rows.length + ' sets — they go up next time you save.', 'pending');
@@ -1037,6 +1085,7 @@ async function boot(){
   await fetchLast();
   carryOver();
   renderList();
+  fetchDay();
 
   const n = readQueue().length;
   if (n) {
