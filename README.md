@@ -37,12 +37,14 @@ Commit. GitHub Pages republishes in about a minute.
 The Worker serves the whole log as CSV. In any Google Sheet, one formula pulls it in and keeps it current:
 
 ```
-=IMPORTDATA("https://logbook.yourname.workers.dev/?action=csv&secret=YOUR_SECRET")
+=IMPORTDATA("https://logbook.yourname.workers.dev/?action=csv")
 ```
 
 For the heart rate table, add `&table=hr`.
 
-`IMPORTDATA` is a built-in sheet function, not a connected app, so Advanced Protection doesn't block it. It refreshes roughly hourly, or on demand from the sheet. The secret sits in the formula, which is fine — only people who can already see the sheet can read it.
+`IMPORTDATA` is a built-in sheet function, not a connected app, so Advanced Protection doesn't block it. It refreshes roughly hourly, or on demand from the sheet.
+
+Reads need no secret. You can open that URL in any browser, hand it to anyone, or point a second sheet at it. Writes still need the secret — not to keep the log private, but so nobody can add junk rows and poison the values the app carries over each week.
 
 ## Logging a session
 
@@ -103,12 +105,14 @@ For analysis, pivot on `exercise` and `date`. Volume per set is `weight_kg × re
 
 ## Two things this does not do
 
-**The secret is not security.** GitHub Pages serves your source publicly, so anyone who finds the URL can read `SECRET` and write to the database. It stops drive-by junk, nothing more. If that matters, the fix is a login in front of the Worker, which costs a sign-in on every phone. For a private family training log the tradeoff is probably fine — decide it deliberately rather than assuming the secret protects anything. Unlike the Sheets version, nothing here can read your Google account.
+**The log is public by design.** Reads are open — anyone with the Worker URL can pull the whole log. That was a deliberate call: it's training data, and nothing here can reach any other account.
+
+**The write secret is weak.** GitHub Pages serves `index.html` publicly, so anyone who finds it can read `SECRET` and write rows. It stops drive-by junk, nothing more. The real defence is that a bad write is visible and deletable with one SQL statement. If it ever became a problem, the fix is a login in front of the Worker, at the cost of a sign-in on every phone.
 
 **No editing past sessions.** Corrections happen with SQL in the D1 console. An edit UI needs row lookup, update and delete paths in the script, which is not worth it for something that happens rarely.
 
 ## If it stops working
 
-- **"Held on this device" instead of "Saved".** The Worker rejected the request or wasn't reachable. Open the Worker URL with `?action=last&user=ikarus&secret=YOUR_SECRET` in a browser: `unauthorized` means the secret in `index.html` doesn't match `LOGBOOK_SECRET`, and a 500 usually means the `DB` binding is missing or you forgot to redeploy after adding bindings.
+- **"Held on this device" instead of "Saved".** The Worker rejected the request or wasn't reachable. Open the Worker URL with `?action=last&user=ikarus` in a browser: `unauthorized` means the secret in `index.html` doesn't match `LOGBOOK_SECRET`, and a 500 usually means the `DB` binding is missing or you forgot to redeploy after adding bindings.
 - **Carried-over values are empty but saving works.** The `sets` table exists but the read query found nothing for that user. Check the `user` column values with `SELECT DISTINCT user FROM sets;`.
 - **"No heart rate values in that file."** The export didn't include heart rate, or it's a FIT file. Re-export as CSV or TCX with heart rate enabled.

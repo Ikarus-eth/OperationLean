@@ -4,9 +4,13 @@
  * Replaces the Google Apps Script. Speaks the same API, so index.html needs
  * no code change: only the ENDPOINT value.
  *
- *   GET  ?action=last&user=ikarus&secret=…   last session per exercise
- *   GET  ?action=csv&secret=…&table=sets     whole log as CSV (for IMPORTDATA)
- *   POST { secret, batchId, rows[], hr }     append a session
+ *   GET  ?action=last&user=ikarus            last session per exercise   (open)
+ *   GET  ?action=csv&table=sets              whole log as CSV            (open)
+ *   POST { secret, batchId, rows[], hr }     append a session         (secret)
+ *
+ * Reads are deliberately open: the log is training data and nothing here can
+ * reach any other account. Writes still need the secret, so nobody can drop
+ * junk rows in and corrupt the carried-over values the app reads back.
  *
  * Bindings required (set in the Cloudflare dashboard):
  *   DB              — D1 database binding
@@ -44,7 +48,6 @@ export default {
 
     /* ── read ──────────────────────────────────────────────────── */
     if (request.method === 'GET') {
-      if (url.searchParams.get('secret') !== SECRET) return json({ ok: false, error: 'unauthorized' }, 401);
       const action = url.searchParams.get('action');
 
       if (action === 'last') {
@@ -98,6 +101,7 @@ export default {
           headers: {
             ...CORS,
             'Content-Type': 'text/csv; charset=utf-8',
+            'Content-Disposition': `inline; filename="${table}.csv"`,
             'Cache-Control': 'no-store',
           },
         });
