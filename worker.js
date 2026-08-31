@@ -17,6 +17,10 @@
  *   DB              — D1 database, added under Settings ▸ Bindings
  *   LOGBOOK_SECRET  — added under Settings ▸ Variables and Secrets, type Secret.
  *                     A Secrets Store binding of the same name also works.
+ *
+ * This version writes sets.ex_notes, the per-exercise comment. Run the ALTER
+ * in schema.sql on an existing database BEFORE deploying this, or every write
+ * fails on a missing column.
  */
 
 const CORS = {
@@ -131,7 +135,7 @@ export default {
         const cols = rows.length
           ? Object.keys(rows[0])
           : (table === 'sets'
-              ? ['id','ts','date','user','session','exercise','set_no','weight','reps','rir','notes','batch_id','set_ts','hr_avg','hr_peak']
+              ? ['id','ts','date','user','session','exercise','set_no','weight','reps','rir','notes','ex_notes','batch_id','set_ts','hr_avg','hr_peak']
               : ['id','ts','date','user','session','source','start','finish','duration_min','avg_hr','max_hr','pct_max','min_above_80','z1','z2','z3','z4','z5','samples','series_10s']);
 
         const esc = v => {
@@ -180,14 +184,16 @@ export default {
 
       const insSet = env.DB.prepare(`
         INSERT INTO sets
-          (ts,date,user,session,exercise,set_no,weight,reps,rir,notes,batch_id,set_ts,hr_avg,hr_peak)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+          (ts,date,user,session,exercise,set_no,weight,reps,rir,notes,ex_notes,
+           batch_id,set_ts,hr_avg,hr_peak)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
 
       for (const r of rows) {
         stmts.push(insSet.bind(
           now, str(r.date), str(r.user), str(r.session), str(r.exercise),
           num(r.set), num(r.weight), num(r.reps), num(r.rir),
-          str(r.notes), batchId, str(r.set_ts), num(r.hr_avg), num(r.hr_peak)
+          str(r.notes), str(r.ex_notes), batchId, str(r.set_ts),
+          num(r.hr_avg), num(r.hr_peak)
         ));
       }
 

@@ -28,7 +28,7 @@ const PROGRAM = {
     label: 'Ikarus',
     sessions: {
       'Lower 1': [
-        { name: 'Jumps',               target: '3-4 × 3-5',  sets: 3, hint: 'log box height, reps' },
+        { name: 'Jumps',               target: '3-4 × 3-5',  sets: 3, units: { w: 'in' }, hint: 'box height in inches, then reps' },
         { name: 'Perfect Squat',       target: '3 × 6-10',   sets: 3 },
         { name: 'Hip Thrust',          target: '3 × 8-12',   sets: 3 },
         { name: 'Leg Press',           target: '3 × 8-12',   sets: 3, hint: 'deep, feet low, shoulder-width, toes out' },
@@ -103,6 +103,23 @@ const PROGRAM = {
 };
 
 const WEEKDAY_SESSION = { 1:'Lower 1', 2:'Upper A', 4:'Lower 2', 5:'Upper B' };
+
+/* ══════════════════════════════════════════════════════════════════
+   DAILY — shown under every session, training day or rest day.
+   Logged against session 'Daily', so habit rows never mix into
+   session volume. `fixed` is the prescription and beats carry-over:
+   the row always opens at the target, not at what you did last time.
+   `fields` narrows the three boxes; `units` relabels them.
+   ══════════════════════════════════════════════════════════════════ */
+const DAILY = {
+  ikarus: [
+    { name: 'Pulls',     target: '3 × 4',   sets: 3, fields: ['r'], fixed: { r: '4' },
+      hint: 'adjust the reps, tick each set you actually did' },
+    { name: 'Handstand', target: '10+ min', sets: 1, fields: ['r'], units: { r: 'min' }, fixed: { r: '10' },
+      hint: 'tick only if you practised ten minutes or more' },
+  ],
+  johanna: [],
+};
 </script>
 
 <style>
@@ -143,6 +160,17 @@ body{
 .ex-target{font-size:13px;color:var(--ink-2);white-space:nowrap}
 .ex-sub{font-size:13px;color:var(--ink-2);margin-bottom:10px;max-width:46ch}
 .ex-sub.fresh{color:var(--pending)}
+.ex-del{appearance:none;align-self:center;flex:0 0 auto;width:34px;height:34px;margin-right:-8px;
+  border:0;border-radius:7px;background:transparent;color:var(--ghost);font:400 21px/1 inherit;cursor:pointer}
+.ex-del:hover{color:var(--danger)}
+.ex-note{width:100%;height:38px;margin-top:8px;border:1px solid var(--rule);border-radius:7px;
+  background:var(--surface);color:var(--ink);font:400 14px/1 inherit;padding:0 10px}
+.ex-note:focus{outline:2px solid var(--ink);outline-offset:-1px;background:#fff}
+.ex-note::placeholder{color:var(--ghost)}
+.ex-note.has{border-color:var(--ink-2)}
+.dayhead{display:flex;align-items:center;gap:10px;padding:22px 0 2px;font-size:12px;
+  color:var(--ink-2);text-transform:uppercase;letter-spacing:.09em}
+.dayhead::after{content:"";flex:1 1 auto;height:1px;background:var(--rule)}
 .ex[data-pair]{position:relative;padding-left:13px}
 .ex[data-pair]::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:2px;background:var(--rule);border-radius:1px}
 .ex[data-pair-first]::before{top:24px}
@@ -333,14 +361,28 @@ function renderSessions(){
 
 const lastSet = (name, i) => (state.last[name] && state.last[name].sets[i]) || null;
 
+/* An exercise shows three boxes labelled kg / reps / RIR unless it says
+   otherwise. `fields` drops boxes, `units` renames them. Box jumps are the
+   reason: the first box holds inches, not kilos. */
+const FIELD_LABEL = { w:'kg', r:'reps', rir:'RIR' };
+const fieldsOf = ex => ex.fields || ['w','r','rir'];
+const labelOf  = (ex, f) => (ex.units && ex.units[f]) || FIELD_LABEL[f];
+const gridOf   = ex => '20px ' + '1fr '.repeat(fieldsOf(ex).length) + '46px';
+
 function renderList(){
   const list = $('#list'); list.innerHTML = '';
 
   state.rows.forEach((ex, xi) => {
+    const prev = state.rows[xi-1];
+    if (ex.daily && (!prev || !prev.daily)) {
+      const h = el('div','dayhead'); h.textContent = 'Every day';
+      list.appendChild(h);
+    }
+
     const box = el('div','ex');
     if (ex.pair) {
       box.dataset.pair = ex.pair;
-      const prev = state.rows[xi-1], next = state.rows[xi+1];
+      const next = state.rows[xi+1];
       if (!prev || prev.pair !== ex.pair) box.dataset.pairFirst = '1';
       if (!next || next.pair !== ex.pair) box.dataset.pairLast  = '1';
     }
@@ -348,7 +390,18 @@ function renderList(){
     const head = el('div','ex-head');
     const nm = el('div','ex-name'); nm.textContent = ex.name;
     const tg = el('div','ex-target'); tg.textContent = ex.target || '';
-    head.append(nm, tg); box.appendChild(head);
+
+    const del = el('button','ex-del'); del.type = 'button'; del.textContent = '\u00D7';
+    del.title = 'Remove ' + ex.name + ' from today';
+    del.setAttribute('aria-label', 'Remove ' + ex.name + ' from today');
+    del.onclick = () => {
+      const touched = ex.sets.some(s => s.done || !s.carried) || !!(ex.note && ex.note.trim());
+      if (touched && !confirm('Remove ' + ex.name + ' and everything typed into it?')) return;
+      state.rows.splice(xi, 1);
+      saveDraft(); renderList();
+    };
+
+    head.append(nm, tg, del); box.appendChild(head);
 
     const sub = el('div','ex-sub');
     const L = state.last[ex.name];
@@ -357,22 +410,27 @@ function renderList(){
     else { sub.textContent = 'First time — nothing to carry over'; sub.className = 'ex-sub fresh'; }
     box.appendChild(sub);
 
+    const F = fieldsOf(ex), grid = gridOf(ex);
+
     const cols = el('div','cols');
-    ['kg','reps','RIR'].forEach(t => { const s = el('span'); s.textContent = t; cols.appendChild(s); });
+    cols.style.gridTemplateColumns = grid;
+    F.forEach(f => { const s = el('span'); s.textContent = labelOf(ex, f); cols.appendChild(s); });
     box.appendChild(cols);
 
     ex.sets.forEach((set, si) => {
       const row  = el('div','row');
       const meta = el('div','meta');
+      row.style.gridTemplateColumns = grid;
+      meta.style.gridTemplateColumns = grid;
 
       const idx = el('div','idx num'); idx.textContent = String(si+1);
       row.appendChild(idx);
 
-      ['w','r','rir'].forEach((f, k) => {
+      F.forEach(f => {
         const inp = el('input');
         inp.type = 'text';
         inp.inputMode = f === 'w' ? 'decimal' : 'numeric';
-        inp.placeholder = ['kg','reps','RIR'][k];
+        inp.placeholder = labelOf(ex, f);
         inp.value = set[f] ?? '';
         inp.setAttribute('aria-label', ex.name + ' set ' + (si+1) + ' ' + inp.placeholder);
         inp.oninput = () => {
@@ -395,13 +453,15 @@ function renderList(){
       function paint(){
         row.classList.toggle('done', !!set.done);
         const g = lastSet(ex.name, si);
-        const now  = parseFloat(set.w) * parseFloat(set.r);
-        const then = g ? parseFloat(g.w) * parseFloat(g.r) : NaN;
+        // Without a weight box there is nothing to multiply, so reps alone decide.
+        const vol = o => F.includes('w') ? parseFloat(o.w) * parseFloat(o.r) : parseFloat(o.r);
+        const now  = vol(set);
+        const then = g ? vol(g) : NaN;
         row.classList.toggle('beat', !!set.done && Number.isFinite(now) && Number.isFinite(then) && now > then);
 
         meta.innerHTML = '';
         meta.appendChild(el('span'));
-        ['w','r','rir'].forEach(f => {
+        F.forEach(f => {
           const s = el('span');
           const prev = g ? g[f] : '';
           s.textContent = (prev !== '' && prev != null && String(prev) !== String(set[f] ?? '')) ? String(prev) : '';
@@ -433,6 +493,19 @@ function renderList(){
     btns.append(add, rm);
     box.appendChild(btns);
 
+    const note = el('input','ex-note');
+    note.type = 'text';
+    note.placeholder = 'Comment';
+    note.value = ex.note || '';
+    note.setAttribute('aria-label', 'Comment on ' + ex.name);
+    if (note.value.trim()) note.classList.add('has');
+    note.oninput = () => {
+      ex.note = note.value;
+      note.classList.toggle('has', !!note.value.trim());
+      saveDraft();
+    };
+    box.appendChild(note);
+
     list.appendChild(box);
   });
 
@@ -449,22 +522,47 @@ function fmtDate(d){
 
 /* ══ program / draft ═════════════════════════════════════ */
 
+function makeRow(p){
+  const fx = p.fixed || {};
+  return {
+    name: p.name, target: p.target || '', hint: p.hint, pair: p.pair,
+    units: p.units, fields: p.fields, fixed: p.fixed, daily: !!p.daily, note: '',
+    sets: Array.from({length: p.sets || 3}, () => ({
+      w: fx.w ?? '', r: fx.r ?? '', rir: fx.rir ?? '', done:false, ts:null, carried:true,
+    })),
+  };
+}
+
 function loadRows(){
   const draft = readDraft();
   if (draft) {
     state.rows = draft.rows;
     $('#notes').value = draft.notes || '';
     if (draft.hr) { state.hr = draft.hr; renderHR(); } else clearHR();
-    return;
+  } else {
+    const plan = PROGRAM[state.user].sessions[state.session] || [];
+    state.rows = plan.map(makeRow)
+      .concat((DAILY[state.user] || []).map(p => makeRow({ ...p, daily: true })));
+    $('#notes').value = '';
+    clearHR();
+    carryOver();
   }
-  const plan = PROGRAM[state.user].sessions[state.session] || [];
-  state.rows = plan.map(p => ({
-    name: p.name, target: p.target, hint: p.hint, pair: p.pair,
-    sets: Array.from({length: p.sets || 3}, () => ({ w:'', r:'', rir:'', done:false, ts:null, carried:true })),
-  }));
-  $('#notes').value = '';
-  clearHR();
-  carryOver();
+  mergeDaily();
+}
+
+/* Daily items are the same items whatever session is picked, so they are kept
+   under one key per day. Without this, ticking pulls and then changing the
+   session dropdown would show them unticked again and log them twice. */
+const dailyKey = () => 'lb.daily.' + state.user + '.' + localDate();
+
+function mergeDaily(){
+  let saved = null;
+  try { saved = JSON.parse(store.get(dailyKey()) || 'null'); } catch(e){}
+  if (!Array.isArray(saved)) return;
+  state.rows = state.rows.map(ex => {
+    if (!ex.daily) return ex;
+    return saved.find(s => s.name === ex.name) || ex;
+  });
 }
 
 /* pre-fill weight, reps and RIR from the last time this exercise was done */
@@ -472,13 +570,15 @@ function carryOver(){
   state.rows.forEach(ex => {
     const L = state.last[ex.name];
     if (!L || !L.sets.length) return;
+    const fx = ex.fixed || {};
     ex.sets.forEach((s, i) => {
       if (s.done || !s.carried) return;
       const g = L.sets[i] || L.sets[L.sets.length-1];
       if (!g) return;
-      if (s.w === '' || s.w == null)     s.w   = g.w;
-      if (s.r === '' || s.r == null)     s.r   = g.r;
-      if (s.rir === '' || s.rir == null) s.rir = g.rir;
+      ['w','r','rir'].forEach(f => {
+        if (fx[f] != null) return;                  // a fixed default outranks history
+        if (s[f] === '' || s[f] == null) s[f] = g[f];
+      });
     });
   });
 }
@@ -488,9 +588,11 @@ function saveDraft(){
   try {
     const rows = state.rows.map(ex => ({
       name:ex.name, target:ex.target, hint:ex.hint, pair:ex.pair,
+      units:ex.units, fields:ex.fields, fixed:ex.fixed, daily:ex.daily, note:ex.note || '',
       sets: ex.sets.map(s => ({ w:s.w, r:s.r, rir:s.rir, done:s.done, ts:s.ts, carried:s.carried })),
     }));
     store.set(draftKey(), JSON.stringify({ rows, notes: $('#notes').value, hr: state.hr }));
+    store.set(dailyKey(), JSON.stringify(rows.filter(r => r.daily)));
   } catch(e){}
 }
 function readDraft(){ try { const r = store.get(draftKey()); return r ? JSON.parse(r) : null; } catch(e){ return null; } }
@@ -690,8 +792,11 @@ function collect(){
       if (!s.done) return;                            // only ticked sets are logged
       const h = setHR(s);
       out.push({
-        date, user: state.user, session: state.session, exercise: ex.name,
-        set: i+1, weight: s.w, reps: s.r, rir: s.rir, notes,
+        date, user: state.user,
+        session: ex.daily ? 'Daily' : state.session,     // habits stay out of session volume
+        exercise: ex.name,
+        set: i+1, weight: s.w, reps: s.r, rir: s.rir,
+        notes, ex_notes: (ex.note || '').trim(),
         set_ts: s.ts ? new Date(s.ts).toISOString() : '',
         hr_avg: h ? h.avg : '', hr_peak: h ? h.peak : '',
       });
@@ -787,6 +892,7 @@ const batchId = () => state.user + '-' + Date.now().toString(36) + '-' + Math.ra
 
 function clearSession(){
   store.del(draftKey());
+  store.del(dailyKey());
   clearHR();
   loadRows();
   renderList();
@@ -842,14 +948,19 @@ $('#save').onclick = save;
 $('#notes').oninput = saveDraft;
 
 $('#addex').onclick = () => {
-  const name = prompt('Exercise name');
-  if (!name || !name.trim()) return;
-  state.rows.push({
-    name: name.trim(), target: '',
-    sets: Array.from({length:3}, () => ({ w:'', r:'', rir:'', done:false, ts:null, carried:true })),
-  });
+  const name = (prompt('Exercise name') || '').trim();
+  if (!name) return;
+  // Typing back the name of something you removed brings its target, hint and
+  // unit labels with it, rather than a bare three-row block.
+  const pool = (PROGRAM[state.user].sessions[state.session] || [])
+    .concat((DAILY[state.user] || []).map(p => ({ ...p, daily: true })));
+  const p = pool.find(e => e.name.toLowerCase() === name.toLowerCase()) || { name };
+  const row = makeRow(p);
+  const firstDaily = state.rows.findIndex(r => r.daily);
+  const at = (row.daily || firstDaily < 0) ? state.rows.length : firstDaily;
+  state.rows.splice(at, 0, row);
   carryOver(); saveDraft(); renderList();
-  window.scrollTo({ top: document.body.scrollHeight });
+  if (at === state.rows.length - 1) window.scrollTo({ top: document.body.scrollHeight });
 };
 
 window.addEventListener('online', flush);

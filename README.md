@@ -54,9 +54,36 @@ Every field arrives pre-filled with what you did last time — weight, reps and 
 - **Something changed:** edit the field. Editing ticks the set for you.
 - **Didn't do it:** leave it alone. Unticked sets are not saved.
 
-Pre-filled values are grey. Once a set is ticked they turn black, so a glance tells you how far through the session you are. When a field differs from last week, the old number appears underneath it. A green edge on the weight box means `weight × reps` beat that set number last time.
+Pre-filled values are grey. Once a set is ticked they turn black, so a glance tells you how far through the session you are. When a field differs from last week, the old number appears underneath it. A green edge on the weight box means `weight × reps` beat that set number last time. Where an exercise has no weight box, reps alone decide.
 
 The tick is not decoration — it timestamps the set, which is what makes per-exercise heart rate possible.
+
+### Comments
+
+Every exercise has a comment box under its buttons. It is for that exercise on that day — cue that worked, pain, tempo, which machine. It is saved on every set row of that exercise, in the `ex_notes` column, next to the session-wide `notes`. Comments do not carry over; they describe a day, not a habit.
+
+### Changing what is on the screen
+
+The **×** beside an exercise name removes it for today. Nothing is lost that was going to be saved — untapped sets were never going to be written — but it clears the screen when the rack is taken or a machine is broken, and stops a stale prefill tempting a wrong tick. If anything in the block was ticked or edited it asks first.
+
+**Add an exercise** at the bottom adds one. Type the name of something you removed and it comes back with its target, hint and unit labels intact. Type anything else and you get a plain three-row block, which carries over next week like everything else.
+
+Both are for today only. Next session the program is back as written.
+
+### Every day
+
+Under every session, training day or rest day, there is an **Every day** block:
+
+- **Pulls**, three sets, four reps. Adjust the reps, tick the sets you did.
+- **Handstand**, one row, ten minutes. Tick it only if you practised ten minutes or more.
+
+These open at the prescription every day, not at what you did last time — that is the point of a target. They are the same rows whichever session is picked in the dropdown, so switching sessions after ticking them cannot log them twice.
+
+They write against session `Daily`, so they never inflate a session's volume. `SELECT * FROM sets WHERE session = 'Daily'` is the whole habit log.
+
+### Units
+
+The first box is kilograms unless the exercise says otherwise. Jumps is inches: box height goes in the first box, reps in the second. The number is stored in the same `weight` column as everything else — the unit is a property of the exercise name, not of the row, so nothing about the table changes. Set `units: { w: 'in' }` on an exercise to relabel it, `fields: ['r']` to drop boxes it does not need.
 
 ## Heart rate
 
@@ -81,15 +108,23 @@ Edit the `PROGRAM` object in `index.html`. Nothing else changes — not the shee
 
 - `sets` is only how many rows appear. Add or remove more in the app.
 - `pair` draws the bracket linking antagonist supersets. Omit for unpaired work.
+- `units: { w: 'in' }` relabels a box. `fields: ['r']` shows only that box.
+- `fixed: { r: '4' }` opens the row at that value every time and ignores what you did last time. For prescriptions, not for progression.
 - Anything not in the program can still be logged with "Add an exercise", and it carries over next week like everything else.
 
-Johanna's program in the config is a placeholder. Replace it.
+The `DAILY` object below `PROGRAM` holds the every-day items, same shape.
+
+Renaming an exercise starts its history over — carry-over is keyed on the exact name, and the old rows keep the old name. Change a name only when you mean to break the line.
+
+Johanna's program in the config is a placeholder, and she has no daily items yet. Replace both.
 
 ## How the data is stored
 
 **`sets` table** — one row per set:
 
-| id | ts | date | user | session | exercise | set_no | weight | reps | rir | notes | batch_id | set_ts | hr_avg | hr_peak |
+| id | ts | date | user | session | exercise | set_no | weight | reps | rir | notes | ex_notes | batch_id | set_ts | hr_avg | hr_peak |
+
+`session` is the split name, or `Daily` for the every-day items. `weight` is kilograms except where the exercise says otherwise — inches for Jumps, and blank for anything with no weight box. `notes` is the session note repeated on every row; `ex_notes` is the comment on that one exercise.
 
 **`hr` table** — one row per workout: duration, average, max, percentage of max, minutes above 80%, minutes in each of five zones, and `series_10s`, the whole trace at ten-second resolution in a single cell. Storing every sample as its own row would add several thousand rows per session; ten-second buckets keep the shape of the curve without that.
 
@@ -100,7 +135,7 @@ For analysis, pivot on `exercise` and `date`. Volume per set is `weight_kg × re
 ## Behaviour worth knowing
 
 - **Offline.** Gym wifi drops. A failed save is held on the device and goes up on the next save or when the connection returns. `batch_id` stops a retry from writing twice.
-- **Drafts.** A part-finished session survives closing the tab, including an attached heart rate file. Keyed by person, session and date.
+- **Drafts.** A part-finished session survives closing the tab, including an attached heart rate file. Keyed by person, session and date. Every-day items are kept separately, keyed by person and date only, so they follow you across the session dropdown.
 - **Wrong date on a heart rate file** shows a warning but still saves against today.
 
 ## Two things this does not do
@@ -116,3 +151,4 @@ For analysis, pivot on `exercise` and `date`. Volume per set is `weight_kg × re
 - **"Held on this device" instead of "Saved".** The Worker rejected the request or wasn't reachable. Open the Worker URL with `?action=last&user=ikarus` in a browser: `unauthorized` means the secret in `index.html` doesn't match `LOGBOOK_SECRET`, and a 500 usually means the `DB` binding is missing or you forgot to redeploy after adding bindings.
 - **Carried-over values are empty but saving works.** The `sets` table exists but the read query found nothing for that user. Check the `user` column values with `SELECT DISTINCT user FROM sets;`.
 - **"No heart rate values in that file."** The export didn't include heart rate, or it's a FIT file. Re-export as CSV or TCX with heart rate enabled.
+- **Every save is held on the device after a Worker update.** Usually a column the new Worker writes that the database doesn't have yet. Open the Worker URL and check `ready`, then run the ALTER at the bottom of `schema.sql` in the D1 console.
