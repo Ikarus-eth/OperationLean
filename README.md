@@ -85,18 +85,62 @@ They write against session `Daily`, so they never inflate a session's volume. `S
 
 The first box is kilograms unless the exercise says otherwise. Jumps is inches: box height goes in the first box, reps in the second. The number is stored in the same `weight` column as everything else — the unit is a property of the exercise name, not of the row, so nothing about the table changes. Set `units: { w: 'in' }` on an exercise to relabel it, `fields: ['r']` to drop boxes it does not need.
 
+## Logging a session for an earlier day
+
+The date at the top right is editable. Tap it, pick a day, and everything on the screen belongs to that day: its own draft, its own carry-over, its own rows in the table. Today's half-finished session is parked, not lost, and comes back when you tap **Back to today**. Future dates are blocked.
+
+Changing the date also switches the session to whatever that weekday usually is, unless you already picked one from the dropdown yourself.
+
+One thing does not move. A tick records the moment you tapped it, which is real information — it is how a retrospective entry stays visible in the data rather than looking like it was logged live. It also means per-set heart rate cannot line up for a back-dated session, because the timestamps fall on the wrong day. `hr_avg` and `hr_peak` come out blank on those rows. The workout summary in the `hr` table still saves in full, dated to the session.
+
+## Logging from more than one device
+
+Saved sessions are on the server, so both the phone and the laptop see the same history and the same carry-over.
+
+A session in progress is not. Drafts and the day's every-day ticks live in the browser's local storage on the device you typed them on. Nothing syncs until you press Save.
+
+- **Fine:** log the whole session on the phone, save, then open the laptop. It reads back what you saved.
+- **Fine:** log Monday on the phone and Tuesday on the laptop.
+- **Not fine:** tick half a session on the phone and finish it on the laptop. The laptop never saw the first half.
+- **Not fine:** tick Pulls on both. `batch_id` stops one save being written twice; it does not notice that two different saves describe the same four reps. That is two rows, and you delete one in SQL.
+
+Refresh the second device before using it, or it may still be showing carry-over from before the last save.
+
 ## Heart rate
 
-Apple can't export a single workout on its own. You need one app on the phone:
+Apple can't export a single workout on its own. The built-in "Export All Health Data" gives you one XML dump of your entire history, which is useless here. You need one app on the phone:
 
-- **Health Auto Export** — free to install, Basic tier is a one-time purchase and covers exporting workouts with heart rate as CSV or JSON. Premium adds automatic exports.
+- **Health Auto Export** — free to install. Exporting workouts with heart rate is a Basic feature, a one-time purchase. Premium adds automatic background exports and is not needed. There is a seven-day trial of everything.
 - **HealthFit** — one-time purchase, exports per workout as FIT, TCX, GPX or CSV.
 
-Either works. After the session, export the workout and pick the file in the app. It reads **CSV, TCX, GPX and JSON**; FIT is binary and is not supported.
+Either works. The app reads **CSV, TCX, GPX and JSON**. FIT is binary and is not supported.
 
-You get duration, average, peak, peak as a percentage of your max, minutes above 80%, and a zone breakdown. Each ticked set also gets a peak bpm shown beside it.
+### What to do after a session
+
+1. Finish the workout on the watch so it closes and lands in Health.
+2. Open the export app on the phone and find that workout by date.
+3. Export it as **CSV or JSON**, with heart rate included, at the **finest resolution the app offers**. In Health Auto Export the aggregation control is the thing to watch: anything coarser than seconds gives you one averaged number for the whole session, which produces a flat line and no per-set values.
+4. Save it to Files, or use the share sheet.
+5. In Logbook, tap **Choose a workout file** and pick it. The summary appears immediately: duration, average, peak, peak as a percentage of your max, minutes above 80%, and the zone bar. A peak bpm shows up beside each ticked set.
+6. Press Save. The sets and the workout go up together.
+
+You can attach the file before or after ticking the sets; the per-set numbers recalculate either way. To swap files, press **Remove this file** and pick another. The file rides along in the draft, so closing the tab does not lose it.
+
+If the export fails or arrives empty, try JSON instead of CSV — the CSV generator in Health Auto Export has drawn complaints recently. [S]
+
+### Heart rate on its own
+
+You do not need to tick any sets. Attach a file and the button reads **Save heart rate only**. That is the way to log a run, a swim, or a session you logged on paper.
+
+### What it can and can't tell you
+
+You get duration, average, peak, peak as a percentage of your max, minutes above 80%, and a zone breakdown. Zones are cut at 60/70/80/90% of the `MAX_HR` value for that person at the top of `index.html`. Those are set to 182 and 185. If they are wrong, every zone number is wrong; measure or estimate and change them.
+
+`series_10s` holds the whole trace at ten-second resolution in one cell, so the shape of the curve survives into the sheet without several thousand rows per session.
 
 **How per-set heart rate is worked out, and its limits.** For each ticked set, the app takes the highest bpm in the 90 seconds before you tapped the tick. That assumes you tick shortly after racking the weight. Tick late and the number drifts toward rest heart rate; tick a batch of sets at the end and the numbers are meaningless. Treat it as a good indicator of which exercises drive heart rate, not as a precise measurement. Change `SET_WINDOW_S` if your habit differs.
+
+It also needs the ticks and the trace to be on the same day, which is why a back-dated session gets a workout summary but no per-set numbers.
 
 ## Changing the program
 

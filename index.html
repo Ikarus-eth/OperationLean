@@ -151,7 +151,16 @@ body{
   color:var(--ink);font:600 15px/1 inherit;height:34px;padding:0 28px 0 10px;cursor:pointer;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%234C534E' stroke-width='1.5'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 10px center}
-.date{font-size:13px;color:var(--ink-2);white-space:nowrap}
+.date{flex:0 0 auto;appearance:none;-webkit-appearance:none;border:1px solid transparent;border-radius:7px;
+  background:transparent;color:var(--ink-2);font:400 13px/1 inherit;height:34px;padding:0 4px;
+  min-width:0;max-width:130px;cursor:pointer}
+.date:focus{outline:2px solid var(--ink);outline-offset:-1px}
+.date[data-back]{border-color:var(--pending);color:var(--pending);background:#FAF6EC;font-weight:600}
+.backdate{margin:14px 0 0;padding:12px 14px;border:1px solid var(--pending);border-radius:9px;
+  background:#FAF6EC;font-size:13px;line-height:1.5;color:var(--ink-2)}
+.backdate b{display:block;color:var(--ink);margin-bottom:3px}
+.backdate button{appearance:none;margin-top:9px;background:transparent;border:1px solid var(--pending);
+  border-radius:7px;color:var(--pending);font:500 13px/1 inherit;height:32px;padding:0 12px;cursor:pointer}
 
 /* exercise */
 .ex{border-bottom:1px solid var(--rule);padding:16px 0}
@@ -268,7 +277,7 @@ body{
   <div class="top-in">
     <div class="who" id="who" role="group" aria-label="Who is training"></div>
     <select class="sess" id="sess" aria-label="Session"></select>
-    <span class="date num" id="today"></span>
+    <input type="date" class="date num" id="datein" aria-label="Session date">
   </div>
 </header>
 
@@ -277,6 +286,12 @@ body{
     <b>Not connected yet</b>
     Open <code>index.html</code> and set <code>ENDPOINT</code> and <code>SECRET</code> near the top.
     You can still log a session — it is held on this device until the connection works.
+  </div>
+
+  <div id="backdate" hidden class="backdate">
+    <b id="backdate-when"></b>
+    <span>Ticks still record the moment you tap, so per-set heart rate cannot line up with a session you did earlier. The workout summary still saves in full.</span>
+    <button type="button" id="totoday">Back to today</button>
   </div>
 
   <div id="list"></div>
@@ -325,13 +340,16 @@ const store = (() => {
 
 const $  = s => document.querySelector(s);
 const el = (t,c) => { const n = document.createElement(t); if(c) n.className = c; return n; };
-const localDate = () => new Date().toLocaleDateString('en-CA');
+const today = () => new Date().toLocaleDateString('en-CA');
+const localDate = () => state.date || today();   // the date being logged, not the clock
 const configured = () => ENDPOINT.startsWith('http') && !SECRET.startsWith('PASTE');
 const maxHR = () => MAX_HR[state.user] || 180;
 
 const state = {
   user: store.get('lb.user') || 'ikarus',
   session: null,
+  date: null,          // YYYY-MM-DD being logged; usually today, editable for a catch-up
+  pinned: false,       // true once the session dropdown is used, so a date change stops guessing
   rows: [],     // {name,target,hint,pair,units,fields,fixed,daily,note,sets:[{w,r,rir,done,ts,carried}]}
   removed: [],  // program exercises taken off today's screen, so they stay off
   last: {},     // exercise -> {date, sets:[{w,r,rir}]}
@@ -357,7 +375,7 @@ function renderSessions(){
     const o = el('option'); o.value = name; o.textContent = name; s.appendChild(o);
   }
   s.value = state.session;
-  s.onchange = () => { saveDraft(); state.session = s.value; loadRows(); renderList(); };
+  s.onchange = () => { saveDraft(); state.pinned = true; state.session = s.value; loadRows(); renderList(); };
 }
 
 const lastSet = (name, i) => (state.last[name] && state.last[name].sets[i]) || null;
@@ -809,7 +827,8 @@ function renderHR(){
   const fileDate = new Date(s.start).toLocaleDateString('en-CA');
   if (fileDate !== localDate()) {
     warn.hidden = false;
-    warn.textContent = 'This file is from ' + fmtDate(fileDate) + ', not today. It is still saved against today\u2019s session.';
+    warn.textContent = 'This file is from ' + fmtDate(fileDate) + ', but the session is dated ' +
+      fmtDate(localDate()) + '. It is saved against the session date. Change the date at the top if that is wrong.';
   } else warn.hidden = true;
 
   const figs = $('#hrfigs'); figs.innerHTML = '';
@@ -840,6 +859,46 @@ function renderHR(){
     }
   });
 }
+
+/* ══ date ════════════════════════════════════════════════ */
+
+function setDate(d){
+  saveDraft();                                   // park the old day under its own key
+  state.date = d;
+  // A date you pick on purpose usually implies its usual session, unless you
+  // already chose one by hand.
+  if (!state.pinned) {
+    const guess = WEEKDAY_SESSION[new Date(d + 'T12:00:00').getDay()];
+    const names = Object.keys(PROGRAM[state.user].sessions);
+    if (guess && names.includes(guess)) state.session = guess;
+  }
+  renderSessions();
+  renderDate();
+  loadRows();
+  renderList();
+}
+
+function renderDate(){
+  const inp = $('#datein');
+  inp.value = state.date;
+  inp.max = today();                             // no logging forward
+  const back = state.date !== today();
+  if (back) inp.dataset.back = '1'; else delete inp.dataset.back;
+
+  $('#backdate').hidden = !back;
+  if (back) {
+    const d = new Date(state.date + 'T12:00:00');
+    $('#backdate-when').textContent =
+      'Logging ' + d.toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'long' }) + ', not today.';
+  }
+}
+
+$('#datein').onchange = () => {
+  const v = $('#datein').value;
+  if (!v) { $('#datein').value = state.date; return; }
+  setDate(v > today() ? today() : v);
+};
+$('#totoday').onclick = () => setDate(today());
 
 /* ══ save ════════════════════════════════════════════════ */
 
@@ -962,17 +1021,18 @@ function clearSession(){
 
 async function boot(){
   renderWho();
+  if (!state.date) state.date = today();
   const sessions = Object.keys(PROGRAM[state.user].sessions);
-  const guess = WEEKDAY_SESSION[new Date().getDay()];
+  const guess = WEEKDAY_SESSION[new Date(state.date + 'T12:00:00').getDay()];
   if (!state.session || !sessions.includes(state.session)) {
     state.session = sessions.includes(guess) ? guess : sessions[0];
   }
   renderSessions();
+  renderDate();
   loadRows();
   renderList();
 
   $('#setup').hidden = configured();
-  $('#today').textContent = new Date().toLocaleDateString(undefined, { weekday:'short', day:'numeric', month:'short' });
 
   await fetchLast();
   carryOver();
