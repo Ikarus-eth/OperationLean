@@ -8,11 +8,11 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23EFEEE8'/><rect x='3' y='4' width='10' height='1.6' fill='%231A1E1C'/><rect x='3' y='7.2' width='10' height='1.6' fill='%231A1E1C'/><rect x='3' y='10.4' width='7' height='1.6' fill='%233F6B3A'/></svg>">
 
 <!-- ══════════════════════════════════════════════════════════════════
-     SETUP — edit after deploying the Apps Script.
+     SETUP — endpoint and secret for the Cloudflare Worker backend.
      ══════════════════════════════════════════════════════════════════ -->
 <script>
 const ENDPOINT = 'https://wild-haze-fac9.74vshck6t7.workers.dev';
-const SECRET   = 'PUT_YOUR_LOGBOOK_SECRET_HERE';
+const SECRET   = 'logbook-4f9c2e';
 
 const MAX_HR = { ikarus: 182, johanna: 185 };   // used for zones and % of max
 const SET_WINDOW_S = 90;                        // seconds before a tick counted as "the set"
