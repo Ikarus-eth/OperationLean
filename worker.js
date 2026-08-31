@@ -12,9 +12,10 @@
  * reach any other account. Writes still need the secret, so nobody can drop
  * junk rows in and corrupt the carried-over values the app reads back.
  *
- * Bindings required (set in the Cloudflare dashboard):
- *   DB              — D1 database binding
- *   LOGBOOK_SECRET  — secret text, must match SECRET in index.html
+ * Set up in the Cloudflare dashboard:
+ *   DB              — D1 database, added under Settings ▸ Bindings
+ *   LOGBOOK_SECRET  — added under Settings ▸ Variables and Secrets, type Secret.
+ *                     A Secrets Store binding of the same name also works.
  */
 
 const CORS = {
@@ -43,8 +44,20 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
 
     const url = new URL(request.url);
-    const SECRET = env.LOGBOOK_SECRET;
-    if (!SECRET) return json({ ok: false, error: 'LOGBOOK_SECRET is not set on the Worker' }, 500);
+
+    // Accept either a plain secret variable or a Secrets Store binding,
+    // which hands back an object with an async get() instead of a string.
+    let SECRET = env.LOGBOOK_SECRET;
+    if (SECRET && typeof SECRET.get === 'function') SECRET = await SECRET.get();
+    if (!SECRET) return json({
+      ok: false,
+      error: 'LOGBOOK_SECRET is not set. Add it under Settings > Variables and Secrets, then redeploy.'
+    }, 500);
+
+    if (!env.DB) return json({
+      ok: false,
+      error: 'No D1 binding named DB. Add it under Settings > Bindings, then redeploy.'
+    }, 500);
 
     /* ── read ──────────────────────────────────────────────────── */
     if (request.method === 'GET') {
