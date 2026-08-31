@@ -2,28 +2,47 @@
 
 Workout logging for two people, writing to one Google Sheet. Static site, no build step, no server.
 
-## Setup, about 10 minutes
+## Setup, about 20 minutes
 
-**1. Sheet.** Create a new Google Sheet. Leave it empty — the script creates its tabs and headers on first write.
+The backend runs on Cloudflare, not Google Apps Script. Google's Advanced Protection Program blocks Apps Script from authorising at all, and the only official fix is turning Advanced Protection off, which is not worth it. Cloudflare needs no Google account, gives real success and failure responses, and keeps the secret on the server instead of in this public repo.
 
-**2. Backend.** In that sheet: `Extensions ▸ Apps Script`. Delete the placeholder, paste in `Code.gs`, change `SECRET`, save.
+**1. Cloudflare account.** Sign up at dash.cloudflare.com with any email. No card, no domain.
 
-`Deploy ▸ New deployment ▸ Web app`:
+**2. Database.** In the sidebar: Storage & Databases ▸ D1 ▸ Create. Name it `logbook`. Open it, go to the Console tab, paste in everything from `schema.sql`, and Execute. Two tables appear, `sets` and `hr`.
 
-- Execute as: **Me**
-- Who has access: **Anyone**
+**3. Worker.** Compute ▸ Workers & Pages ▸ Create ▸ Start from Hello World ▸ Deploy. Then Edit code, delete what's there, paste in `worker.js`, and Deploy again.
 
-Authorise when prompted. Google warns that the app is unverified — expected for your own script; continue through the advanced link. Copy the `/exec` URL.
+**4. Wire the Worker to the database and the secret.** On the Worker: Settings ▸ Bindings ▸ Add.
 
-**3. Front end.** In `index.html`, near the top:
+   - D1 database — variable name `DB`, pointing at `logbook`.
+   - Secret (plain text) — variable name `LOGBOOK_SECRET`, value anything you like, for example `logbook-4f9c2e`. Keep a copy.
+
+   Redeploy after adding bindings.
+
+**5. Front end.** Copy the Worker URL, something like `https://logbook.yourname.workers.dev`. In `index.html`, lines 12 and 13:
 
 ```js
-const ENDPOINT = 'https://script.google.com/macros/s/.../exec';
-const SECRET   = 'the same string you put in Code.gs';
-const MAX_HR   = { ikarus: 182, johanna: 185 };
+const ENDPOINT = 'https://logbook.yourname.workers.dev';
+const SECRET   = 'the same string you set as LOGBOOK_SECRET';
 ```
 
-**4. Deploy.** Push to a GitHub repo, then `Settings ▸ Pages ▸ Source: main branch`. On your phone, open it and use "Add to Home Screen".
+Commit. GitHub Pages republishes in about a minute.
+
+**6. Phone.** Open the Pages URL. The orange "Not connected yet" box should be gone. Share ▸ Add to Home Screen.
+
+**7. Test.** Log one set and save. The status line should say it saved — not "held on this device". Confirm in D1 ▸ Console with `SELECT * FROM sets;`.
+
+## Getting it into a Google Sheet
+
+The Worker serves the whole log as CSV. In any Google Sheet, one formula pulls it in and keeps it current:
+
+```
+=IMPORTDATA("https://logbook.yourname.workers.dev/?action=csv&secret=YOUR_SECRET")
+```
+
+For the heart rate table, add `&table=hr`.
+
+`IMPORTDATA` is a built-in sheet function, not a connected app, so Advanced Protection doesn't block it. It refreshes roughly hourly, or on demand from the sheet. The secret sits in the formula, which is fine — only people who can already see the sheet can read it.
 
 ## Logging a session
 
@@ -66,13 +85,13 @@ Johanna's program in the config is a placeholder. Replace it.
 
 ## How the data is stored
 
-**`log` tab** — one row per set:
+**`sets` table** — one row per set:
 
-| timestamp | date | user | session | exercise | set | weight_kg | reps | rir | notes | batch_id | set_ts | hr_avg | hr_peak |
+| id | ts | date | user | session | exercise | set_no | weight | reps | rir | notes | batch_id | set_ts | hr_avg | hr_peak |
 
-**`hr` tab** — one row per workout: duration, average, max, percentage of max, minutes above 80%, minutes in each of five zones, and `series_10s`, the whole trace at ten-second resolution in a single cell. Storing every sample as its own row would add several thousand rows per session; ten-second buckets keep the shape of the curve without that.
+**`hr` table** — one row per workout: duration, average, max, percentage of max, minutes above 80%, minutes in each of five zones, and `series_10s`, the whole trace at ten-second resolution in a single cell. Storing every sample as its own row would add several thousand rows per session; ten-second buckets keep the shape of the curve without that.
 
-Long format, not wide. This is why program changes are free: a new exercise is a new *value* in the `exercise` column, never a new column. A wide sheet would need restructuring every time the block changes, and would break every formula built on top of it.
+Long format, not wide. This is why program changes are free: a new exercise is a new *value* in the `exercise` column, never a new column. A wide table would need a migration every time the block changes, and would break every query built on top of it.
 
 For analysis, pivot on `exercise` and `date`. Volume per set is `weight_kg × reps`.
 
@@ -84,13 +103,12 @@ For analysis, pivot on `exercise` and `date`. Volume per set is `weight_kg × re
 
 ## Two things this does not do
 
-**The secret is not security.** GitHub Pages serves your source publicly, so anyone who finds the URL can read `SECRET` and write to the sheet. It stops drive-by junk, nothing more. If that matters, the fix is Google OAuth on the Apps Script side, which costs a sign-in on every phone. For a private family training log the tradeoff is probably fine — decide it deliberately rather than assuming the secret protects anything.
+**The secret is not security.** GitHub Pages serves your source publicly, so anyone who finds the URL can read `SECRET` and write to the database. It stops drive-by junk, nothing more. If that matters, the fix is a login in front of the Worker, which costs a sign-in on every phone. For a private family training log the tradeoff is probably fine — decide it deliberately rather than assuming the secret protects anything. Unlike the Sheets version, nothing here can read your Google account.
 
-**No editing past sessions.** Corrections happen in the sheet. An edit UI needs row lookup, update and delete paths in the script, which is not worth it for something that happens rarely.
+**No editing past sessions.** Corrections happen with SQL in the D1 console. An edit UI needs row lookup, update and delete paths in the script, which is not worth it for something that happens rarely.
 
 ## If it stops working
 
-- **Saves fail after you change `Code.gs`.** Apps Script serves the deployed version, not the saved one. `Deploy ▸ Manage deployments ▸ edit ▸ Version: New version`.
-- **Carried-over values are empty but saving works.** The `doGet` path is failing. Open the `/exec` URL with `?action=last&user=ikarus&secret=...` in a browser and read the error.
+- **"Held on this device" instead of "Saved".** The Worker rejected the request or wasn't reachable. Open the Worker URL with `?action=last&user=ikarus&secret=YOUR_SECRET` in a browser: `unauthorized` means the secret in `index.html` doesn't match `LOGBOOK_SECRET`, and a 500 usually means the `DB` binding is missing or you forgot to redeploy after adding bindings.
+- **Carried-over values are empty but saving works.** The `sets` table exists but the read query found nothing for that user. Check the `user` column values with `SELECT DISTINCT user FROM sets;`.
 - **"No heart rate values in that file."** The export didn't include heart rate, or it's a FIT file. Re-export as CSV or TCX with heart rate enabled.
-- **Nothing works after a Google account change.** Redeploy; the web app URL is tied to the account that deployed it.
