@@ -332,7 +332,8 @@ const maxHR = () => MAX_HR[state.user] || 180;
 const state = {
   user: store.get('lb.user') || 'ikarus',
   session: null,
-  rows: [],     // {name,target,hint,pair,sets:[{w,r,rir,done,ts,carried}]}
+  rows: [],     // {name,target,hint,pair,units,fields,fixed,daily,note,sets:[{w,r,rir,done,ts,carried}]}
+  removed: [],  // program exercises taken off today's screen, so they stay off
   last: {},     // exercise -> {date, sets:[{w,r,rir}]}
   hr: null,     // {file, samples:[{t,hr}], sum:{...}}
 };
@@ -398,6 +399,7 @@ function renderList(){
       const touched = ex.sets.some(s => s.done || !s.carried) || !!(ex.note && ex.note.trim());
       if (touched && !confirm('Remove ' + ex.name + ' and everything typed into it?')) return;
       state.rows.splice(xi, 1);
+      if (!state.removed.includes(ex.name)) state.removed.push(ex.name);
       saveDraft(); renderList();
     };
 
@@ -537,17 +539,59 @@ function loadRows(){
   const draft = readDraft();
   if (draft) {
     state.rows = draft.rows;
+    state.removed = draft.removed || [];
     $('#notes').value = draft.notes || '';
     if (draft.hr) { state.hr = draft.hr; renderHR(); } else clearHR();
   } else {
-    const plan = PROGRAM[state.user].sessions[state.session] || [];
-    state.rows = plan.map(makeRow)
-      .concat((DAILY[state.user] || []).map(p => makeRow({ ...p, daily: true })));
+    state.rows = [];
+    state.removed = [];
     $('#notes').value = '';
     clearHR();
-    carryOver();
   }
+  reconcile();
   mergeDaily();
+  carryOver();
+}
+
+function planFor(){
+  return (PROGRAM[state.user].sessions[state.session] || [])
+    .concat((DAILY[state.user] || []).map(p => ({ ...p, daily: true })));
+}
+
+/* A draft holds two things: what you typed, and a copy of the exercise config
+   it was built from. Only the first is yours. Editing PROGRAM used to leave a
+   draft showing the old targets, hints and unit labels until midnight, so the
+   config half is rebuilt from PROGRAM on every load and the typed half is left
+   alone. This is also what adds an exercise you added to the program today, and
+   what keeps it from adding back one you deleted. */
+function reconcile(){
+  const plan = planFor();
+  const byName = new Map(plan.map(p => [p.name, p]));
+
+  state.rows.forEach(ex => {
+    const p = byName.get(ex.name);
+    if (!p) return;                                  // added by hand, nothing to sync
+    ex.target = p.target || '';
+    ex.hint   = p.hint;
+    ex.pair   = p.pair;
+    ex.units  = p.units;
+    ex.fields = p.fields;
+    ex.fixed  = p.fixed;
+    ex.daily  = !!p.daily;
+    const fx = p.fixed || {};
+    ex.sets.forEach(s => ['w','r','rir'].forEach(f => {
+      if (fx[f] != null && s.carried && (s[f] === '' || s[f] == null)) s[f] = fx[f];
+    }));
+  });
+
+  const have = new Set(state.rows.map(r => r.name));
+  const gone = state.removed.concat(readDailyStore().removed);
+  plan.forEach(p => {
+    if (have.has(p.name) || gone.includes(p.name)) return;
+    const row = makeRow(p);
+    const firstDaily = state.rows.findIndex(r => r.daily);
+    state.rows.splice((row.daily || firstDaily < 0) ? state.rows.length : firstDaily, 0, row);
+  });
 }
 
 /* Daily items are the same items whatever session is picked, so they are kept
@@ -555,13 +599,26 @@ function loadRows(){
    session dropdown would show them unticked again and log them twice. */
 const dailyKey = () => 'lb.daily.' + state.user + '.' + localDate();
 
+function readDailyStore(){
+  try {
+    const raw = JSON.parse(store.get(dailyKey()) || 'null');
+    if (Array.isArray(raw)) return { rows: raw, removed: [] };          // earlier shape
+    if (raw && typeof raw === 'object') return { rows: raw.rows || [], removed: raw.removed || [] };
+  } catch(e){}
+  return { rows: [], removed: [] };
+}
+
+/* Config comes from DAILY, only the sets and the comment come back from the
+   store, so a change to a daily item reaches an open draft the same way. */
 function mergeDaily(){
-  let saved = null;
-  try { saved = JSON.parse(store.get(dailyKey()) || 'null'); } catch(e){}
-  if (!Array.isArray(saved)) return;
-  state.rows = state.rows.map(ex => {
-    if (!ex.daily) return ex;
-    return saved.find(s => s.name === ex.name) || ex;
+  const saved = readDailyStore().rows;
+  if (!saved.length) return;
+  state.rows.forEach(ex => {
+    if (!ex.daily) return;
+    const m = saved.find(s => s.name === ex.name);
+    if (!m) return;
+    if (Array.isArray(m.sets)) ex.sets = m.sets;
+    ex.note = m.note || '';
   });
 }
 
@@ -591,8 +648,11 @@ function saveDraft(){
       units:ex.units, fields:ex.fields, fixed:ex.fixed, daily:ex.daily, note:ex.note || '',
       sets: ex.sets.map(s => ({ w:s.w, r:s.r, rir:s.rir, done:s.done, ts:s.ts, carried:s.carried })),
     }));
-    store.set(draftKey(), JSON.stringify({ rows, notes: $('#notes').value, hr: state.hr }));
-    store.set(dailyKey(), JSON.stringify(rows.filter(r => r.daily)));
+    store.set(draftKey(), JSON.stringify({ rows, notes: $('#notes').value, hr: state.hr, removed: state.removed }));
+    store.set(dailyKey(), JSON.stringify({
+      rows: rows.filter(r => r.daily),
+      removed: state.removed.filter(n => (DAILY[state.user] || []).some(p => p.name === n)),
+    }));
   } catch(e){}
 }
 function readDraft(){ try { const r = store.get(draftKey()); return r ? JSON.parse(r) : null; } catch(e){ return null; } }
@@ -952,10 +1012,10 @@ $('#addex').onclick = () => {
   if (!name) return;
   // Typing back the name of something you removed brings its target, hint and
   // unit labels with it, rather than a bare three-row block.
-  const pool = (PROGRAM[state.user].sessions[state.session] || [])
-    .concat((DAILY[state.user] || []).map(p => ({ ...p, daily: true })));
+  const pool = planFor();
   const p = pool.find(e => e.name.toLowerCase() === name.toLowerCase()) || { name };
   const row = makeRow(p);
+  state.removed = state.removed.filter(n => n !== row.name);
   const firstDaily = state.rows.findIndex(r => r.daily);
   const at = (row.daily || firstDaily < 0) ? state.rows.length : firstDaily;
   state.rows.splice(at, 0, row);

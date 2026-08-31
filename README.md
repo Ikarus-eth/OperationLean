@@ -136,6 +136,7 @@ For analysis, pivot on `exercise` and `date`. Volume per set is `weight_kg × re
 
 - **Offline.** Gym wifi drops. A failed save is held on the device and goes up on the next save or when the connection returns. `batch_id` stops a retry from writing twice.
 - **Drafts.** A part-finished session survives closing the tab, including an attached heart rate file. Keyed by person, session and date. Every-day items are kept separately, keyed by person and date only, so they follow you across the session dropdown.
+- **Drafts follow the program.** A draft holds what you typed. Targets, hints, unit labels and which boxes appear are rebuilt from `PROGRAM` every time the page loads, so editing the program takes effect on an open draft instead of waiting for midnight. Set counts are not: if you removed a set, it stays removed. An exercise you added to the program today appears in the draft; one you deleted with the **×** stays deleted.
 - **Wrong date on a heart rate file** shows a warning but still saves against today.
 
 ## Two things this does not do
