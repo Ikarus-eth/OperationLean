@@ -265,6 +265,7 @@ body{
 .save[data-sync="saving"]{background:var(--ink-2)}
 .save[data-sync="offline"]{background:var(--pending)}
 .save[data-sync="idle"]{background:var(--rule);color:var(--ink-2)}
+.save[data-sync="stale"]{background:var(--danger)}
 .save:focus-visible{outline:3px solid var(--gain);outline-offset:2px}
 .status{font-size:13px;color:var(--ink-2);min-height:18px;text-align:center}
 .status[data-tone="ok"]{color:var(--gain)}
@@ -307,7 +308,7 @@ body{
   <section class="hrbox">
     <h2>Heart rate</h2>
     <div class="hrauto" id="hrauto" hidden></div>
-    <p id="hrblurb">Export this workout from your watch and pick the file here. Peak heart rate is matched to each set you ticked.</p>
+    <p id="hrblurb">Your phone sends this on its own once the automation is set up. Attach a file here only if it hasn't, or for a session logged elsewhere.</p>
     <label class="filebtn" for="hrfile" id="hrlabel">Choose a workout file</label>
     <input type="file" id="hrfile" accept=".csv,.tcx,.gpx,.json,.txt,text/csv,application/json,text/xml">
     <div class="hrsum" id="hrsum">
@@ -329,7 +330,7 @@ body{
 <div class="bar">
   <div class="bar-in">
     <div class="status" id="status" role="status" aria-live="polite"></div>
-    <button class="save" id="save" type="button">Save session</button>
+    <button class="save" id="save" type="button" data-sync="idle">Loading…</button>
   </div>
 </div>
 
@@ -365,7 +366,8 @@ const state = {
   hr: null,     // {file, samples:[{t,hr}], sum:{...}}
   day: [],      // hr rows the server already has for this person and date
   dayRows: [],  // set rows the server already has for this person and date
-  sync: 'idle', // idle | dirty | saving | saved | offline
+  sync: 'idle', // idle | dirty | saving | saved | offline | stale
+  worker: null, // health check result, or null if it could not be reached
   savedAt: null,
   lastShape: null,
 };
@@ -1062,12 +1064,36 @@ function hrPayload(){
 
 const syncKey = () => state.user + '|' + state.date + '|' + state.session;
 
+/* Ask the Worker what it can do before sending it anything. A Worker older
+   than continuous saving would take each sync as a fresh append — once a
+   second, with nothing to deduplicate on — and quietly fill the table with
+   copies. Unreachable is not the same as old: offline still queues. */
+async function fetchHealth(){
+  state.worker = null;
+  if (!configured()) return;
+  try {
+    const res = await fetch(ENDPOINT);
+    const d = await res.json();
+    if (d && typeof d === 'object' && d.worker) state.worker = d;
+  } catch(e){}
+  renderSync();
+}
+const workerStale = () =>
+  !!state.worker && !(Array.isArray(state.worker.features) && state.worker.features.includes('sync'));
+
 function renderSync(){
   const b = $('#save');
   const n = collect().length;
   const q = readQueue().length;
   b.disabled = false;                        // always tappable, to force a retry
-  b.dataset.sync = state.sync;
+  b.dataset.sync = workerStale() ? 'stale' : state.sync;
+
+  if (workerStale()) {
+    b.textContent = 'Not saving — worker out of date';
+    setStatus('The app is newer than the worker at ' + ENDPOINT.replace(/^https?:\/\//,'') +
+              '. Deploy worker.js. Nothing is lost; it goes up once they match.', 'bad');
+    return;
+  }
 
   if (state.sync === 'saving') { b.textContent = 'Saving…'; setStatus(''); return; }
   if (state.sync === 'offline') {
@@ -1127,6 +1153,7 @@ async function post(payload){
 async function pushQueue(){
   const q = readQueue();
   if (!q.length) return false;
+  if (workerStale()) { renderSync(); return false; }        // held, not lost
   if (!configured()) { state.sync = 'offline'; renderSync(); return false; }
   state.sync = 'saving'; renderSync();
   while (readQueue().length) {
@@ -1176,8 +1203,12 @@ function parkSync(){
   if (p) { enqueue(p); state.lastShape = null; pushQueue(); }
 }
 
-window.addEventListener('online', pushQueue);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) pushQueue(); });
+window.addEventListener('online', async () => { await fetchHealth(); pushQueue(); });
+document.addEventListener('visibilitychange', async () => {
+  if (document.hidden) return;
+  if (workerStale() || !state.worker) await fetchHealth();
+  pushQueue();
+});
 
 /* ══ boot ════════════════════════════════════════════════ */
 
@@ -1196,6 +1227,7 @@ async function boot(){
 
   $('#setup').hidden = configured();
 
+  await fetchHealth();
   await fetchLast();
   carryOver();
   renderList();

@@ -104,6 +104,8 @@ Open the same date on another device and the sets come back ticked, because the 
 
 If two devices have the same session open at once, the last one to save wins. Log on one at a time.
 
+The app checks the worker before it sends anything. If the worker is older than the app the button turns red and says so, and nothing is written — an older worker would take each save as a fresh append, once a second, with nothing to deduplicate on. Whatever was ticked is held and goes up once they match.
+
 ### Comments
 
 Every exercise has a comment box under its buttons. It is for that exercise on that day — cue that worked, pain, tempo, which machine. It is saved on every set row of that exercise, in the `ex_notes` column, next to the session-wide `notes`. Comments do not carry over; they describe a day, not a habit.
@@ -114,7 +116,7 @@ The **×** beside an exercise name removes it for today. Nothing is lost that wa
 
 **Add an exercise** at the bottom adds one. Type the name of something you removed and it comes back with its target, hint and unit labels intact. Type anything else and you get a plain three-row block, which carries over next week like everything else.
 
-Both are for today only. Next session the program is back as written.
+Both are for today only, and both are local to the device. Another device opening the same date shows the full program again, with the removed exercise back but empty and unticked — nothing was logged for it, so nothing is wrong, it is just clutter you have to clear twice. Next session the program is back as written everywhere.
 
 ### Every day
 
@@ -313,6 +315,19 @@ For analysis, pivot on `exercise` and `date`. Volume per set is `weight_kg × re
 - **Drafts follow the program.** A draft holds what you typed. Targets, hints, unit labels and which boxes appear are rebuilt from `PROGRAM` every time the page loads, so editing the program takes effect on an open draft instead of waiting for midnight. Set counts are not: if you removed a set, it stays removed. An exercise you added to the program today appears in the draft; one you deleted with the **×** stays deleted.
 - **Wrong date on a heart rate file** shows a warning but still saves against today.
 
+## The write secret is in this repository
+
+`SECRET` on line 15 of `index.html` is the same string as `LOGBOOK_SECRET`, and this repository is public. Anyone who finds it can write to the database.
+
+That was a small problem when writes only appended. It is a larger one now that a save replaces a day: a single crafted request can empty a session rather than just add junk to it.
+
+Two ways out, neither started:
+
+- **Take it out of the repository.** The app already has a setup panel and knows when it is unconfigured. The secret would be typed once per browser and kept in local storage instead of committed. Four one-time entries across two people and two devices each, and the hole closes.
+- **Leave it and rely on recovery.** D1 Time Travel keeps thirty days of point-in-time restore, in the dashboard next to the Console tab. Nothing is unrecoverable within a month.
+
+The second is fine if nobody is looking for this repository. The first is what to do if that stops being true.
+
 ## Two things this does not do
 
 **The log is public by design.** Reads are open — anyone with the Worker URL can pull the whole log. That was a deliberate call: it's training data, and nothing here can reach any other account.
@@ -327,6 +342,7 @@ For analysis, pivot on `exercise` and `date`. Volume per set is `weight_kg × re
 - **Carried-over values are empty but saving works.** The `sets` table exists but the read query found nothing for that user. Check the `user` column values with `SELECT DISTINCT user FROM sets;`.
 - **"No heart rate values in that file."** The export didn't include heart rate, or it's a FIT file. Re-export as CSV or TCX with heart rate enabled.
 - **Every save is held on the device after a Worker update.** Open the Worker URL. If `schema` is not `ok` the migration could not run — the message says why. If `ready` is false but `schema` is `ok`, the secret or the D1 binding is missing.
+- **The button is red and says the worker is out of date.** The app on this device is newer than the worker it is talking to. Deploy `worker.js`. Nothing is lost: everything ticked is held and uploads once they match. `?action=day` returning `unknown action` is the same cause.
 - **A Cloudflare build fails.** Check `database_id` in `wrangler.toml` against D1 ▸ `workoutlog` ▸ Settings. The Worker that was already running keeps running.
 - **The watch automation returns 401.** The `X-Logbook-Secret` header does not match `LOGBOOK_SECRET`.
 - **It returns 400 asking for a user.** `?user=ikarus` is missing from the automation URL.

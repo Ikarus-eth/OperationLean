@@ -57,6 +57,14 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
  * places together. The Worker needs them because heart rate can now arrive
  * from the phone hours after the sets, with no browser involved.
  */
+/* Advertised on the health check so the app can tell whether the Worker in
+   front of it understands what it is about to send. Without this an older
+   Worker takes a sync payload, ignores the sync flag, sees rows and appends
+   them — once a second, with no batch id to deduplicate on. Bump VERSION when
+   the wire format changes; add to FEATURES when a new call is added. */
+const VERSION  = '2026-09-01';
+const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate'];
+
 const MAX_HR = { ikarus: 182, johanna: 185 };
 const SET_WINDOW_S = 90;      // seconds before a tick that count as "the set"
 const MIN_WORKOUT_MIN = 10;   // shorter workouts are ignored, so a walk to the shop is not a row
@@ -369,6 +377,8 @@ export default {
       const health = {
         ok: true,
         worker: 'logbook',
+        version: VERSION,
+        features: FEATURES,
         secret_set: !!SECRET,
         d1_bound: !!env.DB,
         tables: null,
