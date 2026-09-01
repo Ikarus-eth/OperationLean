@@ -22,92 +22,63 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
      PROGRAM — the only thing you edit when the block changes.
      ══════════════════════════════════════════════════════════════════ -->
 <script>
+/* Ikarus's sessions, held separately because Johanna trains the same program.
+   Sharing the object rather than copying it means a change to one is a change
+   to both — which is the point, and the thing to remember when it stops being
+   true. Give her her own object at that point; nothing else needs touching. */
+const SESSIONS_IKARUS = {
+    'Lower 1': [
+      { name: 'Jumps',               target: '3-4 × 3-5',  sets: 3, units: { w: 'in' }, hint: 'box height in inches, then reps' },
+      { name: 'Perfect Squat',       target: '3 × 6-10',   sets: 3 },
+      { name: 'Hip Thrust',          target: '3 × 8-12',   sets: 3 },
+      { name: 'Leg Press',           target: '3 × 8-12',   sets: 3, hint: 'deep, feet low, shoulder-width, toes out' },
+      { name: 'Seated Leg Curl',     target: '4 × 8-12',   sets: 4 },
+      { name: 'Standing Calf Raise', target: '3 × 8-12',   sets: 3 },
+      { name: 'Carries',             target: '2 sets',     sets: 2, hint: 'log seconds in the reps box' },
+    ],
+    'Upper A': [
+      { name: 'Pull-ups', target: '3 × 10', sets: 3,
+        fields: ['r','r2','w'], progress: 'r',
+        units: { r: 'BW reps', r2: 'assisted', w: 'assist kg' },
+        seed: [{ r:'8', r2:'2' }, { r:'7', r2:'3' }, { r:'6', r2:'4' }],
+        hint: 'bodyweight to failure, then fill to ten on the machine — full rest' },
+      { name: 'Incline DB Press',     target: '3 × 8-12',  sets: 3, pair: 'A' },
+      { name: 'Chest-Supported Row',  target: '3 × 8-12',  sets: 3, pair: 'A' },
+      { name: 'Flat DB Press',        target: '3 × 8-12',  sets: 3, pair: 'B' },
+      { name: 'Rear Delt Fly',        target: '3 × 12-20', sets: 3, pair: 'B' },
+      { name: 'Incline DB Curl',      target: '3 × 8-12',  sets: 3, pair: 'C' },
+      { name: 'Overhead Triceps Ext', target: '3 × 10-15', sets: 3, pair: 'C' },
+      { name: 'Lateral Raise',        target: '4 × 12-20', sets: 4 },
+    ],
+    'Lower 2': [
+      { name: 'Belt Squat',         target: '3 × 8-12',  sets: 3 },
+      { name: '45° Back Extension', target: '3 × 10-15', sets: 3, hint: 'DB at chest, round-back' },
+      { name: 'Leg Extension',      target: '3 × 12-15', sets: 3 },
+      { name: 'Seated Leg Curl',    target: '4 × 8-12',  sets: 4 },
+      { name: 'Seated Calf Raise',  target: '2 × 10-15', sets: 2 },
+      { name: 'Copenhagen Plank',   target: '2 × 10-15', sets: 2 },
+      { name: 'Carries',            target: '2 sets',    sets: 2, hint: 'log seconds in the reps box' },
+    ],
+    'Upper B': [
+      { name: 'Pull-ups', target: '3 × 10', sets: 3,
+        fields: ['r','r2','w'], progress: 'r',
+        units: { r: 'BW reps', r2: 'assisted', w: 'assist kg' },
+        seed: [{ r:'8', r2:'2' }, { r:'7', r2:'3' }, { r:'6', r2:'4' }],
+        hint: 'bodyweight to failure, then fill to ten on the machine — volume day' },
+      { name: 'Lat Pulldown',      target: '3 × 8-12',  sets: 3, pair: 'A' },
+      { name: 'Incline DB Press',  target: '3 × 8-12',  sets: 3, pair: 'A' },
+      { name: 'Single-Arm DB Row', target: '3 × 8-12',  sets: 3, pair: 'B' },
+      { name: 'DB Fly',            target: '3 × 10-15', sets: 3, pair: 'B' },
+      { name: 'DB Curl',           target: '3 × 10-15', sets: 3, pair: 'C' },
+      { name: 'Skullcrusher',      target: '3 × 10-15', sets: 3, pair: 'C' },
+      { name: 'Lateral Raise',     target: '4 × 12-20', sets: 4 },
+    ],
+  'Other': [],
+};
+
 const PROGRAM = {
-
-  ikarus: {
-    label: 'Ikarus',
-    sessions: {
-      'Lower 1': [
-        { name: 'Jumps',               target: '3-4 × 3-5',  sets: 3, units: { w: 'in' }, hint: 'box height in inches, then reps' },
-        { name: 'Perfect Squat',       target: '3 × 6-10',   sets: 3 },
-        { name: 'Hip Thrust',          target: '3 × 8-12',   sets: 3 },
-        { name: 'Leg Press',           target: '3 × 8-12',   sets: 3, hint: 'deep, feet low, shoulder-width, toes out' },
-        { name: 'Seated Leg Curl',     target: '4 × 8-12',   sets: 4 },
-        { name: 'Standing Calf Raise', target: '3 × 8-12',   sets: 3 },
-        { name: 'Carries',             target: '2 sets',     sets: 2, hint: 'log seconds in the reps box' },
-      ],
-      'Upper A': [
-        { name: 'Pull-ups', target: '3 × 10', sets: 3,
-          fields: ['r','r2','w'], progress: 'r',
-          units: { r: 'BW reps', r2: 'assisted', w: 'assist kg' },
-          seed: [{ r:'8', r2:'2' }, { r:'7', r2:'3' }, { r:'6', r2:'4' }],
-          hint: 'bodyweight to failure, then fill to ten on the machine — full rest' },
-        { name: 'Incline DB Press',     target: '3 × 8-12',  sets: 3, pair: 'A' },
-        { name: 'Chest-Supported Row',  target: '3 × 8-12',  sets: 3, pair: 'A' },
-        { name: 'Flat DB Press',        target: '3 × 8-12',  sets: 3, pair: 'B' },
-        { name: 'Rear Delt Fly',        target: '3 × 12-20', sets: 3, pair: 'B' },
-        { name: 'Incline DB Curl',      target: '3 × 8-12',  sets: 3, pair: 'C' },
-        { name: 'Overhead Triceps Ext', target: '3 × 10-15', sets: 3, pair: 'C' },
-        { name: 'Lateral Raise',        target: '4 × 12-20', sets: 4 },
-      ],
-      'Lower 2': [
-        { name: 'Belt Squat',         target: '3 × 8-12',  sets: 3 },
-        { name: '45° Back Extension', target: '3 × 10-15', sets: 3, hint: 'DB at chest, round-back' },
-        { name: 'Leg Extension',      target: '3 × 12-15', sets: 3 },
-        { name: 'Seated Leg Curl',    target: '4 × 8-12',  sets: 4 },
-        { name: 'Seated Calf Raise',  target: '2 × 10-15', sets: 2 },
-        { name: 'Copenhagen Plank',   target: '2 × 10-15', sets: 2 },
-        { name: 'Carries',            target: '2 sets',    sets: 2, hint: 'log seconds in the reps box' },
-      ],
-      'Upper B': [
-        { name: 'Pull-ups', target: '3 × 10', sets: 3,
-          fields: ['r','r2','w'], progress: 'r',
-          units: { r: 'BW reps', r2: 'assisted', w: 'assist kg' },
-          seed: [{ r:'8', r2:'2' }, { r:'7', r2:'3' }, { r:'6', r2:'4' }],
-          hint: 'bodyweight to failure, then fill to ten on the machine — volume day' },
-        { name: 'Lat Pulldown',      target: '3 × 8-12',  sets: 3, pair: 'A' },
-        { name: 'Incline DB Press',  target: '3 × 8-12',  sets: 3, pair: 'A' },
-        { name: 'Single-Arm DB Row', target: '3 × 8-12',  sets: 3, pair: 'B' },
-        { name: 'DB Fly',            target: '3 × 10-15', sets: 3, pair: 'B' },
-        { name: 'DB Curl',           target: '3 × 10-15', sets: 3, pair: 'C' },
-        { name: 'Skullcrusher',      target: '3 × 10-15', sets: 3, pair: 'C' },
-        { name: 'Lateral Raise',     target: '4 × 12-20', sets: 4 },
-      ],
-      'Other': [],
-    }
-  },
-
-  // ── PLACEHOLDER. Replace with Johanna's actual program. ──────────
-  johanna: {
-    label: 'Johanna',
-    sessions: {
-      'Lower 1': [
-        { name: 'Leg Press',       target: '3 × 8-12',  sets: 3 },
-        { name: 'Hip Thrust',      target: '3 × 8-12',  sets: 3 },
-        { name: 'Seated Leg Curl', target: '3 × 8-12',  sets: 3 },
-        { name: 'Leg Extension',   target: '3 × 12-15', sets: 3 },
-      ],
-      'Upper A': [
-        { name: 'Lat Pulldown',     target: '3 × 8-12',  sets: 3 },
-        { name: 'Incline DB Press', target: '3 × 8-12',  sets: 3 },
-        { name: 'Seated Row',       target: '3 × 8-12',  sets: 3 },
-        { name: 'Lateral Raise',    target: '3 × 12-20', sets: 3 },
-      ],
-      'Lower 2': [
-        { name: 'Belt Squat',          target: '3 × 8-12',  sets: 3 },
-        { name: 'Back Extension',      target: '3 × 10-15', sets: 3 },
-        { name: 'Seated Leg Curl',     target: '3 × 8-12',  sets: 3 },
-        { name: 'Standing Calf Raise', target: '3 × 8-12',  sets: 3 },
-      ],
-      'Upper B': [
-        { name: 'Chest-Supported Row',  target: '3 × 8-12',  sets: 3 },
-        { name: 'Flat DB Press',        target: '3 × 8-12',  sets: 3 },
-        { name: 'DB Curl',              target: '3 × 10-15', sets: 3 },
-        { name: 'Overhead Triceps Ext', target: '3 × 10-15', sets: 3 },
-      ],
-      'Other': [],
-    }
-  },
+  ikarus:  { label: 'Ikarus',  sessions: SESSIONS_IKARUS },
+  johanna: { label: 'Johanna', sessions: SESSIONS_IKARUS },   // same program for now
 };
 
 const WEEKDAY_SESSION = { 1:'Lower 1', 2:'Upper A', 4:'Lower 2', 5:'Upper B' };
@@ -120,15 +91,17 @@ const WEEKDAY_SESSION = { 1:'Lower 1', 2:'Upper A', 4:'Lower 2', 5:'Upper B' };
    `fields` narrows the boxes; `units` relabels them; `except` keeps an
    item off a session that already covers it.
    ══════════════════════════════════════════════════════════════════ */
+const DAILY_IKARUS = [
+  { name: 'Pulls',     target: '3 × 4',   sets: 3, fields: ['r'], fixed: { r: '4' },
+    except: ['Upper A', 'Upper B'],      // those sessions already have pull-ups
+    hint: 'adjust the reps, tick each set you actually did' },
+  { name: 'Handstand', target: '10+ min', sets: 1, fields: ['r'], units: { r: 'min' }, fixed: { r: '10' },
+    hint: 'tick only if you practised ten minutes or more' },
+];
+
 const DAILY = {
-  ikarus: [
-    { name: 'Pulls',     target: '3 × 4',   sets: 3, fields: ['r'], fixed: { r: '4' },
-      except: ['Upper A', 'Upper B'],      // those sessions already have pull-ups
-      hint: 'adjust the reps, tick each set you actually did' },
-    { name: 'Handstand', target: '10+ min', sets: 1, fields: ['r'], units: { r: 'min' }, fixed: { r: '10' },
-      hint: 'tick only if you practised ten minutes or more' },
-  ],
-  johanna: [],
+  ikarus:  DAILY_IKARUS,
+  johanna: DAILY_IKARUS,     // same program for now
 };
 </script>
 
@@ -390,7 +363,14 @@ function renderWho(){
     const b = el('button'); b.type = 'button';
     b.textContent = PROGRAM[key].label;
     b.setAttribute('aria-pressed', String(key === state.user));
-    b.onclick = () => { if (key === state.user) return; saveDraft(); state.user = key; store.set('lb.user', key); boot(); };
+    b.onclick = () => {
+      if (key === state.user) return;
+      saveDraft(); parkSync();                    // the old person's work goes up first
+      state.user = key; store.set('lb.user', key);
+      state.last = {}; state.lastFor = null; state.worker = null;
+      state.day = []; state.dayRows = []; state.lastShape = null; state.sync = 'idle';
+      boot();
+    };
     w.appendChild(b);
   }
 }
@@ -730,12 +710,23 @@ function saveDraft(quiet){
 }
 function readDraft(){ try { const r = store.get(draftKey()); return r ? JSON.parse(r) : null; } catch(e){ return null; } }
 
+/* A reply can arrive after the screen has moved on — another person picked,
+   another date, another session. Applying it then would put one person's
+   numbers on another's screen, and the next save would store them under the
+   wrong name. Every fetch records what it was asked for and drops its own
+   answer if that has changed. */
+let inflight = 0;
+const context = () => state.user + '|' + state.date + '|' + state.session;
+function stale(token, ctx){ return token !== inflight || ctx !== context(); }
+
 async function fetchLast(){
   if (!configured()) return;
+  const token = ++inflight, ctx = context();
   try {
     const u = ENDPOINT + '?action=last&user=' + encodeURIComponent(state.user) + '&secret=' + encodeURIComponent(SECRET);
     const res = await fetch(u);
     const data = await res.json();
+    if (stale(token, ctx)) return;
     if (data && data.ok) state.last = data.last || {};
   } catch(e){}
 }
@@ -744,6 +735,7 @@ async function fetchLast(){
    per-set matching now, so there is nothing to attach when this is filled in.
    Failing quietly is right: the manual picker below still works. */
 async function fetchDay(){
+  const token = ++inflight, ctx = context();
   state.day = [];
   state.dayRows = [];
   if (configured()) {
@@ -752,6 +744,7 @@ async function fetchDay(){
                 '&date=' + encodeURIComponent(state.date);
       const res = await fetch(u);
       const d = await res.json();
+      if (stale(token, ctx)) return;
       if (d && d.ok) { state.day = d.hr || []; state.dayRows = d.sets || []; }
     } catch(e){}
   }
@@ -1109,13 +1102,12 @@ const syncKey = () => state.user + '|' + state.date + '|' + state.session;
    second, with nothing to deduplicate on — and quietly fill the table with
    copies. Unreachable is not the same as old: offline still queues. */
 async function fetchHealth(){
-  state.worker = null;
-  if (!configured()) return;
+  if (!configured()) { state.worker = null; return; }
   try {
     const res = await fetch(ENDPOINT);
     const d = await res.json();
-    if (d && typeof d === 'object' && d.worker) state.worker = d;
-  } catch(e){}
+    state.worker = (d && typeof d === 'object' && d.worker) ? d : null;
+  } catch(e){ state.worker = null; }
   renderSync();
 }
 const missingFeature = f =>

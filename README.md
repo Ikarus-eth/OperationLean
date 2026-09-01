@@ -217,35 +217,30 @@ Set up as above. Buy it if you want this to run for years without attention: it 
 
 ### Option B — an iOS Shortcut, free
 
-Shortcuts is Apple's own app and carries the HealthKit entitlement, so it can read heart rate directly and POST it. The Worker accepts a deliberately plain payload so a Shortcut can build one without loops:
+Shortcuts is Apple's own app, so it already has permission to read Health. It is also programmable, which makes it the one place a shortcut can be written for you without shipping an app.
+
+The endpoint takes the smallest thing a shortcut can build. Everything but the numbers is optional:
 
 ```
 POST https://wild-haze-fac9.74vshck6t7.workers.dev/?user=ikarus
 Header: X-Logbook-Secret: <LOGBOOK_SECRET>
 
-{ "name":  "Strength",
-  "day":   "2026-09-01",
-  "start": "2026-09-01 09:00:00 +0800",
-  "end":   "2026-09-01 09:45:00 +0800",
-  "values": "112,118,125,131, …" }
+{ "values": "112,118,125,131, …", "day": "2026-09-01", "name": "Upper A" }
 ```
 
-`values` is one comma-separated string of bpm. `times` is optional; leave it out and the values are spread evenly between start and end, which is right for a steady sampling rate. Send `day`, or put the UTC offset in `start` — a 07:00 session in Bali is the previous calendar day in UTC, and the row would land on the wrong date.
+With no `start` or `end` the run is treated as having just finished and the readings are laid back at five seconds apart, which is what the watch records during a workout. Send `step_s` if that is wrong. Send `start` and `end` if you have them, and they win.
 
-Roughly, the shortcut is: **Find Workouts** (most recent, limit 1) → **Get Details** for start and end → **Find Health Samples** (Heart Rate, between those two) → **Get Details** of Value → **Combine Text** with a comma → **Text** to assemble the JSON → **Get Contents of URL**, POST, with the header. Drive it from a personal automation on the Workout trigger, set to run without asking.
+The actions, in order:
 
-The catch is that this has not been tested here, only the endpoint it posts to. Whether the detail actions map cleanly over a list of several hundred samples, and how reliably a workout-triggered automation fires, are things only your phone can answer. Shortcuts automations also fail silently. Try it before spending; fall back to Option A if it fights you.
+1. **Find Health Samples** — Heart Rate. Sort by Start Date, Order Oldest First. Filter: Start Date is after `Date` (Relative, −3 Hours).
+2. **Get Details of Health Samples** — Value. Over a list it returns a list.
+3. **Combine Text** — Separator: Custom, `,`.
+4. **Text** — the JSON above, with the combined text dropped into `values`.
+5. **Get Contents of URL** — Method POST, Headers `X-Logbook-Secret` and `Content-Type: application/json`, Request Body File, and the Text from step 4.
 
-Both hit the same wall regardless: Apple blocks health reads on a locked phone, so either way the push happens the next time you unlock it.
+Run it from the Workout automation under Automation ▸ Personal, set to Run Immediately.
 
-Test either with curl before wiring anything up:
-
-```
-curl -X POST 'https://wild-haze-fac9.74vshck6t7.workers.dev/?user=ikarus' \
-  -H 'X-Logbook-Secret: <LOGBOOK_SECRET>' -H 'Content-Type: application/json' \
-  -d '{"name":"Test","day":"2026-09-01","start":"2026-09-01 09:00:00 +0800",
-       "end":"2026-09-01 09:30:00 +0800","values":"120,130,140,150,145,135"}'
-```
+Two honest caveats. This has not been tested here, only the endpoint it posts to — action names move between iOS versions, so send a screenshot if one is missing and it can be adapted. And a three-hour window catches anything else in it, so a run that morning would be folded into an evening session. Narrowing that needs the workout's own start time, which is a few more actions.
 
 ### Manual, as a fallback
 
@@ -301,7 +296,11 @@ The `DAILY` object below `PROGRAM` holds the every-day items, same shape.
 
 Renaming an exercise starts its history over — carry-over is keyed on the exact name, and the old rows keep the old name. Change a name only when you mean to break the line.
 
-Johanna's program in the config is a placeholder, and she has no daily items yet. Replace both.
+Johanna trains the same program, so `PROGRAM.johanna.sessions` points at the same object as Ikarus's rather than holding a copy. Change one and both change, which is the point right now and the thing to remember when it stops being true — give her her own object at that moment and nothing else needs touching.
+
+Only the program is shared. Sets, history, carry-over, drafts and heart rate are all per person, and `MAX_HR` is already 182 and 185.
+
+The pull-up ladder seeds at 8/2, 7/3, 6/4 for both. Those are Ikarus's numbers; hers get replaced by carry-over after one session.
 
 ## How the data is stored
 

@@ -12,7 +12,7 @@
  *                                            session, sent continuously (secret)
  *   POST { secret, batchId, rows[], hr }     append a session, legacy (secret)
  *   POST ?user=ikarus  {data:{workouts}}     Health Auto Export push  (secret)
- *   POST ?user=ikarus  {start,end,values}    any other client, eg a Shortcut
+ *   POST ?user=ikarus  {values}               any other client, eg a Shortcut
  *
  * Reads are deliberately open: the log is training data and nothing here can
  * reach any other account. Writes still need the secret, so nobody can drop
@@ -62,7 +62,7 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-09-01b';
+const VERSION  = '2026-09-01c';
 const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
@@ -264,32 +264,42 @@ async function ingestWorkouts(env, user, payload) {
  *      "start": "2026-09-01 09:00:00 +0800", "end": "2026-09-01 09:47:00 +0800",
  *      "values": "112,118,125,…" }
  *
- *  "times" is optional; without it the values are spread evenly between start
- *  and end, which is close enough for a trace sampled at a steady rate. Send
- *  "day", or put the UTC offset in "start", or a morning session in Bali lands
- *  on the previous calendar day. */
+ *  Everything except "values" is optional, because every field left out is one
+ *  more action to build in Shortcuts. With no "end" the run is treated as
+ *  having just finished; with no "start" the values are laid back from there at
+ *  "step_s" seconds apart, five by default, which is what the watch records
+ *  during a workout. "times" overrides all of it when exact stamps are handy.
+ *
+ *  Send "day", or put the UTC offset in "start" — a 07:00 session in Bali is
+ *  the previous calendar day in UTC, and the row would land on the wrong date. */
 function normaliseSimple(b) {
   const vals = String(b.values ?? '').split(/[,\s]+/).map(v => Number(v)).filter(v => Number.isFinite(v));
   if (!vals.length) return null;
-  const t0 = parseHRDate(b.start);
-  if (!Number.isFinite(t0)) return null;
 
-  const t1 = parseHRDate(b.end);
+  const step = (Number(b.step_s) > 0 ? Number(b.step_s) : 5) * 1000;
   const times = String(b.times ?? '').split(',').map(s => s.trim()).filter(Boolean);
-  const span = (Number.isFinite(t1) && t1 > t0) ? t1 - t0 : (vals.length - 1) * 5000;
-  const step = vals.length > 1 ? span / (vals.length - 1) : 0;
 
+  let t0 = parseHRDate(b.start);
+  let t1 = parseHRDate(b.end);
+  if (!Number.isFinite(t1)) t1 = Number.isFinite(t0) ? t0 + (vals.length - 1) * step : Date.now();
+  if (!Number.isFinite(t0)) t0 = t1 - (vals.length - 1) * step;
+  if (t1 <= t0) t1 = t0 + (vals.length - 1) * step;
+
+  const gap = vals.length > 1 ? (t1 - t0) / (vals.length - 1) : 0;
   const heartRateData = [];
   vals.forEach((v, i) => {
-    const t = times.length === vals.length ? parseHRDate(times[i]) : t0 + i * step;
+    const t = times.length === vals.length ? parseHRDate(times[i]) : t0 + i * gap;
     if (Number.isFinite(t)) heartRateData.push({ date: new Date(t).toISOString(), Avg: v, Max: v });
   });
   if (!heartRateData.length) return null;
 
+  // Without a day and without an offset in start, the Worker's clock is UTC and
+  // in the wrong place, so fall back to the day at the first sample.
   return { data: { workouts: [{
     id: str(b.id || ''), name: str(b.name || 'Workout'),
-    day: str(b.day || ''), start: b.start,
-    end: b.end || new Date(t0 + span).toISOString(),
+    day: str(b.day || ''),
+    start: b.start || heartRateData[0].date,
+    end: b.end || heartRateData[heartRateData.length - 1].date,
     heartRateData,
   }] } };
 }
@@ -515,7 +525,7 @@ export default {
          phone gets its own URL. */
       const looksLikeWatch = body && body.data &&
         (Array.isArray(body.data.workouts) || Array.isArray(body.data.metrics));
-      const looksLikeSimple = body && body.values !== undefined && body.start !== undefined;
+      const looksLikeSimple = body && body.values !== undefined;
 
       if (looksLikeWatch || looksLikeSimple || url.searchParams.get('action') === 'hr') {
         const given = request.headers.get('x-logbook-secret') || url.searchParams.get('secret') || '';
