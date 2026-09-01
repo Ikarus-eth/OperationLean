@@ -145,6 +145,50 @@ Use **Manual Export** in the automation screen to test it before trusting it. A 
 
 **Turn it off** by deleting the automation. The manual path below keeps working.
 
+### Why this needs an outside app at all
+
+A web page cannot read Apple Health. There is no browser API for HealthKit and there is not going to be one: Apple exposes health data only to native apps carrying the HealthKit entitlement. Logbook is a web page on GitHub Pages, so it can never reach the watch by itself, however the app is written.
+
+Getting there directly would mean shipping a native iOS app, which costs $99 a year for the Apple Developer Program. Without paying, a sideloaded build expires after seven days and has to be reinstalled from Xcode. That is worse than a one-time purchase on every axis.
+
+So the choice is which entitled app does the reading. Two work.
+
+### Option A — Health Auto Export, $24.99 lifetime
+
+Set up as above. Buy it if you want this to run for years without attention: it handles since-last-sync bookkeeping, retries, background scheduling within iOS's limits, and keeps activity logs when a run fails. That reliability is the actual product; the export is the easy part.
+
+### Option B — an iOS Shortcut, free
+
+Shortcuts is Apple's own app and carries the HealthKit entitlement, so it can read heart rate directly and POST it. The Worker accepts a deliberately plain payload so a Shortcut can build one without loops:
+
+```
+POST https://wild-haze-fac9.74vshck6t7.workers.dev/?user=ikarus
+Header: X-Logbook-Secret: <LOGBOOK_SECRET>
+
+{ "name":  "Strength",
+  "day":   "2026-09-01",
+  "start": "2026-09-01 09:00:00 +0800",
+  "end":   "2026-09-01 09:45:00 +0800",
+  "values": "112,118,125,131, …" }
+```
+
+`values` is one comma-separated string of bpm. `times` is optional; leave it out and the values are spread evenly between start and end, which is right for a steady sampling rate. Send `day`, or put the UTC offset in `start` — a 07:00 session in Bali is the previous calendar day in UTC, and the row would land on the wrong date.
+
+Roughly, the shortcut is: **Find Workouts** (most recent, limit 1) → **Get Details** for start and end → **Find Health Samples** (Heart Rate, between those two) → **Get Details** of Value → **Combine Text** with a comma → **Text** to assemble the JSON → **Get Contents of URL**, POST, with the header. Drive it from a personal automation on the Workout trigger, set to run without asking.
+
+The catch is that this has not been tested here, only the endpoint it posts to. Whether the detail actions map cleanly over a list of several hundred samples, and how reliably a workout-triggered automation fires, are things only your phone can answer. Shortcuts automations also fail silently. Try it before spending; fall back to Option A if it fights you.
+
+Both hit the same wall regardless: Apple blocks health reads on a locked phone, so either way the push happens the next time you unlock it.
+
+Test either with curl before wiring anything up:
+
+```
+curl -X POST 'https://wild-haze-fac9.74vshck6t7.workers.dev/?user=ikarus' \
+  -H 'X-Logbook-Secret: <LOGBOOK_SECRET>' -H 'Content-Type: application/json' \
+  -d '{"name":"Test","day":"2026-09-01","start":"2026-09-01 09:00:00 +0800",
+       "end":"2026-09-01 09:30:00 +0800","values":"120,130,140,150,145,135"}'
+```
+
 ### Manual, as a fallback
 
 1. Finish the workout on the watch so it closes and lands in Health.

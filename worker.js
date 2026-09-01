@@ -10,6 +10,7 @@
  *   GET  ?action=csv&table=sets              whole log as CSV            (open)
  *   POST { secret, batchId, rows[], hr }     append a session         (secret)
  *   POST ?user=ikarus  {data:{workouts}}     Health Auto Export push  (secret)
+ *   POST ?user=ikarus  {start,end,values}    any other client, eg a Shortcut
  *
  * Reads are deliberately open: the log is training data and nothing here can
  * reach any other account. Writes still need the secret, so nobody can drop
@@ -205,7 +206,7 @@ async function ingestWorkouts(env, user, payload) {
     if (!sum) { skipped++; continue; }
     if (sum.duration_min < MIN_WORKOUT_MIN) { skipped++; continue; }
 
-    const date = localDayOf(w.start) || localDayOf(new Date(sum.start).toISOString());
+    const date = localDayOf(w.day) || localDayOf(w.start) || localDayOf(new Date(sum.start).toISOString());
     const startIso = new Date(sum.start).toISOString();
     const endIso = new Date(sum.end).toISOString();
 
@@ -244,6 +245,43 @@ async function ingestWorkouts(env, user, payload) {
   let attributed = 0;
   for (const d of days) attributed += await attributeDay(env, user, d);
   return { written, skipped, seen: found.length, attributed };
+}
+
+/** Any hand-rolled client — an iOS Shortcut, curl, a watch app — can send this
+ *  much simpler shape instead of the Health Auto Export one:
+ *
+ *    { "name": "Strength", "day": "2026-09-01",
+ *      "start": "2026-09-01 09:00:00 +0800", "end": "2026-09-01 09:47:00 +0800",
+ *      "values": "112,118,125,…" }
+ *
+ *  "times" is optional; without it the values are spread evenly between start
+ *  and end, which is close enough for a trace sampled at a steady rate. Send
+ *  "day", or put the UTC offset in "start", or a morning session in Bali lands
+ *  on the previous calendar day. */
+function normaliseSimple(b) {
+  const vals = String(b.values ?? '').split(/[,\s]+/).map(v => Number(v)).filter(v => Number.isFinite(v));
+  if (!vals.length) return null;
+  const t0 = parseHRDate(b.start);
+  if (!Number.isFinite(t0)) return null;
+
+  const t1 = parseHRDate(b.end);
+  const times = String(b.times ?? '').split(',').map(s => s.trim()).filter(Boolean);
+  const span = (Number.isFinite(t1) && t1 > t0) ? t1 - t0 : (vals.length - 1) * 5000;
+  const step = vals.length > 1 ? span / (vals.length - 1) : 0;
+
+  const heartRateData = [];
+  vals.forEach((v, i) => {
+    const t = times.length === vals.length ? parseHRDate(times[i]) : t0 + i * step;
+    if (Number.isFinite(t)) heartRateData.push({ date: new Date(t).toISOString(), Avg: v, Max: v });
+  });
+  if (!heartRateData.length) return null;
+
+  return { data: { workouts: [{
+    id: str(b.id || ''), name: str(b.name || 'Workout'),
+    day: str(b.day || ''), start: b.start,
+    end: b.end || new Date(t0 + span).toISOString(),
+    heartRateData,
+  }] } };
 }
 
 export default {
@@ -383,13 +421,16 @@ export default {
          phone gets its own URL. */
       const looksLikeWatch = body && body.data &&
         (Array.isArray(body.data.workouts) || Array.isArray(body.data.metrics));
-      if (looksLikeWatch || url.searchParams.get('action') === 'hr') {
+      const looksLikeSimple = body && body.values !== undefined && body.start !== undefined;
+
+      if (looksLikeWatch || looksLikeSimple || url.searchParams.get('action') === 'hr') {
         const given = request.headers.get('x-logbook-secret') || url.searchParams.get('secret') || '';
         if (given !== SECRET) return json({ ok: false, error: 'unauthorized' }, 401);
         const user = str(url.searchParams.get('user')).toLowerCase();
         if (!user) return json({ ok: false, error: 'add ?user=ikarus to the URL' }, 400);
+        const payload = looksLikeWatch ? body : (normaliseSimple(body) || body);
         try {
-          const r = await ingestWorkouts(env, user, body);
+          const r = await ingestWorkouts(env, user, payload);
           return json({ ok: true, ...r });
         } catch (e) {
           return json({ ok: false, error: 'ingest failed: ' + e.message }, 500);
