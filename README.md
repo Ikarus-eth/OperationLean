@@ -129,6 +129,16 @@ These open at the prescription every day, not at what you did last time — that
 
 They write against session `Daily`, so they never inflate a session's volume. `SELECT * FROM sets WHERE session = 'Daily'` is the whole habit log.
 
+### Pull-ups
+
+Three boxes instead of the usual three: **BW reps**, **assisted**, **assist kg**. Do as many bodyweight reps as you have, then finish to ten on the assist machine and record how much counterweight it took.
+
+The ladder opens at 8/2, 7/3, 6/4 the first time and carries over from what you actually did after that. `assisted` is stored in its own column, `reps_assist`, so bodyweight reps and machine reps never get added together by accident.
+
+Progress here is bodyweight reps, not weight — more counterweight is less work, so the usual weight-times-reps comparison would mark going backwards as a green edge. The exercise says `progress: 'r'` and the comparison follows it.
+
+The every-day **Pulls** item does not appear on Upper A or Upper B, since those sessions have pull-ups in them already. That is the `except` list on the item.
+
 ### Units
 
 The first box is kilograms unless the exercise says otherwise. Jumps is inches: box height goes in the first box, reps in the second. The number is stored in the same `weight` column as everything else — the unit is a property of the exercise name, not of the row, so nothing about the table changes. Set `units: { w: 'in' }` on an exercise to relabel it, `fields: ['r']` to drop boxes it does not need.
@@ -282,6 +292,9 @@ Edit the `PROGRAM` object in `index.html`. Nothing else changes — not the shee
 - `pair` draws the bracket linking antagonist supersets. Omit for unpaired work.
 - `units: { w: 'in' }` relabels a box. `fields: ['r']` shows only that box.
 - `fixed: { r: '4' }` opens the row at that value every time and ignores what you did last time. For prescriptions, not for progression.
+- `seed: [{ r:'8' }, { r:'7' }]` is a per-set starting point for an exercise with no history yet. Unlike `fixed` it steps out of the way as soon as there is a real session to carry over from.
+- `progress: 'r'` names the number that decides whether a set beat last week. Without it the comparison is weight times reps, which is wrong wherever more weight means less work.
+- `except: ['Upper A']` on an every-day item keeps it off sessions that already cover it.
 - Anything not in the program can still be logged with "Add an exercise", and it carries over next week like everything else.
 
 The `DAILY` object below `PROGRAM` holds the every-day items, same shape.
@@ -296,9 +309,9 @@ Johanna's program in the config is a placeholder, and she has no daily items yet
 
 **`sets` table** — one row per set:
 
-| id | ts | date | user | session | exercise | set_no | weight | reps | rir | notes | ex_notes | batch_id | set_ts | hr_avg | hr_peak |
+| id | ts | date | user | session | exercise | set_no | weight | reps | reps_assist | rir | notes | ex_notes | batch_id | set_ts | hr_avg | hr_peak |
 
-`session` is the split name, or `Daily` for the every-day items. `weight` is kilograms except where the exercise says otherwise — inches for Jumps, and blank for anything with no weight box. `notes` is the session note repeated on every row; `ex_notes` is the comment on that one exercise.
+`session` is the split name, or `Daily` for the every-day items. `weight` is kilograms except where the exercise says otherwise — inches for Jumps, counterweight on the assist machine for pull-ups, and blank for anything with no weight box. `reps` is bodyweight reps and `reps_assist` the ones finished on the machine; everywhere else `reps_assist` is empty. `notes` is the session note repeated on every row; `ex_notes` is the comment on that one exercise.
 
 **`hr` table** — one row per workout: duration, average, max, percentage of max, minutes above 80%, minutes in each of five zones, and `series_10s`, the whole trace at ten-second resolution in a single cell. Storing every sample as its own row would add several thousand rows per session; ten-second buckets keep the shape of the curve without that.
 
@@ -342,6 +355,7 @@ The second is fine if nobody is looking for this repository. The first is what t
 - **Carried-over values are empty but saving works.** The `sets` table exists but the read query found nothing for that user. Check the `user` column values with `SELECT DISTINCT user FROM sets;`.
 - **"No heart rate values in that file."** The export didn't include heart rate, or it's a FIT file. Re-export as CSV or TCX with heart rate enabled.
 - **Every save is held on the device after a Worker update.** Open the Worker URL. If `schema` is not `ok` the migration could not run — the message says why. If `ready` is false but `schema` is `ok`, the secret or the D1 binding is missing.
+- **"Saved, but assisted reps are being dropped."** The worker predates the `reps_assist` column. Everything else is saving normally. Deploy `worker.js` and it stops.
 - **The button is red and says the worker is out of date.** The app on this device is newer than the worker it is talking to. Deploy `worker.js`. Nothing is lost: everything ticked is held and uploads once they match. `?action=day` returning `unknown action` is the same cause.
 - **A Cloudflare build fails.** Check `database_id` in `wrangler.toml` against D1 ▸ `workoutlog` ▸ Settings. The Worker that was already running keeps running.
 - **The watch automation returns 401.** The `X-Logbook-Secret` header does not match `LOGBOOK_SECRET`.

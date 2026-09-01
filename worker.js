@@ -62,8 +62,8 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-09-01';
-const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate'];
+const VERSION  = '2026-09-01b';
+const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
 const SET_WINDOW_S = 90;      // seconds before a tick that count as "the set"
@@ -308,7 +308,8 @@ const SCHEMA_TABLES = [
   `CREATE TABLE IF NOT EXISTS sets (
      id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, date TEXT, user TEXT,
      session TEXT, exercise TEXT, set_no INTEGER, weight REAL, reps REAL, rir REAL,
-     notes TEXT, ex_notes TEXT, batch_id TEXT, set_ts TEXT, hr_avg REAL, hr_peak REAL)`,
+     notes TEXT, ex_notes TEXT, batch_id TEXT, set_ts TEXT, hr_avg REAL, hr_peak REAL,
+     reps_assist REAL)`,
   `CREATE TABLE IF NOT EXISTS hr (
      id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, date TEXT, user TEXT, session TEXT,
      source TEXT, start TEXT, finish TEXT, duration_min REAL, avg_hr REAL, max_hr REAL,
@@ -321,6 +322,7 @@ const SCHEMA_TABLES = [
 // migration process now: no console, no ordering to get right.
 const SCHEMA_COLUMNS = [
   ['sets', 'ex_notes',     'TEXT'],
+  ['sets', 'reps_assist',  'REAL'],   // reps finished on the assist machine
   ['hr',   'workout_id',   'TEXT'],
   ['hr',   'workout_type', 'TEXT'],
 ];
@@ -461,7 +463,7 @@ export default {
            FROM hr WHERE user = ?1 AND date = ?2 ORDER BY start`
         ).bind(user, date).all();
         const ss = await env.DB.prepare(
-          `SELECT session, exercise, set_no, weight, reps, rir, notes, ex_notes, set_ts, hr_avg, hr_peak
+          `SELECT session, exercise, set_no, weight, reps, reps_assist, rir, notes, ex_notes, set_ts, hr_avg, hr_peak
            FROM sets WHERE user = ?1 AND date = ?2 ORDER BY id`
         ).bind(user, date).all();
         return json({ ok: true, hr: rs.results || [], sets: ss.results || [] });
@@ -477,7 +479,7 @@ export default {
         const cols = rows.length
           ? Object.keys(rows[0])
           : (table === 'sets'
-              ? ['id','ts','date','user','session','exercise','set_no','weight','reps','rir','notes','ex_notes','batch_id','set_ts','hr_avg','hr_peak']
+              ? ['id','ts','date','user','session','exercise','set_no','weight','reps','reps_assist','rir','notes','ex_notes','batch_id','set_ts','hr_avg','hr_peak']
               : ['id','ts','date','user','session','source','start','finish','duration_min','avg_hr','max_hr','pct_max','min_above_80','z1','z2','z3','z4','z5','samples','series_10s','workout_id','workout_type']);
 
         const esc = v => {
@@ -556,13 +558,13 @@ export default {
 
         const insSet = env.DB.prepare(`
           INSERT INTO sets
-            (ts,date,user,session,exercise,set_no,weight,reps,rir,notes,ex_notes,
+            (ts,date,user,session,exercise,set_no,weight,reps,reps_assist,rir,notes,ex_notes,
              batch_id,set_ts,hr_avg,hr_peak)
-          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
         for (const r of rows) {
           stmts.push(insSet.bind(
             now, str(r.date), str(r.user), str(r.session), str(r.exercise),
-            num(r.set), num(r.weight), num(r.reps), num(r.rir),
+            num(r.set), num(r.weight), num(r.reps), num(r.reps_assist), num(r.rir),
             str(r.notes), str(r.ex_notes), 'sync', str(r.set_ts),
             num(r.hr_avg), num(r.hr_peak)
           ));
@@ -624,14 +626,14 @@ export default {
 
       const insSet = env.DB.prepare(`
         INSERT INTO sets
-          (ts,date,user,session,exercise,set_no,weight,reps,rir,notes,ex_notes,
+          (ts,date,user,session,exercise,set_no,weight,reps,reps_assist,rir,notes,ex_notes,
            batch_id,set_ts,hr_avg,hr_peak)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
 
       for (const r of rows) {
         stmts.push(insSet.bind(
           now, str(r.date), str(r.user), str(r.session), str(r.exercise),
-          num(r.set), num(r.weight), num(r.reps), num(r.rir),
+          num(r.set), num(r.weight), num(r.reps), num(r.reps_assist), num(r.rir),
           str(r.notes), str(r.ex_notes), batchId, str(r.set_ts),
           num(r.hr_avg), num(r.hr_peak)
         ));

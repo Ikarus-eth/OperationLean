@@ -37,7 +37,11 @@ const PROGRAM = {
         { name: 'Carries',             target: '2 sets',     sets: 2, hint: 'log seconds in the reps box' },
       ],
       'Upper A': [
-        { name: 'Pull-ups',             target: '3 × AMRAP', sets: 3, hint: 'RIR 1, full rest' },
+        { name: 'Pull-ups', target: '3 × 10', sets: 3,
+          fields: ['r','r2','w'], progress: 'r',
+          units: { r: 'BW reps', r2: 'assisted', w: 'assist kg' },
+          seed: [{ r:'8', r2:'2' }, { r:'7', r2:'3' }, { r:'6', r2:'4' }],
+          hint: 'bodyweight to failure, then fill to ten on the machine — full rest' },
         { name: 'Incline DB Press',     target: '3 × 8-12',  sets: 3, pair: 'A' },
         { name: 'Chest-Supported Row',  target: '3 × 8-12',  sets: 3, pair: 'A' },
         { name: 'Flat DB Press',        target: '3 × 8-12',  sets: 3, pair: 'B' },
@@ -56,7 +60,11 @@ const PROGRAM = {
         { name: 'Carries',            target: '2 sets',    sets: 2, hint: 'log seconds in the reps box' },
       ],
       'Upper B': [
-        { name: 'Pull-ups',          target: '3 × AMRAP', sets: 3, hint: 'RIR 2-3, volume' },
+        { name: 'Pull-ups', target: '3 × 10', sets: 3,
+          fields: ['r','r2','w'], progress: 'r',
+          units: { r: 'BW reps', r2: 'assisted', w: 'assist kg' },
+          seed: [{ r:'8', r2:'2' }, { r:'7', r2:'3' }, { r:'6', r2:'4' }],
+          hint: 'bodyweight to failure, then fill to ten on the machine — volume day' },
         { name: 'Lat Pulldown',      target: '3 × 8-12',  sets: 3, pair: 'A' },
         { name: 'Incline DB Press',  target: '3 × 8-12',  sets: 3, pair: 'A' },
         { name: 'Single-Arm DB Row', target: '3 × 8-12',  sets: 3, pair: 'B' },
@@ -109,11 +117,13 @@ const WEEKDAY_SESSION = { 1:'Lower 1', 2:'Upper A', 4:'Lower 2', 5:'Upper B' };
    Logged against session 'Daily', so habit rows never mix into
    session volume. `fixed` is the prescription and beats carry-over:
    the row always opens at the target, not at what you did last time.
-   `fields` narrows the three boxes; `units` relabels them.
+   `fields` narrows the boxes; `units` relabels them; `except` keeps an
+   item off a session that already covers it.
    ══════════════════════════════════════════════════════════════════ */
 const DAILY = {
   ikarus: [
     { name: 'Pulls',     target: '3 × 4',   sets: 3, fields: ['r'], fixed: { r: '4' },
+      except: ['Upper A', 'Upper B'],      // those sessions already have pull-ups
       hint: 'adjust the reps, tick each set you actually did' },
     { name: 'Handstand', target: '10+ min', sets: 1, fields: ['r'], units: { r: 'min' }, fixed: { r: '10' },
       hint: 'tick only if you practised ten minutes or more' },
@@ -360,9 +370,9 @@ const state = {
   session: null,
   date: null,          // YYYY-MM-DD being logged; usually today, editable for a catch-up
   pinned: false,       // true once the session dropdown is used, so a date change stops guessing
-  rows: [],     // {name,target,hint,pair,units,fields,fixed,daily,note,sets:[{w,r,rir,done,ts,carried}]}
+  rows: [],     // {name,target,hint,pair,units,fields,fixed,daily,note,sets:[{w,r,r2,rir,done,ts,carried}]}
   removed: [],  // program exercises taken off today's screen, so they stay off
-  last: {},     // exercise -> {date, sets:[{w,r,rir}]}
+  last: {},     // exercise -> {date, sets:[{w,r,r2,rir}]}
   hr: null,     // {file, samples:[{t,hr}], sum:{...}}
   day: [],      // hr rows the server already has for this person and date
   dayRows: [],  // set rows the server already has for this person and date
@@ -404,7 +414,8 @@ const lastSet = (name, i) => (state.last[name] && state.last[name].sets[i]) || n
 /* An exercise shows three boxes labelled kg / reps / RIR unless it says
    otherwise. `fields` drops boxes, `units` renames them. Box jumps are the
    reason: the first box holds inches, not kilos. */
-const FIELD_LABEL = { w:'kg', r:'reps', rir:'RIR' };
+const FIELD_LABEL = { w:'kg', r:'reps', r2:'reps', rir:'RIR' };
+const ALL_FIELDS = ['w','r','r2','rir'];
 const fieldsOf = ex => ex.fields || ['w','r','rir'];
 const labelOf  = (ex, f) => (ex.units && ex.units[f]) || FIELD_LABEL[f];
 const gridOf   = ex => '20px ' + '1fr '.repeat(fieldsOf(ex).length) + '46px';
@@ -495,7 +506,11 @@ function renderList(){
         row.classList.toggle('done', !!set.done);
         const g = lastSet(ex.name, si);
         // Without a weight box there is nothing to multiply, so reps alone decide.
-        const vol = o => F.includes('w') ? parseFloat(o.w) * parseFloat(o.r) : parseFloat(o.r);
+        // Weight times reps, unless the exercise names the number it is really
+        // about. On assisted pull-ups more kilos on the machine is less work,
+        // so comparing weight there would mark going backwards as progress.
+        const vol = o => ex.progress ? parseFloat(o[ex.progress])
+          : (F.includes('w') ? parseFloat(o.w) * parseFloat(o.r) : parseFloat(o.r));
         const now  = vol(set);
         const then = g ? vol(g) : NaN;
         row.classList.toggle('beat', !!set.done && Number.isFinite(now) && Number.isFinite(then) && now > then);
@@ -525,7 +540,8 @@ function renderList(){
     const add = el('button'); add.type = 'button'; add.textContent = 'Add set';
     add.onclick = () => {
       const p = ex.sets[ex.sets.length-1];
-      ex.sets.push({ w: p ? p.w : '', r: p ? p.r : '', rir: p ? p.rir : '', done:false, ts:null, carried:true });
+      ex.sets.push({ w: p ? p.w : '', r: p ? p.r : '', r2: p ? p.r2 : '', rir: p ? p.rir : '',
+                     done:false, ts:null, carried:true });
       saveDraft(); renderList(); renderSync();
     };
     const rm = el('button'); rm.type = 'button'; rm.textContent = 'Remove set';
@@ -567,9 +583,10 @@ function makeRow(p){
   const fx = p.fixed || {};
   return {
     name: p.name, target: p.target || '', hint: p.hint, pair: p.pair,
-    units: p.units, fields: p.fields, fixed: p.fixed, daily: !!p.daily, note: '',
+    units: p.units, fields: p.fields, fixed: p.fixed, seed: p.seed, progress: p.progress,
+    daily: !!p.daily, note: '',
     sets: Array.from({length: p.sets || 3}, () => ({
-      w: fx.w ?? '', r: fx.r ?? '', rir: fx.rir ?? '', done:false, ts:null, carried:true,
+      w: fx.w ?? '', r: fx.r ?? '', r2: fx.r2 ?? '', rir: fx.rir ?? '', done:false, ts:null, carried:true,
     })),
   };
 }
@@ -592,9 +609,13 @@ function loadRows(){
   carryOver();
 }
 
+/* Every-day items minus the ones this session already covers. */
+const dailyFor = () => (DAILY[state.user] || [])
+  .filter(p => !(p.except || []).includes(state.session))
+  .map(p => ({ ...p, daily: true }));
+
 function planFor(){
-  return (PROGRAM[state.user].sessions[state.session] || [])
-    .concat((DAILY[state.user] || []).map(p => ({ ...p, daily: true })));
+  return (PROGRAM[state.user].sessions[state.session] || []).concat(dailyFor());
 }
 
 /* A draft holds two things: what you typed, and a copy of the exercise config
@@ -616,12 +637,19 @@ function reconcile(){
     ex.units  = p.units;
     ex.fields = p.fields;
     ex.fixed  = p.fixed;
+    ex.seed   = p.seed;
+    ex.progress = p.progress;
     ex.daily  = !!p.daily;
     const fx = p.fixed || {};
-    ex.sets.forEach(s => ['w','r','rir'].forEach(f => {
+    ex.sets.forEach(s => ALL_FIELDS.forEach(f => {
       if (fx[f] != null && s.carried && (s[f] === '' || s[f] == null)) s[f] = fx[f];
     }));
   });
+
+  // An every-day item now excluded from this session leaves the screen. Only
+  // rows flagged daily are touched, so one added by hand is left alone.
+  const dailyHere = new Set(dailyFor().map(p => p.name));
+  state.rows = state.rows.filter(ex => !ex.daily || dailyHere.has(ex.name));
 
   const have = new Set(state.rows.map(r => r.name));
   const gone = state.removed.concat(readDailyStore().removed);
@@ -661,19 +689,24 @@ function mergeDaily(){
   });
 }
 
-/* pre-fill weight, reps and RIR from the last time this exercise was done */
+/* Pre-fill each field from the last time this exercise was done. An exercise
+   with no history falls back to `seed`, which is per set rather than per
+   exercise — the pull-up ladder starts 8, 7, 6, not 8, 8, 8. History always
+   wins over a seed, so a seed is only ever seen once. */
 function carryOver(){
   state.rows.forEach(ex => {
     const L = state.last[ex.name];
-    if (!L || !L.sets.length) return;
+    const hist = L && L.sets.length ? L.sets : null;
+    if (!hist && !ex.seed) return;
     const fx = ex.fixed || {};
     ex.sets.forEach((s, i) => {
       if (s.done || !s.carried) return;
-      const g = L.sets[i] || L.sets[L.sets.length-1];
+      const src = hist || ex.seed;
+      const g = src[i] || src[src.length-1];
       if (!g) return;
-      ['w','r','rir'].forEach(f => {
-        if (fx[f] != null) return;                  // a fixed default outranks history
-        if (s[f] === '' || s[f] == null) s[f] = g[f];
+      ALL_FIELDS.forEach(f => {
+        if (fx[f] != null) return;                  // a fixed default outranks both
+        if (s[f] === '' || s[f] == null) s[f] = g[f] ?? '';
       });
     });
   });
@@ -685,7 +718,7 @@ function saveDraft(quiet){
     const rows = state.rows.map(ex => ({
       name:ex.name, target:ex.target, hint:ex.hint, pair:ex.pair,
       units:ex.units, fields:ex.fields, fixed:ex.fixed, daily:ex.daily, note:ex.note || '',
-      sets: ex.sets.map(s => ({ w:s.w, r:s.r, rir:s.rir, done:s.done, ts:s.ts, carried:s.carried })),
+      sets: ex.sets.map(s => ({ w:s.w, r:s.r, r2:s.r2, rir:s.rir, done:s.done, ts:s.ts, carried:s.carried })),
     }));
     store.set(draftKey(), JSON.stringify({ rows, notes: $('#notes').value, hr: state.hr, removed: state.removed }));
     store.set(dailyKey(), JSON.stringify({
@@ -749,11 +782,17 @@ function mergeServer(){
     String(r.session) === state.session || String(r.session) === 'Daily');
   if (!rows.length) return;
 
+  const dailyNames = new Set((DAILY[state.user] || []).map(p => p.name));
+  const onPlan = new Set(planFor().map(p => p.name));
+
   rows.forEach(r => {
     const name = String(r.exercise || '');
     if (!name) return;
     let ex = state.rows.find(x => x.name === name);
     if (!ex) {
+      // Stored under 'Daily' but not wanted on this session: it belongs to the
+      // day, and to a session that does want it. Do not drag it back here.
+      if (dailyNames.has(name) && !onPlan.has(name)) return;
       const p = planFor().find(e => e.name === name) || { name };
       ex = makeRow(p);
       const firstDaily = state.rows.findIndex(x => x.daily);
@@ -761,12 +800,13 @@ function mergeServer(){
       state.removed = state.removed.filter(n => n !== name);
     }
     const i = Math.max(0, Number(r.set_no || 1) - 1);
-    while (ex.sets.length <= i) ex.sets.push({ w:'', r:'', rir:'', done:false, ts:null, carried:true });
+    while (ex.sets.length <= i) ex.sets.push({ w:'', r:'', r2:'', rir:'', done:false, ts:null, carried:true });
     const s = ex.sets[i];
     if (s.done) return;                       // already ticked here, leave it
     s.w   = r.weight === null || r.weight === undefined ? '' : String(r.weight);
     s.r   = r.reps   === null || r.reps   === undefined ? '' : String(r.reps);
     s.rir = r.rir    === null || r.rir    === undefined ? '' : String(r.rir);
+    s.r2  = r.reps_assist === null || r.reps_assist === undefined ? '' : String(r.reps_assist);
     s.done = true;
     s.ts = r.set_ts ? Date.parse(r.set_ts) : null;
     s.carried = false;
@@ -1032,7 +1072,7 @@ function collect(){
         date, user: state.user,
         session: ex.daily ? 'Daily' : state.session,     // habits stay out of session volume
         exercise: ex.name,
-        set: i+1, weight: s.w, reps: s.r, rir: s.rir,
+        set: i+1, weight: s.w, reps: s.r, reps_assist: s.r2, rir: s.rir,
         notes, ex_notes: (ex.note || '').trim(),
         set_ts: s.ts ? new Date(s.ts).toISOString() : '',
         hr_avg: h ? h.avg : '', hr_peak: h ? h.peak : '',
@@ -1078,8 +1118,12 @@ async function fetchHealth(){
   } catch(e){}
   renderSync();
 }
-const workerStale = () =>
-  !!state.worker && !(Array.isArray(state.worker.features) && state.worker.features.includes('sync'));
+const missingFeature = f =>
+  !!state.worker && !(Array.isArray(state.worker.features) && state.worker.features.includes(f));
+
+// Missing 'sync' is not survivable: an older worker would append every save.
+// A missing field is, so that only warns.
+const workerStale = () => missingFeature('sync');
 
 function renderSync(){
   const b = $('#save');
@@ -1103,7 +1147,11 @@ function renderSync(){
   }
   if (state.sync === 'saved') {
     b.textContent = n ? 'Saved · ' + n + (n === 1 ? ' set' : ' sets') : 'Saved · nothing ticked';
-    setStatus(state.savedAt ? 'Last saved ' + state.savedAt : '', 'ok');
+    if (missingFeature('assist-reps')) {
+      setStatus('Saved, but assisted reps are being dropped — deploy worker.js.', 'pending');
+    } else {
+      setStatus(state.savedAt ? 'Last saved ' + state.savedAt : '', 'ok');
+    }
     return;
   }
   b.textContent = n === 0 && !state.hr ? 'Tick the sets you did'

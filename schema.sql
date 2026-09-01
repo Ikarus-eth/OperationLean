@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS sets (
   exercise  TEXT,
   set_no    INTEGER,
   weight    REAL,
-  reps      REAL,
+  reps      REAL,      -- bodyweight reps; on pull-ups the unassisted ones
+  reps_assist REAL,    -- reps finished on the assist machine, blank elsewhere
   rir       REAL,
   notes     TEXT,      -- session note, the same on every row of the session
   ex_notes  TEXT,      -- comment on this exercise, the same on its own rows
