@@ -255,6 +255,22 @@ body{
 .status[data-tone="pending"]{color:var(--pending)}
 .status[data-tone="bad"]{color:var(--danger)}
 
+.firstrun{margin:28px 0;padding:20px;border:1px solid var(--rule);border-radius:11px;background:var(--surface)}
+.firstrun b{display:block;font-size:19px;color:var(--ink);margin-bottom:6px}
+.firstrun p{margin:0 0 16px;font-size:14px;line-height:1.55;color:var(--ink-2)}
+#firstrun-who{display:flex;gap:10px}
+#firstrun-who button{appearance:none;flex:1 1 0;min-height:56px;border:1px solid var(--ink);
+  border-radius:9px;background:var(--bg);color:var(--ink);font:500 17px/1 inherit;cursor:pointer}
+#firstrun-who button:hover{background:var(--ink);color:var(--bg)}
+body[data-firstrun] #list,
+body[data-firstrun] .hrbox,
+body[data-firstrun] .tail,
+body[data-firstrun] #setup,
+body[data-firstrun] .bar,
+body[data-firstrun] #addex,
+body[data-firstrun] #backdate{display:none !important}
+body[data-firstrun] .sess,
+body[data-firstrun] .date{visibility:hidden}
 .setup{margin:16px 0;padding:14px;border:1px solid var(--pending);border-radius:9px;background:#FAF6EC;font-size:14px;line-height:1.5}
 .setup b{display:block;margin-bottom:4px}
 .setup code{font:400 13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surface);padding:1px 4px;border-radius:4px}
@@ -274,6 +290,13 @@ body{
 </header>
 
 <main class="wrap">
+  <div id="firstrun" hidden class="firstrun">
+    <b>Who is using this device?</b>
+    <p>Everything you log is filed under this name. It is remembered here, and the
+       buttons at the top change it whenever you want.</p>
+    <div id="firstrun-who"></div>
+  </div>
+
   <div id="setup" hidden class="setup">
     <b>Not connected yet</b>
     Open <code>index.html</code> and set <code>ENDPOINT</code> and <code>SECRET</code> near the top.
@@ -340,6 +363,7 @@ const maxHR = () => MAX_HR[state.user] || 180;
 
 const state = {
   user: store.get('lb.user') || 'ikarus',
+  userChosen: !!store.get('lb.user'),   // false on a device nobody has claimed yet
   session: null,
   date: null,          // YYYY-MM-DD being logged; usually today, editable for a catch-up
   pinned: false,       // true once the session dropdown is used, so a date change stops guessing
@@ -356,6 +380,29 @@ const state = {
 };
 
 /* ══ render ══════════════════════════════════════════════ */
+
+/* A device with no name chosen yet asks once, rather than defaulting to
+   whoever is first in the config. Two people share one URL, and silently
+   logging her session under his name is not a mistake you notice for weeks. */
+function renderFirstRun(){
+  const need = !state.userChosen;
+  document.body.toggleAttribute('data-firstrun', need);
+  $('#firstrun').hidden = !need;
+  if (!need) return;
+  const box = $('#firstrun-who'); box.innerHTML = '';
+  for (const key of Object.keys(PROGRAM)) {
+    const b = el('button'); b.type = 'button';
+    b.textContent = PROGRAM[key].label;
+    b.onclick = () => {
+      state.user = key; store.set('lb.user', key);
+      state.userChosen = true;
+      state.last = {}; state.lastFor = null;
+      renderFirstRun();
+      boot();
+    };
+    box.appendChild(b);
+  }
+}
 
 function renderWho(){
   const w = $('#who'); w.innerHTML = '';
@@ -1254,6 +1301,8 @@ document.addEventListener('visibilitychange', async () => {
 
 async function boot(){
   renderWho();
+  renderFirstRun();
+  if (!state.userChosen) return;         // nothing else until we know whose this is
   if (!state.date) state.date = today();
   const sessions = Object.keys(PROGRAM[state.user].sessions);
   const guess = WEEKDAY_SESSION[new Date(state.date + 'T12:00:00').getDay()];

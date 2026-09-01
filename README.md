@@ -151,6 +151,14 @@ Changing the date also switches the session to whatever that weekday usually is,
 
 One thing does not move. A tick records the moment you tapped it, which is real information — it is how a retrospective entry stays visible in the data rather than looking like it was logged live. It also means per-set heart rate cannot line up for a back-dated session, because the timestamps fall on the wrong day. `hr_avg` and `hr_peak` come out blank on those rows. The workout summary in the `hr` table still saves in full, dated to the session.
 
+## Setting up a device
+
+Open the app, tap the name, done. Add it to the home screen and it opens like an app.
+
+A device with no name yet asks before it shows anything. That is deliberate: two people share one URL, and a session silently filed under the wrong name is not a mistake you notice for weeks. The answer is remembered on that device and the buttons at the top change it any time.
+
+Three devices, two people, one database: his laptop and his phone both on Ikarus, her phone on Johanna. Nothing is shared between people except the program itself.
+
 ## Logging from more than one device
 
 Saved sessions are on the server, so both the phone and the laptop see the same history and the same carry-over.
@@ -217,30 +225,24 @@ Set up as above. Buy it if you want this to run for years without attention: it 
 
 ### Option B — an iOS Shortcut, free
 
-Shortcuts is Apple's own app, so it already has permission to read Health. It is also programmable, which makes it the one place a shortcut can be written for you without shipping an app.
+Shortcuts is Apple's own app, so it already has permission to read Health, and it is programmable. That makes it the one place a program can be written for you without shipping an iPhone app.
 
-The endpoint takes the smallest thing a shortcut can build. Everything but the numbers is optional:
+Four actions. The body is a bare list of readings and everything else lives in the URL, which removes the fiddliest part — assembling JSON around a variable.
 
-```
-POST https://wild-haze-fac9.74vshck6t7.workers.dev/?user=ikarus
-Header: X-Logbook-Secret: <LOGBOOK_SECRET>
-
-{ "values": "112,118,125,131, …", "day": "2026-09-01", "name": "Upper A" }
-```
-
-With no `start` or `end` the run is treated as having just finished and the readings are laid back at five seconds apart, which is what the watch records during a workout. Send `step_s` if that is wrong. Send `start` and `end` if you have them, and they win.
-
-The actions, in order:
-
-1. **Find Health Samples** — Heart Rate. Sort by Start Date, Order Oldest First. Filter: Start Date is after `Date` (Relative, −3 Hours).
-2. **Get Details of Health Samples** — Value. Over a list it returns a list.
+1. **Find Health Samples** — Heart Rate. Sort by Start Date, Order Oldest First. Filter: Start Date is after `Date`, Relative, −3 Hours.
+2. **Get Details of Health Samples** — Value.
 3. **Combine Text** — Separator: Custom, `,`.
-4. **Text** — the JSON above, with the combined text dropped into `values`.
-5. **Get Contents of URL** — Method POST, Headers `X-Logbook-Secret` and `Content-Type: application/json`, Request Body File, and the Text from step 4.
+4. **Get Contents of URL**
+   - URL: `https://wild-haze-fac9.74vshck6t7.workers.dev/?user=ikarus&tz=+08:00`
+   - Method: POST
+   - Headers: `X-Logbook-Secret` = the secret
+   - Request Body: File, and pick the Combined Text
 
-Run it from the Workout automation under Automation ▸ Personal, set to Run Immediately.
+Then Automation ▸ Personal ▸ Workout ▸ When it ends ▸ Run Immediately.
 
-Two honest caveats. This has not been tested here, only the endpoint it posts to — action names move between iOS versions, so send a screenshot if one is missing and it can be adapted. And a three-hour window catches anything else in it, so a run that morning would be folded into an evening session. Narrowing that needs the workout's own start time, which is a few more actions.
+`tz` is your UTC offset and decides which calendar day the workout belongs to — `+08:00` in Bali, `+02:00` in most of Europe in summer. It is in the URL rather than worked out here because a Worker's clock is UTC and in the wrong place. Change it when you travel, or add `&day=` with a formatted date if you would rather.
+
+Two caveats. Only the endpoint has been tested, not the shortcut: action names move between iOS versions, so send a screenshot if one is missing. And a three-hour window catches anything else inside it, so a morning run would be folded into an evening session. Narrowing that needs the workout's own start time and a few more actions.
 
 ### Manual, as a fallback
 
@@ -264,6 +266,8 @@ You do not need to tick any sets. Attach a file and the button reads **Save hear
 You get duration, average, peak, peak as a percentage of your max, minutes above 80%, and a zone breakdown. Zones are cut at 60/70/80/90% of the `MAX_HR` value for that person at the top of `index.html`. Those are set to 182 and 185. If they are wrong, every zone number is wrong; measure or estimate and change them.
 
 `series_10s` holds the whole trace at ten-second resolution in one cell, so the shape of the curve survives into the sheet without several thousand rows per session.
+
+**You may not need per-set numbers at all.** One lifting session a day means the trace itself is legible: the first spike is the first exercise, the last is the last, and the gaps are the rests. `series_10s` holds the whole curve, so plotting it against the session's exercise order answers most of what per-set matching would. The matching is a convenience on top of that, not the point.
 
 **How per-set heart rate is worked out, and its limits.** For each ticked set, the highest bpm in the 90 seconds before you tapped the tick. That assumes you tick shortly after racking the weight. Tick late and the number drifts toward rest heart rate; tick a batch of sets at the end and the numbers are meaningless. Treat it as a good indicator of which exercises drive heart rate, not as a precise measurement.
 

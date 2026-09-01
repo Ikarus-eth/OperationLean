@@ -12,7 +12,8 @@
  *                                            session, sent continuously (secret)
  *   POST { secret, batchId, rows[], hr }     append a session, legacy (secret)
  *   POST ?user=ikarus  {data:{workouts}}     Health Auto Export push  (secret)
- *   POST ?user=ikarus  {values}               any other client, eg a Shortcut
+ *   POST ?user=ikarus&day=…  112,118,125       a bare list of readings,
+ *                                            for an iOS Shortcut
  *
  * Reads are deliberately open: the log is training data and nothing here can
  * reach any other account. Writes still need the secret, so nobody can drop
@@ -62,7 +63,7 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-09-01c';
+const VERSION  = '2026-09-01d';
 const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
@@ -272,6 +273,15 @@ async function ingestWorkouts(env, user, payload) {
  *
  *  Send "day", or put the UTC offset in "start" — a 07:00 session in Bali is
  *  the previous calendar day in UTC, and the row would land on the wrong date. */
+/** The calendar day at a given UTC offset, for a client that can send its
+ *  timezone but not a formatted date. "+08:00", "+0800" and "-05:00" all work. */
+function dayInZone(ms, tz) {
+  const m = String(tz || '').trim().match(/^([+-])(\d{2}):?(\d{2})?$/);
+  if (!m || !Number.isFinite(ms)) return '';
+  const mins = (m[1] === '-' ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3] || 0));
+  return new Date(ms + mins * 60000).toISOString().slice(0, 10);
+}
+
 function normaliseSimple(b) {
   const vals = String(b.values ?? '').split(/[,\s]+/).map(v => Number(v)).filter(v => Number.isFinite(v));
   if (!vals.length) return null;
@@ -297,7 +307,7 @@ function normaliseSimple(b) {
   // in the wrong place, so fall back to the day at the first sample.
   return { data: { workouts: [{
     id: str(b.id || ''), name: str(b.name || 'Workout'),
-    day: str(b.day || ''),
+    day: str(b.day || '') || dayInZone(t1, b.tz),
     start: b.start || heartRateData[0].date,
     end: b.end || heartRateData[heartRateData.length - 1].date,
     heartRateData,
@@ -515,9 +525,24 @@ export default {
 
     /* ── write ─────────────────────────────────────────────────── */
     if (request.method === 'POST') {
-      let body;
-      try { body = await request.json(); }        // parses regardless of content-type
-      catch (e) { return json({ ok: false, error: 'could not read the request body' }, 400); }
+      const raw = await request.text();
+      let body = null;
+      try { body = JSON.parse(raw); } catch (e) { /* maybe not JSON at all */ }
+
+      /* A bare list of numbers in the body, with everything else in the query
+         string. Assembling JSON around a variable is the fiddliest step in
+         Shortcuts, and this removes it: the body becomes one Combine Text. */
+      if (!body || typeof body !== 'object') {
+        const t = raw.trim();
+        if (t && /^[\d\s.,]+$/.test(t)) body = { values: t };
+        else return json({ ok: false, error: 'could not read the request body' }, 400);
+      }
+
+      // Query string fills in anything the body did not say.
+      for (const k of ['day', 'name', 'step_s', 'tz', 'id', 'start', 'end']) {
+        const v = url.searchParams.get(k);
+        if (v && body[k] === undefined) body[k] = v;
+      }
 
       /* A payload from Health Auto Export on the phone rather than from the
          app. It cannot send a body field, so its secret comes from a header or
