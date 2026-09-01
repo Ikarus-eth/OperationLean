@@ -11,13 +11,12 @@ name = "wild-haze-fac9"
 main = "worker.js"
 compatibility_date = "2026-05-01"
 
-# Not a credential — an identifier. D1 > workoutlog > Settings shows it.
-# Until the real value is in, a Git deploy fails and the running Worker is
-# left alone, which is the safe way round.
+# Not a credential — an identifier, shown on D1 > workoutlog > Overview.
+# A wrong one fails the build and leaves the running Worker alone.
 [[d1_databases]]
 binding = "DB"
 database_name = "workoutlog"
-database_id = "PASTE_DATABASE_ID_HERE"
+database_id = "eae746b8-c815-4733-a44b-b64c4e6fed71"
 
 [observability]
 enabled = true
