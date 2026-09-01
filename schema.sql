@@ -1,5 +1,11 @@
 -- Logbook — D1 schema.
--- Paste into the Cloudflare dashboard: D1 ▸ your database ▸ Console, then Execute.
+--
+-- You do not need to run this. The Worker creates these tables and adds any
+-- missing column on its first request after a deploy, so an empty database
+-- becomes a working one on its own. This file is here to read.
+--
+-- To add a column: put it in SCHEMA_COLUMNS in worker.js and here, and deploy.
+-- That is the whole migration process.
 
 CREATE TABLE IF NOT EXISTS sets (
   id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,14 +53,7 @@ CREATE INDEX IF NOT EXISTS idx_sets_session ON sets (user, date);
 CREATE INDEX IF NOT EXISTS idx_hr_session   ON hr   (user, date);
 CREATE INDEX IF NOT EXISTS idx_hr_dedupe    ON hr   (user, start);
 
--- ── Migrations, for a database that already has rows in it ──────────
--- CREATE TABLE IF NOT EXISTS above will not add a column to an existing
--- table, and SQLite has no ADD COLUMN IF NOT EXISTS. Run these once, by
--- hand, before deploying a Worker that writes them. Each errors harmlessly
--- if the column is already there.
---
---   ALTER TABLE sets ADD COLUMN ex_notes TEXT;      -- done Aug 2026
---
---   ALTER TABLE hr ADD COLUMN workout_id TEXT;
---   ALTER TABLE hr ADD COLUMN workout_type TEXT;
---   CREATE INDEX IF NOT EXISTS idx_hr_dedupe ON hr (user, start);
+-- ── Migrations ──────────────────────────────────────────────────────
+-- Handled by ensureSchema() in worker.js. It runs each statement on its
+-- own, because a batch is one transaction and one "duplicate column name"
+-- would abort the rest — which is what went wrong doing this by hand.

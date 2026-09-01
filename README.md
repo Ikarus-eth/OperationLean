@@ -8,9 +8,9 @@ The backend runs on Cloudflare, not Google Apps Script. Google's Advanced Protec
 
 **1. Cloudflare account.** Sign up at dash.cloudflare.com with any email. No card, no domain.
 
-**2. Database.** In the sidebar: Storage & Databases ▸ D1 ▸ Create. Name it `logbook`. Open it, go to the Console tab, paste in everything from `schema.sql`, and Execute. Two tables appear, `sets` and `hr`.
+**2. Database.** In the sidebar: Storage & Databases ▸ D1 ▸ Create. Name it `workoutlog`. Leave it empty — the Worker builds its own tables the first time it runs.
 
-**3. Worker.** Compute ▸ Workers & Pages ▸ Create ▸ Start from Hello World ▸ Deploy. Then Edit code, delete what's there, paste in `worker.js`, and Deploy again.
+**3. Worker.** Compute ▸ Workers & Pages ▸ Create ▸ Start from Hello World ▸ Deploy. Then connect it to this repository as described under Deploying, and every later change arrives on its own.
 
 **4. Wire the Worker to the database and the secret.** On the Worker: Settings ▸ Bindings ▸ Add.
 
@@ -31,6 +31,32 @@ Commit. GitHub Pages republishes in about a minute.
 **6. Phone.** Open the Pages URL. The orange "Not connected yet" box should be gone. Share ▸ Add to Home Screen.
 
 **7. Test.** Log one set and save. The status line should say it saved — not "held on this device". Confirm in D1 ▸ Console with `SELECT * FROM sets;`.
+
+## Deploying
+
+`index.html`, `README.md` and `schema.sql` deploy themselves: GitHub Pages republishes about a minute after a push to `main`.
+
+`worker.js` does too, once. Connect it in the Cloudflare dashboard one time and never open it again:
+
+1. Put the real database id into `wrangler.toml`. D1 ▸ `workoutlog` ▸ Settings shows it. It is an identifier, not a credential, and belongs in the repository.
+2. Workers & Pages ▸ `wild-haze-fac9` ▸ Settings ▸ Build ▸ **Connect** to `Ikarus-eth/OperationLean`, branch `main`, root `/`.
+3. Leave the build command empty. Deploy command `npx wrangler deploy`.
+
+After that a push updates the Worker the way it already updates the app.
+
+Two things to know before connecting. `wrangler.toml` becomes the source of truth for bindings, so a binding missing from it is dropped on the next deploy — the D1 binding is in there, keep it there. And `LOGBOOK_SECRET` must stay a dashboard secret and must never go into `wrangler.toml`, because this repository is public. Secrets survive deploys; they are managed separately from the config.
+
+If the database id is still a placeholder the build fails and the running Worker is left alone, which is the safe way round.
+
+### The database migrates itself
+
+There is no SQL to run, ever. On its first request after a deploy the Worker creates any missing table and adds any missing column, so an empty D1 database becomes a working one on its own.
+
+Each statement runs separately on purpose. A batch is a single transaction, so one `duplicate column name` aborts everything after it — which is exactly what happens when these are pasted into the D1 console as one block and half of them silently never run.
+
+Adding a column means adding it to `SCHEMA_COLUMNS` in `worker.js`, and to `schema.sql` so the file still describes reality. Nothing else.
+
+Open the Worker URL to see where things stand: `schema` says `ok`, `columns` lists what each table actually has, and `ready` is true only when the code and the database agree.
 
 ## Getting it into a Google Sheet
 
@@ -300,7 +326,8 @@ For analysis, pivot on `exercise` and `date`. Volume per set is `weight_kg × re
 - **"Held on this device" instead of "Saved".** The Worker rejected the request or wasn't reachable. Open the Worker URL with `?action=last&user=ikarus` in a browser: `unauthorized` means the secret in `index.html` doesn't match `LOGBOOK_SECRET`, and a 500 usually means the `DB` binding is missing or you forgot to redeploy after adding bindings.
 - **Carried-over values are empty but saving works.** The `sets` table exists but the read query found nothing for that user. Check the `user` column values with `SELECT DISTINCT user FROM sets;`.
 - **"No heart rate values in that file."** The export didn't include heart rate, or it's a FIT file. Re-export as CSV or TCX with heart rate enabled.
-- **Every save is held on the device after a Worker update.** Usually a column the new Worker writes that the database doesn't have yet. Open the Worker URL and check `ready`, then run the migrations at the bottom of `schema.sql` in the D1 console.
+- **Every save is held on the device after a Worker update.** Open the Worker URL. If `schema` is not `ok` the migration could not run — the message says why. If `ready` is false but `schema` is `ok`, the secret or the D1 binding is missing.
+- **A Cloudflare build fails.** Check `database_id` in `wrangler.toml` against D1 ▸ `workoutlog` ▸ Settings. The Worker that was already running keeps running.
 - **The watch automation returns 401.** The `X-Logbook-Secret` header does not match `LOGBOOK_SECRET`.
 - **It returns 400 asking for a user.** `?user=ikarus` is missing from the automation URL.
 - **`{"ok":true,"written":0,"skipped":2}`.** It ran, found workouts, and dropped them: either under ten minutes or with no heart rate trace. Check that Include Workout Metrics is on and Time Grouping is Seconds.

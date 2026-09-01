@@ -286,6 +286,68 @@ function normaliseSimple(b) {
   }] } };
 }
 
+/* ── schema ───────────────────────────────────────────────────────────
+ * The Worker owns its schema. Deploying a version that wrote a new column
+ * used to mean remembering to run an ALTER in the D1 console first, and
+ * forgetting meant every write failed. Now it checks on its first request
+ * and adds whatever is missing.
+ *
+ * Each statement runs on its own rather than in a batch. A batch is one
+ * transaction, so a single "duplicate column" aborts the rest — which is
+ * exactly how running these by hand went wrong.
+ */
+const SCHEMA_TABLES = [
+  `CREATE TABLE IF NOT EXISTS sets (
+     id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, date TEXT, user TEXT,
+     session TEXT, exercise TEXT, set_no INTEGER, weight REAL, reps REAL, rir REAL,
+     notes TEXT, ex_notes TEXT, batch_id TEXT, set_ts TEXT, hr_avg REAL, hr_peak REAL)`,
+  `CREATE TABLE IF NOT EXISTS hr (
+     id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, date TEXT, user TEXT, session TEXT,
+     source TEXT, start TEXT, finish TEXT, duration_min REAL, avg_hr REAL, max_hr REAL,
+     pct_max REAL, min_above_80 REAL, z1 REAL, z2 REAL, z3 REAL, z4 REAL, z5 REAL,
+     samples INTEGER, series_10s TEXT, workout_id TEXT, workout_type TEXT)`,
+  `CREATE TABLE IF NOT EXISTS batches (batch_id TEXT PRIMARY KEY, ts TEXT)`,
+];
+
+// Columns added after a table first shipped. Appending here is the whole
+// migration process now: no console, no ordering to get right.
+const SCHEMA_COLUMNS = [
+  ['sets', 'ex_notes',     'TEXT'],
+  ['hr',   'workout_id',   'TEXT'],
+  ['hr',   'workout_type', 'TEXT'],
+];
+
+const SCHEMA_INDEXES = [
+  'CREATE INDEX IF NOT EXISTS idx_sets_lookup  ON sets (user, exercise, date)',
+  'CREATE INDEX IF NOT EXISTS idx_sets_batch   ON sets (batch_id)',
+  'CREATE INDEX IF NOT EXISTS idx_sets_session ON sets (user, date)',
+  'CREATE INDEX IF NOT EXISTS idx_hr_session   ON hr   (user, date)',
+  'CREATE INDEX IF NOT EXISTS idx_hr_dedupe    ON hr   (user, start)',
+];
+
+let schemaReady = null;
+
+function ensureSchema(env) {
+  if (!env || !env.DB) return Promise.resolve();
+  if (schemaReady) return schemaReady;
+  schemaReady = (async () => {
+    for (const sql of SCHEMA_TABLES) await env.DB.prepare(sql).run();
+    for (const [t, c, type] of SCHEMA_COLUMNS) {
+      try { await env.DB.prepare(`ALTER TABLE ${t} ADD COLUMN ${c} ${type}`).run(); }
+      catch (e) { /* already there, which is the normal case */ }
+    }
+    for (const sql of SCHEMA_INDEXES) await env.DB.prepare(sql).run();
+  })().catch(e => { schemaReady = null; throw e; });   // retry on the next request
+  return schemaReady;
+}
+
+async function columnsOf(env, table) {
+  try {
+    const r = await env.DB.prepare(`SELECT name FROM pragma_table_info(?1)`).bind(table).all();
+    return (r.results || []).map(x => x.name);
+  } catch (e) { return null; }
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
@@ -296,6 +358,11 @@ export default {
     // which hands back an object with an async get() instead of a string.
     let SECRET = env.LOGBOOK_SECRET;
     if (SECRET && typeof SECRET.get === 'function') SECRET = await SECRET.get();
+
+    // Bring the database up to what this version of the code expects. Failing
+    // here is not fatal on its own; the query that needs the column will say so.
+    let schemaError = null;
+    try { await ensureSchema(env); } catch (e) { schemaError = e.message; }
 
     // Health check on the bare URL, so setup can be verified by clicking it.
     if (request.method === 'GET' && !url.searchParams.get('action')) {
@@ -321,9 +388,18 @@ export default {
           health.tables = 'query failed: ' + e.message;
         }
       }
-      health.ready = !!SECRET && !!env.DB
+      health.schema = schemaError ? ('migration failed: ' + schemaError) : 'ok';
+      if (env.DB) {
+        health.columns = {
+          sets: await columnsOf(env, 'sets'),
+          hr: await columnsOf(env, 'hr'),
+        };
+      }
+      health.ready = !!SECRET && !!env.DB && !schemaError
         && Array.isArray(health.tables)
-        && health.tables.includes('sets') && health.tables.includes('hr');
+        && health.tables.includes('sets') && health.tables.includes('hr')
+        && SCHEMA_COLUMNS.every(([t, c]) =>
+             !health.columns || !health.columns[t] || health.columns[t].includes(c));
       return json(health);
     }
 

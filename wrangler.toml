@@ -1,0 +1,23 @@
+# Lets Cloudflare deploy worker.js straight from this repository, so a push to
+# main updates the Worker the same way it already updates the app. Connect it
+# once under Workers & Pages > wild-haze-fac9 > Settings > Build > Connect.
+#
+# This file is the source of truth for bindings once Git deploys are on. A
+# binding that is not listed here is removed on the next deploy. Secrets are
+# not affected: LOGBOOK_SECRET stays where it is and must not be put in here,
+# because this repository is public.
+
+name = "wild-haze-fac9"
+main = "worker.js"
+compatibility_date = "2026-05-01"
+
+# Not a credential — an identifier. D1 > workoutlog > Settings shows it.
+# Until the real value is in, a Git deploy fails and the running Worker is
+# left alone, which is the safe way round.
+[[d1_databases]]
+binding = "DB"
+database_name = "workoutlog"
+database_id = "PASTE_DATABASE_ID_HERE"
+
+[observability]
+enabled = true
