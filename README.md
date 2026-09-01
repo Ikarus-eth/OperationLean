@@ -58,6 +58,26 @@ Pre-filled values are grey. Once a set is ticked they turn black, so a glance te
 
 The tick is not decoration — it timestamps the set, which is what makes per-exercise heart rate possible.
 
+### It saves itself
+
+There is no submit step. Every tick and every typed number is written to the server about a second later, and the button at the bottom says where things stand:
+
+| Button | Meaning |
+|---|---|
+| Tick the sets you did | nothing logged yet |
+| Saving in a moment… | a change is queued |
+| Saving… | uploading now |
+| **Saved · 7 sets** (green) | on the server, with the time underneath |
+| **Not saved — tap to retry** (amber) | no connection; held on the device, sent when it comes back |
+
+Typing a weight or a rep count confirms that set on its own, so an edited row does not also need a tap. The tap is for a set you did exactly as prefilled.
+
+A save replaces the stored version of that person, date and session rather than adding to it. So the same screen can be sent a hundred times without piling up duplicates, and unticking a set removes it from the database. The screen is the record.
+
+Open the same date on another device and the sets come back ticked, because the app now asks the server what it already has for that day. That is also why a session logged on the laptop shows up on the phone — but only after you set the phone to the same date. The app always opens on today.
+
+If two devices have the same session open at once, the last one to save wins. Log on one at a time.
+
 ### Comments
 
 Every exercise has a comment box under its buttons. It is for that exercise on that day — cue that worked, pain, tempo, which machine. It is saved on every set row of that exercise, in the `ex_notes` column, next to the session-wide `notes`. Comments do not carry over; they describe a day, not a habit.
@@ -99,12 +119,12 @@ Saved sessions are on the server, so both the phone and the laptop see the same 
 
 A session in progress is not. Drafts and the day's every-day ticks live in the browser's local storage on the device you typed them on. Nothing syncs until you press Save.
 
-- **Fine:** log the whole session on the phone, save, then open the laptop. It reads back what you saved.
-- **Fine:** log Monday on the phone and Tuesday on the laptop.
-- **Not fine:** tick half a session on the phone and finish it on the laptop. The laptop never saw the first half.
-- **Not fine:** tick Pulls on both. `batch_id` stops one save being written twice; it does not notice that two different saves describe the same four reps. That is two rows, and you delete one in SQL.
+- **Fine:** log on the phone, then open the laptop on the same date. The sets come back ticked.
+- **Fine:** tick half a session on the phone and finish it on the laptop, as long as the phone finished uploading first. Watch for the green button before you switch.
+- **Fine:** tick Pulls on both. A save replaces rather than appends, so it stays one set of rows rather than two.
+- **Not fine:** both devices open on the same date at once. Neither knows about the other and the last save wins, silently.
 
-Refresh the second device before using it, or it may still be showing carry-over from before the last save.
+Two things still live only on the device you typed them on: an unsent change made offline, and the heart rate file you attached by hand. Everything else is on the server the moment the button turns green.
 
 ## Heart rate
 
@@ -244,6 +264,8 @@ Johanna's program in the config is a placeholder, and she has no daily items yet
 
 ## How the data is stored
 
+`batch_id` is `sync` on anything written by the app now. The old random value only appears on rows from before continuous saving.
+
 **`sets` table** — one row per set:
 
 | id | ts | date | user | session | exercise | set_no | weight | reps | rir | notes | ex_notes | batch_id | set_ts | hr_avg | hr_peak |
@@ -261,7 +283,7 @@ For analysis, pivot on `exercise` and `date`. Volume per set is `weight_kg × re
 ## Behaviour worth knowing
 
 - **Offline.** Gym wifi drops. A failed save is held on the device and goes up on the next save or when the connection returns. `batch_id` stops a retry from writing twice.
-- **Drafts.** A part-finished session survives closing the tab, including an attached heart rate file. Keyed by person, session and date. Every-day items are kept separately, keyed by person and date only, so they follow you across the session dropdown.
+- **Drafts.** A part-finished session survives closing the tab, including an attached heart rate file. Keyed by person, session and date. Every-day items are kept separately, keyed by person and date only, so they follow you across the session dropdown. The draft is now a cache in front of the server rather than the only copy.
 - **Drafts follow the program.** A draft holds what you typed. Targets, hints, unit labels and which boxes appear are rebuilt from `PROGRAM` every time the page loads, so editing the program takes effect on an open draft instead of waiting for midnight. Set counts are not: if you removed a set, it stays removed. An exercise you added to the program today appears in the draft; one you deleted with the **×** stays deleted.
 - **Wrong date on a heart rate file** shows a warning but still saves against today.
 
@@ -283,4 +305,5 @@ For analysis, pivot on `exercise` and `date`. Volume per set is `weight_kg × re
 - **It returns 400 asking for a user.** `?user=ikarus` is missing from the automation URL.
 - **`{"ok":true,"written":0,"skipped":2}`.** It ran, found workouts, and dropped them: either under ten minutes or with no heart rate trace. Check that Include Workout Metrics is on and Time Grouping is Seconds.
 - **Nothing arrives for hours.** Expected if the phone stays locked; Apple blocks health reads on a locked device. Check Activity Logs in the automation screen, add the widget to the home screen, and confirm Background App Refresh is on for the app.
+- **A session logged on one device is missing on another.** Check the date at the top: the app opens on today, and a session logged for an earlier day is only visible with that day selected. If the date is right, open `?action=csv&table=sets` and search for it — if the rows are there the read-back failed, if they are not the save never landed and the first device is probably still showing an amber button.
 - **Heart rate rows appear but per-set columns stay empty.** The ticks and the trace are on different days, or the set timestamps fall outside every workout window. Compare `sets.set_ts` with `hr.start` and `hr.finish`.

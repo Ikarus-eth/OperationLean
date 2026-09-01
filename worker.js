@@ -8,7 +8,9 @@
  *   GET  ?action=last&user=ikarus            last session per exercise   (open)
  *   GET  ?action=day&user=&date=             what the watch sent that day (open)
  *   GET  ?action=csv&table=sets              whole log as CSV            (open)
- *   POST { secret, batchId, rows[], hr }     append a session         (secret)
+ *   POST { secret, sync, user, date, session, rows[], hr }   replace a day's
+ *                                            session, sent continuously (secret)
+ *   POST { secret, batchId, rows[], hr }     append a session, legacy (secret)
  *   POST ?user=ikarus  {data:{workouts}}     Health Auto Export push  (secret)
  *   POST ?user=ikarus  {start,end,values}    any other client, eg a Shortcut
  *
@@ -372,7 +374,11 @@ export default {
           `SELECT workout_type, duration_min, avg_hr, max_hr, pct_max, min_above_80, source
            FROM hr WHERE user = ?1 AND date = ?2 ORDER BY start`
         ).bind(user, date).all();
-        return json({ ok: true, hr: rs.results || [] });
+        const ss = await env.DB.prepare(
+          `SELECT session, exercise, set_no, weight, reps, rir, notes, ex_notes, set_ts, hr_avg, hr_peak
+           FROM sets WHERE user = ?1 AND date = ?2 ORDER BY id`
+        ).bind(user, date).all();
+        return json({ ok: true, hr: rs.results || [], sets: ss.results || [] });
       }
 
       if (action === 'csv') {
@@ -438,6 +444,82 @@ export default {
       }
 
       if (body.secret !== SECRET) return json({ ok: false, error: 'unauthorized' }, 401);
+
+      /* ── continuous save ────────────────────────────────────────
+       * The app saves as you tick rather than once at the end, so the same
+       * screen is written over and over. Appending would pile up duplicates,
+       * and would have no way to express unticking a set or fixing a weight.
+       * So a sync replaces everything already stored for that person, date
+       * and session. Sending it twice changes nothing; sending it with one
+       * set removed removes that set. The screen is the truth.
+       *
+       * 'Daily' rows go with it: they belong to the day, not the split, and
+       * the same screen holds them whichever session is picked. */
+      if (body.sync === true) {
+        const user = str(body.user), date = str(body.date), session = str(body.session);
+        if (!user || !date || !session) {
+          return json({ ok: false, error: 'sync needs user, date and session' }, 400);
+        }
+        const rows = Array.isArray(body.rows) ? body.rows : [];
+        const now = new Date().toISOString();
+        const stmts = [];
+
+        stmts.push(env.DB.prepare(
+          "DELETE FROM sets WHERE user = ? AND date = ? AND (session = ? OR session = 'Daily')"
+        ).bind(user, date, session));
+
+        const insSet = env.DB.prepare(`
+          INSERT INTO sets
+            (ts,date,user,session,exercise,set_no,weight,reps,rir,notes,ex_notes,
+             batch_id,set_ts,hr_avg,hr_peak)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+        for (const r of rows) {
+          stmts.push(insSet.bind(
+            now, str(r.date), str(r.user), str(r.session), str(r.exercise),
+            num(r.set), num(r.weight), num(r.reps), num(r.rir),
+            str(r.notes), str(r.ex_notes), 'sync', str(r.set_ts),
+            num(r.hr_avg), num(r.hr_peak)
+          ));
+        }
+
+        /* A hand-attached file replaces an earlier hand-attached one. Anything
+           the phone pushed is left alone: the watch knows better than a file. */
+        const hr = body.hr || null;
+        if (hr) {
+          stmts.push(env.DB.prepare(
+            "DELETE FROM hr WHERE user = ? AND date = ? AND (source IS NULL OR source NOT LIKE 'watch:%')"
+          ).bind(user, date));
+          stmts.push(env.DB.prepare(`
+            INSERT INTO hr (ts,date,user,session,source,start,finish,duration_min,avg_hr,max_hr,
+              pct_max,min_above_80,z1,z2,z3,z4,z5,samples,series_10s)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
+            now, str(hr.date), str(hr.user), str(hr.session), str(hr.source),
+            str(hr.start), str(hr.end), num(hr.duration_min), num(hr.avg_hr), num(hr.max_hr),
+            num(hr.pct_max), num(hr.min_above_80),
+            num(hr.z1), num(hr.z2), num(hr.z3), num(hr.z4), num(hr.z5),
+            num(hr.samples), str(hr.series_10s)
+          ));
+        }
+
+        try {
+          await env.DB.batch(stmts);
+        } catch (e) {
+          return json({ ok: false, error: 'database write failed: ' + e.message }, 500);
+        }
+
+        let attributed = 0;
+        try {
+          if (rows.length) {
+            await env.DB.prepare(
+              "UPDATE hr SET session = ? WHERE user = ? AND date = ? AND (session IS NULL OR session = '')"
+            ).bind(session, user, date).run();
+          }
+          attributed = await attributeDay(env, user, date);
+        } catch (e) { /* the sets are safe; attribution retries on the next sync */ }
+
+        return json({ ok: true, stored: rows.length, attributed, at: now });
+      }
+
 
       const rows = body.rows || [];
       const hr = body.hr || null;

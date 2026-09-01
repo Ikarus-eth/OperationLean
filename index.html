@@ -261,6 +261,10 @@ body{
 .save{appearance:none;width:100%;height:52px;border:0;border-radius:9px;background:var(--ink);
   color:var(--paper);font:600 17px/1 inherit;cursor:pointer}
 .save:disabled{background:var(--rule);color:var(--ink-2);cursor:default}
+.save[data-sync="saved"]{background:var(--gain)}
+.save[data-sync="saving"]{background:var(--ink-2)}
+.save[data-sync="offline"]{background:var(--pending)}
+.save[data-sync="idle"]{background:var(--rule);color:var(--ink-2)}
 .save:focus-visible{outline:3px solid var(--gain);outline-offset:2px}
 .status{font-size:13px;color:var(--ink-2);min-height:18px;text-align:center}
 .status[data-tone="ok"]{color:var(--gain)}
@@ -360,6 +364,10 @@ const state = {
   last: {},     // exercise -> {date, sets:[{w,r,rir}]}
   hr: null,     // {file, samples:[{t,hr}], sum:{...}}
   day: [],      // hr rows the server already has for this person and date
+  dayRows: [],  // set rows the server already has for this person and date
+  sync: 'idle', // idle | dirty | saving | saved | offline
+  savedAt: null,
+  lastShape: null,
 };
 
 /* ══ render ══════════════════════════════════════════════ */
@@ -381,7 +389,12 @@ function renderSessions(){
     const o = el('option'); o.value = name; o.textContent = name; s.appendChild(o);
   }
   s.value = state.session;
-  s.onchange = () => { saveDraft(); state.pinned = true; state.session = s.value; loadRows(); renderList(); };
+  s.onchange = () => {
+    saveDraft(); parkSync();
+    state.pinned = true; state.session = s.value;
+    state.lastShape = null; state.sync = 'idle';
+    loadRows(); renderList(); fetchDay();
+  };
 }
 
 const lastSet = (name, i) => (state.last[name] && state.last[name].sets[i]) || null;
@@ -463,7 +476,7 @@ function renderList(){
           set[f] = inp.value;
           set.carried = false;
           if (!set.done) confirmSet(set);
-          paint(); saveDraft(); updateSave();
+          paint(); saveDraft(); renderSync();
         };
         row.appendChild(inp);
       });
@@ -472,7 +485,7 @@ function renderList(){
       tick.setAttribute('aria-label', 'Mark set ' + (si+1) + ' of ' + ex.name + ' as done');
       tick.onclick = () => {
         if (set.done) { set.done = false; set.ts = null; } else confirmSet(set);
-        paint(); saveDraft(); updateSave();
+        paint(); saveDraft(); renderSync();
       };
       row.appendChild(tick);
 
@@ -511,11 +524,11 @@ function renderList(){
     add.onclick = () => {
       const p = ex.sets[ex.sets.length-1];
       ex.sets.push({ w: p ? p.w : '', r: p ? p.r : '', rir: p ? p.rir : '', done:false, ts:null, carried:true });
-      saveDraft(); renderList(); updateSave();
+      saveDraft(); renderList(); renderSync();
     };
     const rm = el('button'); rm.type = 'button'; rm.textContent = 'Remove set';
     rm.disabled = ex.sets.length <= 1;
-    rm.onclick = () => { ex.sets.pop(); saveDraft(); renderList(); updateSave(); };
+    rm.onclick = () => { ex.sets.pop(); saveDraft(); renderList(); renderSync(); };
     btns.append(add, rm);
     box.appendChild(btns);
 
@@ -535,7 +548,7 @@ function renderList(){
     list.appendChild(box);
   });
 
-  updateSave();
+  renderSync();
 }
 
 function confirmSet(set){ set.done = true; set.ts = set.ts || Date.now(); }
@@ -665,7 +678,7 @@ function carryOver(){
 }
 
 const draftKey = () => 'lb.draft.' + state.user + '.' + state.session + '.' + localDate();
-function saveDraft(){
+function saveDraft(quiet){
   try {
     const rows = state.rows.map(ex => ({
       name:ex.name, target:ex.target, hint:ex.hint, pair:ex.pair,
@@ -678,6 +691,7 @@ function saveDraft(){
       removed: state.removed.filter(n => (DAILY[state.user] || []).some(p => p.name === n)),
     }));
   } catch(e){}
+  if (!quiet) scheduleSync();
 }
 function readDraft(){ try { const r = store.get(draftKey()); return r ? JSON.parse(r) : null; } catch(e){ return null; } }
 
@@ -696,16 +710,70 @@ async function fetchLast(){
    Failing quietly is right: the manual picker below still works. */
 async function fetchDay(){
   state.day = [];
+  state.dayRows = [];
   if (configured()) {
     try {
       const u = ENDPOINT + '?action=day&user=' + encodeURIComponent(state.user) +
                 '&date=' + encodeURIComponent(state.date);
       const res = await fetch(u);
       const d = await res.json();
-      if (d && d.ok) state.day = d.hr || [];
+      if (d && d.ok) { state.day = d.hr || []; state.dayRows = d.sets || []; }
     } catch(e){}
   }
+  mergeServer();
   renderAuto();
+  renderList();
+
+  /* Whatever came back is by definition already stored. Only claim that when
+     the screen matches it, so an unsent tick made offline still shows as
+     waiting rather than being quietly called saved. */
+  const mine = (state.dayRows || []).filter(r =>
+    String(r.session) === state.session || String(r.session) === 'Daily').length;
+  const p = buildSync();
+  if (mine && collect().length === mine) {
+    state.lastShape = p ? JSON.stringify([p.rows, p.hr, p.notes]) : null;
+    state.sync = 'saved';
+    state.savedAt = null;
+  }
+  renderSync();
+}
+
+/* Sets already stored for this person and date, put back on the screen ticked.
+   Without this a session logged on the laptop is invisible on the phone: the
+   rows are in the database but nothing ever asked for them. Additive only —
+   a set ticked here and not yet uploaded is never overwritten by the server. */
+function mergeServer(){
+  const rows = (state.dayRows || []).filter(r =>
+    String(r.session) === state.session || String(r.session) === 'Daily');
+  if (!rows.length) return;
+
+  rows.forEach(r => {
+    const name = String(r.exercise || '');
+    if (!name) return;
+    let ex = state.rows.find(x => x.name === name);
+    if (!ex) {
+      const p = planFor().find(e => e.name === name) || { name };
+      ex = makeRow(p);
+      const firstDaily = state.rows.findIndex(x => x.daily);
+      state.rows.splice((ex.daily || firstDaily < 0) ? state.rows.length : firstDaily, 0, ex);
+      state.removed = state.removed.filter(n => n !== name);
+    }
+    const i = Math.max(0, Number(r.set_no || 1) - 1);
+    while (ex.sets.length <= i) ex.sets.push({ w:'', r:'', rir:'', done:false, ts:null, carried:true });
+    const s = ex.sets[i];
+    if (s.done) return;                       // already ticked here, leave it
+    s.w   = r.weight === null || r.weight === undefined ? '' : String(r.weight);
+    s.r   = r.reps   === null || r.reps   === undefined ? '' : String(r.reps);
+    s.rir = r.rir    === null || r.rir    === undefined ? '' : String(r.rir);
+    s.done = true;
+    s.ts = r.set_ts ? Date.parse(r.set_ts) : null;
+    s.carried = false;
+    if (r.ex_notes && !ex.note) ex.note = String(r.ex_notes);
+  });
+
+  const withNote = rows.find(r => r.notes);
+  if (withNote && !$('#notes').value) $('#notes').value = String(withNote.notes);
+  saveDraft(true);            // reading the server back is not a change to save
 }
 
 function renderAuto(){
@@ -910,6 +978,7 @@ function renderHR(){
 
 function setDate(d){
   saveDraft();                                   // park the old day under its own key
+  parkSync();                                    // and get it up before it leaves the screen
   state.date = d;
   // A date you pick on purpose usually implies its usual session, unless you
   // already chose one by hand.
@@ -984,14 +1053,36 @@ function hrPayload(){
   };
 }
 
-function updateSave(){
-  const n = collect().length;
+/* ══ saving ══════════════════════════════════════════════
+ * The screen saves itself. Every change is written to the server a moment
+ * later, and the button says whether that has happened. A sync replaces the
+ * stored version of this session rather than appending, so sending it twice
+ * is harmless and unticking a set removes it.
+ */
+
+const syncKey = () => state.user + '|' + state.date + '|' + state.session;
+
+function renderSync(){
   const b = $('#save');
-  b.disabled = n === 0 && !state.hr;
-  if (n === 0 && state.hr) { b.textContent = 'Save heart rate only'; return; }
-  b.textContent = n === 0
-    ? 'Tick the sets you did'
-    : 'Save ' + n + (n === 1 ? ' set' : ' sets') + (state.hr ? ' and heart rate' : '');
+  const n = collect().length;
+  const q = readQueue().length;
+  b.disabled = false;                        // always tappable, to force a retry
+  b.dataset.sync = state.sync;
+
+  if (state.sync === 'saving') { b.textContent = 'Saving…'; setStatus(''); return; }
+  if (state.sync === 'offline') {
+    b.textContent = 'Not saved — tap to retry';
+    setStatus(q + (q === 1 ? ' change' : ' changes') + ' waiting for a connection.', 'pending');
+    return;
+  }
+  if (state.sync === 'saved') {
+    b.textContent = n ? 'Saved · ' + n + (n === 1 ? ' set' : ' sets') : 'Saved · nothing ticked';
+    setStatus(state.savedAt ? 'Last saved ' + state.savedAt : '', 'ok');
+    return;
+  }
+  b.textContent = n === 0 && !state.hr ? 'Tick the sets you did'
+    : 'Saving in a moment…';
+  setStatus('', null);
 }
 
 function setStatus(msg, tone){
@@ -1003,67 +1094,90 @@ function setStatus(msg, tone){
 function readQueue(){ try { return JSON.parse(store.get('lb.queue') || '[]'); } catch(e){ return []; } }
 function writeQueue(q){ store.set('lb.queue', JSON.stringify(q)); }
 
-async function post(batch){
+/** Newest wins per session: a queue of every keystroke would be pointless
+ *  when each entry is a whole replacement of the same rows. */
+function enqueue(p){
+  const q = readQueue().filter(x => !(x.user === p.user && x.date === p.date && x.session === p.session));
+  q.push(p);
+  writeQueue(q);
+}
+
+function buildSync(){
+  const rows = collect();
+  const key = syncKey();
+  const everSent = store.get('lb.sent.' + key) === '1';
+  if (!rows.length && !state.hr && !everSent) return null;   // nothing to say yet
+  return {
+    sync: true, user: state.user, date: state.date, session: state.session,
+    rows, hr: hrPayload(), notes: $('#notes').value,
+  };
+}
+
+async function post(payload){
   const res = await fetch(ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // avoids CORS preflight
-    body: JSON.stringify({ secret: SECRET, batchId: batch.id, rows: batch.rows, hr: batch.hr }),
+    body: JSON.stringify({ secret: SECRET, ...payload }),
   });
   const data = await res.json();
-  if (!data || !data.ok) throw new Error(data && data.error ? data.error : 'rejected by the sheet');
+  if (!data || !data.ok) throw new Error(data && data.error ? data.error : 'rejected by the server');
   return data;
 }
 
-async function flush(){
+async function pushQueue(){
   const q = readQueue();
-  if (!q.length || !configured()) return 0;
-  let sent = 0;
-  while (q.length) {
-    try { await post(q[0]); q.shift(); sent++; writeQueue(q); }
-    catch(e){ writeQueue(q); break; }
+  if (!q.length) return false;
+  if (!configured()) { state.sync = 'offline'; renderSync(); return false; }
+  state.sync = 'saving'; renderSync();
+  while (readQueue().length) {
+    const cur = readQueue();
+    try {
+      await post(cur[0]);
+      store.set('lb.sent.' + cur[0].user + '|' + cur[0].date + '|' + cur[0].session, '1');
+      cur.shift(); writeQueue(cur);
+    } catch(e){
+      state.sync = 'offline'; renderSync(); return false;
+    }
   }
-  return sent;
+  state.sync = 'saved';
+  state.savedAt = new Date().toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
+  renderSync();
+  return true;
 }
 
-async function save(){
-  const rows = collect();
-  const hr = hrPayload();
-  if (!rows.length && !hr) return;
+let syncTimer = null;
 
-  const batch = { id: batchId(), rows, hr };
-  $('#save').disabled = true;
-
-  if (!configured()) {
-    const q = readQueue(); q.push(batch); writeQueue(q);
-    setStatus('Held on this device — no connection set up yet.', 'pending');
-    return clearSession();
-  }
-
-  setStatus('Saving…');
-  try {
-    await post(batch);
-    const extra = await flush();
-    setStatus('Saved ' + rows.length + ' sets' + (hr ? ' and heart rate' : '') +
-              (extra ? ', plus ' + extra + ' from earlier' : '') + '.', 'ok');
-    clearSession();
-    fetchLast();
-    fetchDay();
-  } catch(e){
-    const q = readQueue(); q.push(batch); writeQueue(q);
-    setStatus('No connection. Held ' + rows.length + ' sets — they go up next time you save.', 'pending');
-    clearSession();
-  }
+/** Called from saveDraft, so every edit anywhere schedules a save. */
+function scheduleSync(){
+  if (state.sync !== 'offline') state.sync = 'dirty';
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncNow, 900);
+  renderSync();
 }
 
-const batchId = () => state.user + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,7);
-
-function clearSession(){
-  store.del(draftKey());
-  store.del(dailyKey());
-  clearHR();
-  loadRows();
-  renderList();
+/** Sends only when something actually changed, so holding a key down or
+ *  retyping the same weight does not write the day out again and again. */
+async function syncNow(){
+  clearTimeout(syncTimer);
+  const p = buildSync();
+  if (!p) { state.sync = 'idle'; renderSync(); return; }
+  const shape = JSON.stringify([p.rows, p.hr, p.notes]);
+  if (shape === state.lastShape && state.sync === 'saved') { renderSync(); return; }
+  state.lastShape = shape;
+  enqueue(p);
+  const done = await pushQueue();
+  if (done) { fetchLast(); }
 }
+
+/* Leaving this session behind: get it up before the screen changes under us. */
+function parkSync(){
+  clearTimeout(syncTimer);
+  const p = buildSync();
+  if (p) { enqueue(p); state.lastShape = null; pushQueue(); }
+}
+
+window.addEventListener('online', pushQueue);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) pushQueue(); });
 
 /* ══ boot ════════════════════════════════════════════════ */
 
@@ -1088,11 +1202,7 @@ async function boot(){
   fetchDay();
 
   const n = readQueue().length;
-  if (n) {
-    const sent = await flush();
-    if (sent) setStatus('Sent ' + sent + ' held ' + (sent === 1 ? 'session' : 'sessions') + '.', 'ok');
-    else setStatus(n + ' ' + (n === 1 ? 'session is' : 'sessions are') + ' still waiting to go up.', 'pending');
-  }
+  if (n) await pushQueue(); else renderSync();
 }
 
 $('#hrfile').onchange = async (e) => {
@@ -1103,7 +1213,7 @@ $('#hrfile').onchange = async (e) => {
     const samples = await parseHRFile(f);
     if (!samples.length) throw new Error('No heart rate values in that file');
     state.hr = { file: f.name, samples, sum: summarise(samples) };
-    renderHR(); repaintAll(); saveDraft(); updateSave();
+    renderHR(); repaintAll(); saveDraft(); renderSync();
     setStatus('');
   } catch (err) {
     clearHR();
@@ -1112,8 +1222,8 @@ $('#hrfile').onchange = async (e) => {
   e.target.value = '';
 };
 
-$('#hrdrop').onclick = () => { clearHR(); repaintAll(); saveDraft(); updateSave(); };
-$('#save').onclick = save;
+$('#hrdrop').onclick = () => { clearHR(); repaintAll(); saveDraft(); renderSync(); };
+$('#save').onclick = () => { state.lastShape = null; syncNow(); };
 $('#notes').oninput = saveDraft;
 
 $('#addex').onclick = () => {
@@ -1132,7 +1242,6 @@ $('#addex').onclick = () => {
   if (at === state.rows.length - 1) window.scrollTo({ top: document.body.scrollHeight });
 };
 
-window.addEventListener('online', flush);
 boot();
 </script>
 </body>
