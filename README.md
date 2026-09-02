@@ -240,7 +240,9 @@ Four actions. The body is a bare list of readings and everything else lives in t
 
 Then Automation ▸ Personal ▸ Workout ▸ When it ends ▸ Run Immediately.
 
-`tz` is your UTC offset and decides which calendar day the workout belongs to — `+08:00` in Bali, `+02:00` in most of Europe in summer. It is in the URL rather than worked out here because a Worker's clock is UTC and in the wrong place. Change it when you travel, or add `&day=` with a formatted date if you would rather.
+`tz` is your UTC offset and decides which calendar day the workout belongs to — `+08:00` in Bali, `+02:00` in most of Europe in summer. It is in the URL rather than worked out here because a Worker's clock is UTC and in the wrong place. Change it when you travel.
+
+A plus sign in a URL means a space, so `+08:00` arrives with the sign stripped. Rather than make anyone type `%2B` on a phone, a missing sign is read as plus: `+08:00`, `08:00`, `0800` and `8` all mean the same thing, and west of Greenwich still needs its minus. Anything that is not an offset is ignored rather than guessed at.
 
 Two caveats. Only the endpoint has been tested, not the shortcut: action names move between iOS versions, so send a screenshot if one is missing. And a three-hour window catches anything else inside it, so a morning run would be folded into an evening session. Narrowing that needs the workout's own start time and a few more actions.
 

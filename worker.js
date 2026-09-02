@@ -274,11 +274,17 @@ async function ingestWorkouts(env, user, payload) {
  *  Send "day", or put the UTC offset in "start" — a 07:00 session in Bali is
  *  the previous calendar day in UTC, and the row would land on the wrong date. */
 /** The calendar day at a given UTC offset, for a client that can send its
- *  timezone but not a formatted date. "+08:00", "+0800" and "-05:00" all work. */
+ *  timezone but not a formatted date.
+ *
+ *  A plus sign in a query string means a space, so ?tz=+08:00 arrives here as
+ *  " 08:00" with the sign eaten. Rather than make anyone type %2B into a phone,
+ *  an absent sign is read as plus, which is what someone writing +08:00 meant.
+ *  "+0800", "08:00", "8" and "-05:00" all work too. */
 function dayInZone(ms, tz) {
-  const m = String(tz || '').trim().match(/^([+-])(\d{2}):?(\d{2})?$/);
+  const m = String(tz || '').trim().match(/^([+-]?)(\d{1,2}):?(\d{2})?$/);
   if (!m || !Number.isFinite(ms)) return '';
   const mins = (m[1] === '-' ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3] || 0));
+  if (Math.abs(mins) > 15 * 60) return '';
   return new Date(ms + mins * 60000).toISOString().slice(0, 10);
 }
 
