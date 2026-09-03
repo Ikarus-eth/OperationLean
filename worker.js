@@ -63,7 +63,7 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-09-01e';
+const VERSION  = '2026-09-01f';
 const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
@@ -111,18 +111,25 @@ function samplesOf(workout) {
 function trimToEffort(s, maxhr) {
   if (s.length < 12) return s;
   const floor = Math.max(100, 0.55 * maxhr);
-  const hot = [];
-  for (let i = 0; i < s.length; i++) if (s[i].peak >= floor) hot.push(i);
-  if (!hot.length) return s;                       // an easy session; keep it all
+  const COOL_RUN = 60;             // easy readings in a row that end a session
+  const COOL_GAP = 15 * 60000;     // or a real gap, when the stamps are real
 
-  // Walk back from the last hard reading while the gaps stay under a quarter
-  // of an hour, so this morning's surf is not glued onto tonight's lifting.
-  let end = hot[hot.length - 1], start = end;
-  for (let k = hot.length - 1; k > 0; k--) {
-    if (s[hot[k]].t - s[hot[k - 1]].t > 15 * 60000) break;
-    start = hot[k - 1];
+  let end = -1;
+  for (let i = s.length - 1; i >= 0; i--) if (s[i].peak >= floor) { end = i; break; }
+  if (end < 0) return s;                            // an easy session; keep it all
+
+  /* Walk back from the last hard reading. Counting readings rather than
+     minutes is the point: a client that sends values without timestamps has
+     them laid back out evenly, which squashes four quiet hours between the
+     sauna and the gym into a few apparent minutes. The count survives that. */
+  let start = end, cool = 0;
+  for (let i = end - 1; i >= 0; i--) {
+    if (s[i + 1].t - s[i].t > COOL_GAP) break;
+    if (s[i].peak < floor) { if (++cool >= COOL_RUN) break; }
+    else { cool = 0; start = i; }
   }
-  const pad = 120000;                              // two minutes either side
+
+  const pad = 120000;                               // two minutes either side
   const out = s.filter(p => p.t >= s[start].t - pad && p.t <= s[end].t + pad);
   return out.length >= 12 ? out : s;
 }
@@ -314,14 +321,16 @@ function dayInZone(ms, tz) {
 }
 
 function normaliseSimple(b) {
-  const vals = String(b.values ?? '').split(/[,\s]+/).map(v => Number(v)).filter(v => Number.isFinite(v));
+  let vals = String(b.values ?? '').split(/[,\s]+/).map(v => Number(v)).filter(v => Number.isFinite(v));
   if (!vals.length) return null;
+  if (vals.length > 20000) vals = vals.slice(-20000);   // a week of readings, at most
 
   const step = (Number(b.step_s) > 0 ? Number(b.step_s) : 5) * 1000;
   const times = String(b.times ?? '').split(',').map(s => s.trim()).filter(Boolean);
 
   let t0 = parseHRDate(b.start);
   let t1 = parseHRDate(b.end);
+  const hadStart = Number.isFinite(t0), hadEnd = Number.isFinite(t1);
   if (!Number.isFinite(t1)) t1 = Number.isFinite(t0) ? t0 + (vals.length - 1) * step : Date.now();
   if (!Number.isFinite(t0)) t0 = t1 - (vals.length - 1) * step;
   if (t1 <= t0) t1 = t0 + (vals.length - 1) * step;
@@ -338,7 +347,10 @@ function normaliseSimple(b) {
   // in the wrong place, so fall back to the day at the first sample.
   return { data: { workouts: [{
     id: str(b.id || ''), name: str(b.name || 'Workout'),
-    trim: String(b.trim ?? '') !== 'no',            // &trim=no to keep the lot
+    // Trim only when the boundaries were guessed. Given both ends explicitly,
+    // the caller knows where the session was and is not to be second-guessed.
+    trim: String(b.trim ?? '') === 'yes' ||
+          (String(b.trim ?? '') !== 'no' && !(hadStart && hadEnd)),
     day: str(b.day || '') || dayInZone(t1, b.tz),
     start: b.start || heartRateData[0].date,
     end: b.end || heartRateData[heartRateData.length - 1].date,

@@ -229,7 +229,7 @@ Shortcuts is Apple's own app, so it already has permission to read Health, and i
 
 Four actions. The body is a bare list of readings and everything else lives in the URL, which removes the fiddliest part — assembling JSON around a variable.
 
-1. **Find Health Samples** — Type is Heart Rate. Start Date in the last 2 hours. **Sort by Start Date, Oldest First.** Unit `count/min`, Group by None, Limit off, and no other filters.
+1. **Find Health Samples** — Type is Heart Rate. Start Date is in the last **1 days**. **Sort by Start Date, Order Oldest First.** Unit `count/min`, Group by None, Limit off, and no other filters.
 2. **Get Details of Health Samples** — Value.
 3. **Combine Text** — Separator: Custom, `,`.
 4. **Get Contents of URL**
@@ -238,7 +238,9 @@ Four actions. The body is a bare list of readings and everything else lives in t
    - Headers: `X-Logbook-Secret` = the secret
    - Request Body: File, and pick the Combined Text
 
-Then Automation ▸ Personal ▸ Workout ▸ When it ends ▸ Run Immediately.
+Then Automation ▸ Personal ▸ Workout. Set **Workout Type** to the one lifting type and **When** to Is Ended, then Run Immediately.
+
+The workout type on the trigger is what keeps the sauna and the yoga out. The shortcut only ever runs at the end of a lift, so the most recent hard stretch of the day is the lift, and the shortcut never has to know about anything else. Shortcuts only offers days as a window, not hours, which is why the narrowing happens here rather than in the filter.
 
 `tz` is your UTC offset and decides which calendar day the workout belongs to — `+08:00` in Bali, `+02:00` in most of Europe in summer. It is in the URL rather than worked out here because a Worker's clock is UTC and in the wrong place. Change it when you travel.
 
@@ -246,7 +248,13 @@ A plus sign in a URL means a space, so `+08:00` arrives with the sign stripped. 
 
 The sort matters more than it looks. Only the numbers are sent, with no timestamps — they are laid back out at five seconds apart. Out of order, the trace is scrambled, and nothing about the result will look obviously wrong.
 
-The window does not have to be exact. A raw window has quiet minutes either side of the session, so the readings are trimmed to the last stretch that looks like effort before anything is stored: everything below the greater of 100 bpm and 55% of your maximum is dropped from the ends, with two minutes left either side. A gap of more than a quarter of an hour between hard readings ends the session, so this morning's surf is not glued onto tonight's lifting. A session that never gets hot is kept whole rather than thrown away, and `&trim=no` in the URL turns it off. None of this touches a workout that came from Health Auto Export, which the watch has already bounded.
+The window does not have to be exact. A day of readings is trimmed to the last stretch that looks like effort before anything is stored. Everything below the greater of 100 bpm and 55% of your maximum comes off the ends, with two minutes left either side, and sixty easy readings in a row end the session.
+
+Sixty *readings*, not sixty minutes, and the difference matters. A client that sends values with no timestamps has them laid back out evenly, which squashes the four quiet hours between the sauna and the gym into a few apparent minutes — a rule about elapsed time would glue them together, and one about counts does not. A real gap of a quarter of an hour still separates sessions when actual timestamps were sent.
+
+A session that never gets hot — yoga nidra, an easy walk — is kept whole rather than thrown away, since nothing in it crosses the floor. `&trim=no` turns it off, and giving both `start` and `end` turns it off too: explicit boundaries mean the caller knows where the session was.
+
+None of this touches a workout from Health Auto Export, which the watch has already bounded.
 
 One caveat. Only the endpoint has been tested, not the shortcut: action names move between iOS versions, so send a screenshot if one is missing.
 
