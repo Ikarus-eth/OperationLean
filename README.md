@@ -229,7 +229,7 @@ Shortcuts is Apple's own app, so it already has permission to read Health, and i
 
 Four actions. The body is a bare list of readings and everything else lives in the URL, which removes the fiddliest part — assembling JSON around a variable.
 
-1. **Find Health Samples** — Heart Rate. Sort by Start Date, Order Oldest First. Filter: Start Date is after `Date`, Relative, −3 Hours.
+1. **Find Health Samples** — Type is Heart Rate. Start Date in the last 2 hours. **Sort by Start Date, Oldest First.** Unit `count/min`, Group by None, Limit off, and no other filters.
 2. **Get Details of Health Samples** — Value.
 3. **Combine Text** — Separator: Custom, `,`.
 4. **Get Contents of URL**
@@ -244,7 +244,11 @@ Then Automation ▸ Personal ▸ Workout ▸ When it ends ▸ Run Immediately.
 
 A plus sign in a URL means a space, so `+08:00` arrives with the sign stripped. Rather than make anyone type `%2B` on a phone, a missing sign is read as plus: `+08:00`, `08:00`, `0800` and `8` all mean the same thing, and west of Greenwich still needs its minus. Anything that is not an offset is ignored rather than guessed at.
 
-Two caveats. Only the endpoint has been tested, not the shortcut: action names move between iOS versions, so send a screenshot if one is missing. And a three-hour window catches anything else inside it, so a morning run would be folded into an evening session. Narrowing that needs the workout's own start time and a few more actions.
+The sort matters more than it looks. Only the numbers are sent, with no timestamps — they are laid back out at five seconds apart. Out of order, the trace is scrambled, and nothing about the result will look obviously wrong.
+
+The window does not have to be exact. A raw window has quiet minutes either side of the session, so the readings are trimmed to the last stretch that looks like effort before anything is stored: everything below the greater of 100 bpm and 55% of your maximum is dropped from the ends, with two minutes left either side. A gap of more than a quarter of an hour between hard readings ends the session, so this morning's surf is not glued onto tonight's lifting. A session that never gets hot is kept whole rather than thrown away, and `&trim=no` in the URL turns it off. None of this touches a workout that came from Health Auto Export, which the watch has already bounded.
+
+One caveat. Only the endpoint has been tested, not the shortcut: action names move between iOS versions, so send a screenshot if one is missing.
 
 ### Manual, as a fallback
 

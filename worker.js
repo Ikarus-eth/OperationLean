@@ -63,7 +63,7 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-09-01d';
+const VERSION  = '2026-09-01e';
 const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
@@ -100,6 +100,31 @@ function samplesOf(workout) {
     out.push({ t, hr: avg, peak: Number.isFinite(peak) ? peak : avg });
   }
   return out.sort((a, b) => a.t - b.t);
+}
+
+/** A raw time window has quiet minutes either side of the session — sitting in
+ *  the car, walking to the rack. Keep the last stretch that looks like effort,
+ *  so a two-hour window and a fifty-minute session give the same row.
+ *
+ *  Only for hand-rolled pushes. A workout from Health Auto Export is already
+ *  bounded by the watch and must be left exactly as it came. */
+function trimToEffort(s, maxhr) {
+  if (s.length < 12) return s;
+  const floor = Math.max(100, 0.55 * maxhr);
+  const hot = [];
+  for (let i = 0; i < s.length; i++) if (s[i].peak >= floor) hot.push(i);
+  if (!hot.length) return s;                       // an easy session; keep it all
+
+  // Walk back from the last hard reading while the gaps stay under a quarter
+  // of an hour, so this morning's surf is not glued onto tonight's lifting.
+  let end = hot[hot.length - 1], start = end;
+  for (let k = hot.length - 1; k > 0; k--) {
+    if (s[hot[k]].t - s[hot[k - 1]].t > 15 * 60000) break;
+    start = hot[k - 1];
+  }
+  const pad = 120000;                              // two minutes either side
+  const out = s.filter(p => p.t >= s[start].t - pad && p.t <= s[end].t + pad);
+  return out.length >= 12 ? out : s;
 }
 
 /** Same shape the browser produces, so both paths fill the hr table alike. */
@@ -212,7 +237,7 @@ async function ingestWorkouts(env, user, payload) {
   const days = new Set();
 
   for (const w of found) {
-    const s = samplesOf(w);
+    const s = w.trim ? trimToEffort(samplesOf(w), maxhr) : samplesOf(w);
     const sum = summariseHR(s, maxhr);
     if (!sum) { skipped++; continue; }
     if (sum.duration_min < MIN_WORKOUT_MIN) { skipped++; continue; }
@@ -313,6 +338,7 @@ function normaliseSimple(b) {
   // in the wrong place, so fall back to the day at the first sample.
   return { data: { workouts: [{
     id: str(b.id || ''), name: str(b.name || 'Workout'),
+    trim: String(b.trim ?? '') !== 'no',            // &trim=no to keep the lot
     day: str(b.day || '') || dayInZone(t1, b.tz),
     start: b.start || heartRateData[0].date,
     end: b.end || heartRateData[heartRateData.length - 1].date,
@@ -545,7 +571,7 @@ export default {
       }
 
       // Query string fills in anything the body did not say.
-      for (const k of ['day', 'name', 'step_s', 'tz', 'id', 'start', 'end']) {
+      for (const k of ['day', 'name', 'step_s', 'tz', 'id', 'start', 'end', 'trim']) {
         const v = url.searchParams.get(k);
         if (v && body[k] === undefined) body[k] = v;
       }
