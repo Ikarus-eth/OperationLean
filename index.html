@@ -163,6 +163,9 @@ body{
 .dayhead{display:flex;align-items:center;gap:10px;padding:22px 0 2px;font-size:12px;
   color:var(--ink-2);text-transform:uppercase;letter-spacing:.09em}
 .dayhead::after{content:"";flex:1 1 auto;height:1px;background:var(--rule)}
+.ex-pair{display:inline-block;margin-right:8px;padding:0 5px;border:1px solid var(--rule);border-radius:5px;
+  background:var(--surface);color:var(--ink-2);font:600 11px/17px inherit;letter-spacing:.07em;
+  vertical-align:2px;white-space:nowrap}
 .ex[data-pair]{position:relative;padding-left:13px}
 .ex[data-pair]::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:2px;background:var(--rule);border-radius:1px}
 .ex[data-pair-first]::before{top:24px}
@@ -458,15 +461,31 @@ function renderList(){
     }
 
     const box = el('div','ex');
+    /* Paired exercises run in parallel — a set of one, then a set of the other.
+       The gutter rule alone did not read as "these two alternate", so each one
+       also carries its position in the pair: A1, A2. A group left with one
+       member after a delete is not a superset any more and loses the mark. */
+    let mark = null, partner = null;
     if (ex.pair) {
       box.dataset.pair = ex.pair;
       const next = state.rows[xi+1];
       if (!prev || prev.pair !== ex.pair) box.dataset.pairFirst = '1';
       if (!next || next.pair !== ex.pair) box.dataset.pairLast  = '1';
+      const group = state.rows.filter(r => r.pair === ex.pair);
+      if (group.length > 1) {
+        mark = ex.pair + (group.indexOf(ex) + 1);
+        partner = group.filter(r => r !== ex).map(r => r.name).join(', ');
+      }
     }
 
     const head = el('div','ex-head');
-    const nm = el('div','ex-name'); nm.textContent = ex.name;
+    const nm = el('div','ex-name');
+    if (mark) {
+      const tag = el('span','ex-pair'); tag.textContent = mark;
+      tag.title = 'Alternate sets with ' + partner;
+      nm.append(tag, document.createTextNode(ex.name));
+      nm.setAttribute('aria-label', ex.name + ', superset ' + mark + ' with ' + partner);
+    } else nm.textContent = ex.name;
     const tg = el('div','ex-target'); tg.textContent = ex.target || '';
 
     const del = el('button','ex-del'); del.type = 'button'; del.textContent = '\u00D7';

@@ -302,7 +302,7 @@ Edit the `PROGRAM` object in `index.html`. Nothing else changes — not the shee
 ```
 
 - `sets` is only how many rows appear. Add or remove more in the app.
-- `pair` draws the bracket linking antagonist supersets. Omit for unpaired work.
+- `pair` marks an antagonist superset. Everything sharing a letter is bracketed in the left gutter and numbered in order — `A1`, `A2` — so the screen says which exercises alternate. A letter left with one exercise, because the partner was taken off for the day, shows no number. Omit for unpaired work.
 - `units: { w: 'in' }` relabels a box. `fields: ['r']` shows only that box.
 - `fixed: { r: '4' }` opens the row at that value every time and ignores what you did last time. For prescriptions, not for progression.
 - `seed: [{ r:'8' }, { r:'7' }]` is a per-set starting point for an exercise with no history yet. Unlike `fixed` it steps out of the way as soon as there is a real session to carry over from.
