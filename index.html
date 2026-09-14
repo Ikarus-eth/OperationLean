@@ -531,7 +531,27 @@ function renderList(){
         inp.placeholder = labelOf(ex, f);
         inp.value = set[f] ?? '';
         inp.setAttribute('aria-label', ex.name + ' set ' + (si+1) + ' ' + inp.placeholder);
+        /* Tapping a box empties it so the new number can be typed straight in.
+           The old number stays readable as a placeholder and comes back if the
+           box is left without typing, so a mis-tap costs nothing. Clearing the
+           DOM value does not fire `input`, so `set[f]` and the done flag only
+           move when a key is actually pressed. */
+        inp.onfocus = () => {
+          if (inp.value === '') return;
+          inp.dataset.prev = inp.value;
+          inp.placeholder = inp.value;
+          inp.value = '';
+        };
+        inp.onblur = () => {
+          if ('prev' in inp.dataset) {
+            if (inp.value === '' && !inp.dataset.typed) inp.value = inp.dataset.prev;
+            delete inp.dataset.prev;
+          }
+          delete inp.dataset.typed;
+          inp.placeholder = labelOf(ex, f);
+        };
         inp.oninput = () => {
+          inp.dataset.typed = '1';
           set[f] = inp.value;
           set.carried = false;
           if (!set.done) confirmSet(set);

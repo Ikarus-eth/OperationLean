@@ -77,7 +77,7 @@ Reads need no secret. You can open that URL in any browser, hand it to anyone, o
 Every field arrives pre-filled with what you did last time — weight, reps and RIR.
 
 - **Same as last week:** tap the tick. One tap for the whole set.
-- **Something changed:** edit the field. Editing ticks the set for you.
+- **Something changed:** tap the field and type. It empties on tap, so the new number goes straight in — the old one stays behind it in grey and comes back if you tap away without typing. Editing ticks the set for you.
 - **Didn't do it:** leave it alone. Unticked sets are not saved.
 
 Pre-filled values are grey. Once a set is ticked they turn black, so a glance tells you how far through the session you are. When a field differs from last week, the old number appears underneath it. A green edge on the weight box means `weight × reps` beat that set number last time. Where an exercise has no weight box, reps alone decide.
