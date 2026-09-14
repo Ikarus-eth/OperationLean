@@ -16,6 +16,12 @@ const SECRET   = 'logbook-4f9c2e';
 
 const MAX_HR = { ikarus: 182, johanna: 185 };   // used for zones and % of max
 const SET_WINDOW_S = 90;                        // seconds before a tick counted as "the set"
+
+/* Bumped by hand on every deploy. It is printed at the bottom of the page so
+   "is this phone running the version I just shipped?" is answerable by looking,
+   rather than by guessing at caches. GitHub Pages serves this file with a ten
+   minute max-age, so a phone can sit on an old copy for a while. */
+const BUILD = { n: 1, at: '14 Sep 2026, 12:05' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -278,6 +284,7 @@ body[data-firstrun] .date{visibility:hidden}
 .setup b{display:block;margin-bottom:4px}
 .setup code{font:400 13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surface);padding:1px 4px;border-radius:4px}
 
+.build{color:var(--ghost);font-size:12px;text-align:center;padding:18px 0 2px;letter-spacing:.02em}
 :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -333,6 +340,7 @@ body[data-firstrun] .date{visibility:hidden}
     <label for="notes">Session notes</label>
     <textarea id="notes" placeholder="Sleep, energy, niggles, anything that explains the numbers later."></textarea>
     <button class="addex" id="addex" type="button">Add an exercise</button>
+    <div class="build num" id="build"></div>
   </div>
 </main>
 
@@ -532,23 +540,25 @@ function renderList(){
         inp.value = set[f] ?? '';
         inp.setAttribute('aria-label', ex.name + ' set ' + (si+1) + ' ' + inp.placeholder);
         /* Tapping a box empties it so the new number can be typed straight in.
-           The old number stays readable as a placeholder and comes back if the
-           box is left without typing, so a mis-tap costs nothing. Clearing the
-           DOM value does not fire `input`, so `set[f]` and the done flag only
-           move when a key is actually pressed. */
-        inp.onfocus = () => {
-          if (inp.value === '') return;
+           Nothing takes its place: a grey ghost of the old number looks exactly
+           like a carried-over value, which defeats the point of clearing it.
+           The number is not lost — it comes back if the box is left without
+           typing, and once a new one is typed the old one shows in the row
+           underneath. Clearing the DOM value does not fire `input`, so `set[f]`
+           and the done flag only move when a key is actually pressed. */
+        const grab = () => {
+          if ('prev' in inp.dataset || inp.value === '') return;
           inp.dataset.prev = inp.value;
-          inp.placeholder = inp.value;
           inp.value = '';
         };
+        inp.onfocus = grab;
+        inp.onclick = grab;          // in case focus arrives late or not at all
         inp.onblur = () => {
           if ('prev' in inp.dataset) {
             if (inp.value === '' && !inp.dataset.typed) inp.value = inp.dataset.prev;
             delete inp.dataset.prev;
           }
           delete inp.dataset.typed;
-          inp.placeholder = labelOf(ex, f);
         };
         inp.oninput = () => {
           inp.dataset.typed = '1';
@@ -1339,6 +1349,7 @@ document.addEventListener('visibilitychange', async () => {
 /* ══ boot ════════════════════════════════════════════════ */
 
 async function boot(){
+  $('#build').textContent = 'Build ' + BUILD.n + ' \u00b7 ' + BUILD.at;
   renderWho();
   renderFirstRun();
   if (!state.userChosen) return;         // nothing else until we know whose this is

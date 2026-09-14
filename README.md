@@ -77,10 +77,12 @@ Reads need no secret. You can open that URL in any browser, hand it to anyone, o
 Every field arrives pre-filled with what you did last time — weight, reps and RIR.
 
 - **Same as last week:** tap the tick. One tap for the whole set.
-- **Something changed:** tap the field and type. It empties on tap, so the new number goes straight in — the old one stays behind it in grey and comes back if you tap away without typing. Editing ticks the set for you.
+- **Something changed:** tap the field and type. The box empties on tap, so the new number goes straight in. Tap away without typing and the old number comes back, so a mis-tap costs nothing. Editing ticks the set for you.
 - **Didn't do it:** leave it alone. Unticked sets are not saved.
 
 Pre-filled values are grey. Once a set is ticked they turn black, so a glance tells you how far through the session you are. When a field differs from last week, the old number appears underneath it. A green edge on the weight box means `weight × reps` beat that set number last time. Where an exercise has no weight box, reps alone decide.
+
+At the bottom of the page is a build number. It says which version of the app this phone is actually running. GitHub Pages serves the page with a ten minute cache and a home-screen app can hold it longer, so after a change that number is how you tell a stale copy from a real bug. If it is behind, open the page with `?v=` and anything after it, or close the app from the switcher and reopen.
 
 The tick is not decoration — it timestamps the set, which is what makes per-exercise heart rate possible.
 
