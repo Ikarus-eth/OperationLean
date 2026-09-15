@@ -120,6 +120,12 @@ The **×** beside an exercise name removes it for today. Nothing is lost that wa
 
 Both are for today only, and both are local to the device. Another device opening the same date shows the full program again, with the removed exercise back but empty and unticked — nothing was logged for it, so nothing is wrong, it is just clutter you have to clear twice. Next session the program is back as written everywhere.
 
+### When carry-over is empty
+
+A row with no numbers in it says which of two things happened. **First time — nothing to carry over** means the database has no history for that exercise name. **Could not reach your history** means the app asked and did not get an answer, so the boxes are empty for a reason that has nothing to do with you. The second one retries on its own when the phone comes off the lock screen or back onto a network, and fills the boxes in when it succeeds — it only ever fills boxes still empty and untouched, so catching up mid-session cannot overwrite a set you already did.
+
+Carry-over has no time limit. It takes the most recent date that exercise appears on, whether that was Tuesday or in March. A gap of a fortnight changes nothing; an exercise that never got saved has nothing to offer.
+
 ### Swapping an exercise
 
 Every exercise name is a dropdown. Tap it and you get the same movement done five or six other ways — bodyweight, dumbbell, cable, machine, barbell — plus **Something else…** for a free-text name. The machine is taken, the toe hurts, the gym does not have the thing: change the row, keep the session.

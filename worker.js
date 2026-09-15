@@ -496,8 +496,11 @@ export default {
       if (action === 'last') {
         const user = url.searchParams.get('user') || '';
         // For each exercise, the rows belonging to its most recent date.
+        // reps_assist belongs here for the same reason it is in `day`: the
+        // pull-up ladder is three numbers, and a carry-over missing one of
+        // them opens the row half empty every single week.
         const rs = await env.DB.prepare(`
-          SELECT s.exercise, s.date, s.set_no, s.weight, s.reps, s.rir
+          SELECT s.exercise, s.date, s.set_no, s.weight, s.reps, s.reps_assist, s.rir
           FROM sets s
           JOIN (
             SELECT exercise, MAX(date) AS d
@@ -513,6 +516,7 @@ export default {
           last[r.exercise].sets.push({
             w: r.weight === null ? '' : String(r.weight),
             r: r.reps   === null ? '' : String(r.reps),
+            r2: r.reps_assist === null || r.reps_assist === undefined ? '' : String(r.reps_assist),
             rir: r.rir  === null ? '' : String(r.rir),
           });
         }
