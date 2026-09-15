@@ -34,19 +34,17 @@ Commit. GitHub Pages republishes in about a minute.
 
 ## Deploying
 
-`index.html`, `README.md` and `schema.sql` deploy themselves: GitHub Pages republishes about a minute after a push to `main`.
+Everything deploys itself. There is no manual step and no dashboard to open.
 
-`worker.js` does too, once. Connect it in the Cloudflare dashboard one time and never open it again:
+`index.html`, `README.md` and `schema.sql` go out through GitHub Pages, which republishes about a minute after a push to `main`. `worker.js` and `wrangler.toml` go out through Cloudflare Workers Builds, connected to this repository at Workers & Pages ▸ `wild-haze-fac9` ▸ Settings ▸ Builds — build command empty, deploy command `npx wrangler deploy`, root `/`.
 
-1. Put the real database id into `wrangler.toml`. D1 ▸ `workoutlog` ▸ Settings shows it. It is an identifier, not a credential, and belongs in the repository.
-2. Workers & Pages ▸ `wild-haze-fac9` ▸ Settings ▸ Build ▸ **Connect** to `Ikarus-eth/OperationLean`, branch `main`, root `/`.
-3. Leave the build command empty. Deploy command `npx wrangler deploy`.
+To know a Worker deploy landed rather than assuming it, change `VERSION` in `worker.js` in the same commit and then read the `version` field at the Worker URL. Without that the health check says the same thing before and after and tells you nothing, which is how a Git connection can sit there working for weeks while everyone believes the Worker still needs pasting in by hand.
 
-After that a push updates the Worker the way it already updates the app.
+`wrangler.toml` is the source of truth for bindings. A binding not listed there is dropped on the next deploy, so the D1 block stays in. Secrets are managed separately and survive: `LOGBOOK_SECRET` lives in the dashboard and must never go into `wrangler.toml`, because this repository is public. Both are visible in the health check — `d1_bound` and `secret_set`.
 
-Two things to know before connecting. `wrangler.toml` becomes the source of truth for bindings, so a binding missing from it is dropped on the next deploy — the D1 binding is in there, keep it there. And `LOGBOOK_SECRET` must stay a dashboard secret and must never go into `wrangler.toml`, because this repository is public. Secrets survive deploys; they are managed separately from the config.
+A failed build leaves the running Worker alone, which is the safe way round. The log is at Settings ▸ Builds.
 
-If the database id is still a placeholder the build fails and the running Worker is left alone, which is the safe way round.
+Build watch paths are `*`, so a push that only touches the app redeploys the Worker too. Harmless — a deploy is atomic, and the binding and the secret both survive it — but narrowing Include paths to `worker.js` and `wrangler.toml` would stop the pointless ones.
 
 ### The database migrates itself
 
