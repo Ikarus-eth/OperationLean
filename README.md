@@ -120,6 +120,20 @@ The **×** beside an exercise name removes it for today. Nothing is lost that wa
 
 Both are for today only, and both are local to the device. Another device opening the same date shows the full program again, with the removed exercise back but empty and unticked — nothing was logged for it, so nothing is wrong, it is just clutter you have to clear twice. Next session the program is back as written everywhere.
 
+### Swapping an exercise
+
+Every exercise name is a dropdown. Tap it and you get the same movement done five or six other ways — bodyweight, dumbbell, cable, machine, barbell — plus **Something else…** for a free-text name. The machine is taken, the toe hurts, the gym does not have the thing: change the row, keep the session.
+
+A substitution is logged under its own name. `Cable Overhead Ext` is not `Overhead Triceps Ext`, so it carries over from the last time you did cable overhead extensions, compares against those numbers, and never averages in with the dumbbell ones. This is only possible because the exercise column holds values and not columns; see *How the data is stored*.
+
+What the row keeps from the line it replaced: its place in the session, its target, and its superset letter. What it takes from the substitute: its boxes and unit labels. Swapping Pull-ups for Lat Pulldown drops the BW/assisted/assist-kg layout and gives you kg/reps/RIR; swapping it for Chin-ups keeps it.
+
+Sets already ticked move across with the row, after a confirm. Untouched sets are blanked and refilled from the substitute's own history, so the numbers you see are the ones you actually lifted on that variant. The line under the name says *in place of X* until you swap back, and the original is always the first option in the list.
+
+The swap is for today only, and — like removing an exercise — it lives on the device that made it. If the sets have been saved, another device opening the same date moves the row across on its own rather than showing both. Next session the program is back as written.
+
+To change the alternatives, edit `VARIANTS` at the top of `index.html`. It is a list of groups; anything in a group can stand in for anything else in it, so adding a name to a group makes it available from every other member. A substitute that needs different boxes — seconds, inches, no weight column — gets an entry in `EX_CFG` below it.
+
 ### Every day
 
 Under every session, training day or rest day, there is an **Every day** block:
@@ -313,6 +327,8 @@ Edit the `PROGRAM` object in `index.html`. Nothing else changes — not the shee
 - Anything not in the program can still be logged with "Add an exercise", and it carries over next week like everything else.
 
 The `DAILY` object below `PROGRAM` holds the every-day items, same shape.
+
+`VARIANTS` below that holds the substitutions offered in each exercise's dropdown — a list of groups, one per movement. Anything in a group can stand in for anything else in it, so a name added to a group becomes available from every other member and there is no per-exercise list to keep in step. Names may repeat across groups; the first group wins, and the line a row replaced is always offered back regardless. `EX_CFG` under it gives boxes and unit labels to substitutes that are not kg / reps / RIR, and is only read for names that appear nowhere in `PROGRAM`.
 
 Renaming an exercise starts its history over — carry-over is keyed on the exact name, and the old rows keep the old name. Change a name only when you mean to break the line.
 

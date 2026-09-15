@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 1, at: '14 Sep 2026, 12:05' };
+const BUILD = { n: 2, at: '15 Sep 2026, 10:50' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -109,6 +109,86 @@ const DAILY = {
   ikarus:  DAILY_IKARUS,
   johanna: DAILY_IKARUS,     // same program for now
 };
+
+/* ══════════════════════════════════════════════════════════════════
+   VARIANTS — what may stand in for what, on the day.
+
+   One array per movement. Anything in a group can replace anything
+   else in it, so adding a name to a group makes it available from
+   every other member; there is no per-exercise list to keep in step.
+   The first name in each group is the one the program normally asks
+   for, which is only a convention — nothing reads the order.
+
+   A substitution is logged under its own name, because the exercise
+   column is a value and not a schema. That is the whole reason this
+   is cheap: cable overhead extensions carry over from the last cable
+   overhead extensions, and never get averaged in with the dumbbell
+   ones. It also means a swap is worth making even for one session.
+   ══════════════════════════════════════════════════════════════════ */
+const VARIANTS = [
+  // legs
+  ['Perfect Squat','Belt Squat','Leg Press','Hack Squat','Goblet Squat','Bulgarian Split Squat'],
+  ['Hip Thrust','Machine Hip Thrust','Cable Pull-Through','Romanian Deadlift','45° Back Extension','Single-Leg Hip Thrust'],
+  ['Seated Leg Curl','Lying Leg Curl','Standing Leg Curl','Cable Leg Curl','Nordic Curl','Slider Leg Curl'],
+  ['Leg Extension','Single-Leg Extension','Cable Leg Extension','Sissy Squat','Reverse Nordic','Step-Up'],
+  ['Standing Calf Raise','Seated Calf Raise','Leg Press Calf Raise','Smith Calf Raise','DB Calf Raise','Single-Leg Calf Raise'],
+  ['Copenhagen Plank','Side Plank','Adductor Machine','Cable Hip Adduction','Short-Lever Copenhagen','Side Plank Leg Lift'],
+  ['Jumps','Box Jump','Broad Jump','Depth Jump','Pogo Hops','Trap Bar Jump'],
+  ['Carries','Farmer\u2019s Walk','Suitcase Carry','Trap Bar Carry','Overhead Carry','Sled Push'],
+
+  // pulling
+  ['Pull-ups','Lat Pulldown','Chin-ups','Neutral-Grip Pulldown','Assisted Pull-up Machine','Kneeling Cable Pulldown'],
+  ['Chest-Supported Row','Single-Arm DB Row','Seated Cable Row','Machine Row','Inverted Row','Barbell Row'],
+
+  // pushing
+  ['Incline DB Press','Flat DB Press','Machine Chest Press','Incline Barbell Press','Cable Chest Press','Push-ups','Dips'],
+  ['DB Fly','Cable Crossover','Pec Deck','Incline DB Fly','Low-to-High Cable Fly','Band Fly'],
+
+  // shoulders and arms
+  ['Rear Delt Fly','Reverse Pec Deck','Cable Face Pull','Bent-Over DB Fly','Band Pull-Apart','Rope Rear Delt Row'],
+  ['Lateral Raise','Cable Lateral Raise','Machine Lateral Raise','Leaning DB Lateral Raise','Band Lateral Raise','Upright Row'],
+  ['Incline DB Curl','DB Curl','Hammer Curl','Cable Curl','Preacher Curl','Barbell Curl'],
+  ['Overhead Triceps Ext','Cable Overhead Ext','Skullcrusher','Rope Pushdown','Bar Pushdown','Bench Dip'],
+
+  // daily habits
+  ['Pulls','Chin-ups','Inverted Row','Ring Row','Band Pulldown','Negative Pull-up'],
+  ['Handstand','Wall Handstand','Freestanding Handstand','Pike Push-up','Handstand Push-up','Crow Pose'],
+];
+
+/* Boxes for the substitutes that are not kg / reps / RIR. An exercise that
+   is already in a session takes its config from PROGRAM and never reaches
+   this; this is only for names that exist nowhere but a VARIANTS group. */
+const EX_CFG = {
+  'Chin-ups':                  { fields:['r','r2','w'], progress:'r', units:{ r:'BW reps', r2:'assisted', w:'assist kg' } },
+  'Assisted Pull-up Machine':  { progress:'r', units:{ w:'assist kg' } },
+  'Negative Pull-up':          { fields:['r','rir'] },
+  'Inverted Row':              { fields:['r','rir'] },
+  'Ring Row':                  { fields:['r','rir'] },
+  'Push-ups':                  { fields:['r','rir'] },
+  'Sissy Squat':               { fields:['r','rir'] },
+  'Reverse Nordic':            { fields:['r','rir'] },
+  'Nordic Curl':               { fields:['r','rir'] },
+  'Slider Leg Curl':           { fields:['r','rir'] },
+  'Box Jump':                  { units:{ w:'in' }, hint:'box height in inches, then reps' },
+  'Broad Jump':                { fields:['r'] },
+  'Depth Jump':                { units:{ w:'in' }, hint:'drop height in inches, then reps' },
+  'Pogo Hops':                 { fields:['r'] },
+  'Farmer\u2019s Walk':        { hint:'log seconds in the reps box' },
+  'Suitcase Carry':            { hint:'log seconds in the reps box' },
+  'Trap Bar Carry':            { hint:'log seconds in the reps box' },
+  'Overhead Carry':            { hint:'log seconds in the reps box' },
+  'Sled Push':                 { hint:'log seconds in the reps box' },
+  'Side Plank':                { fields:['r'], units:{ r:'sec' } },
+  'Short-Lever Copenhagen':    { fields:['r'], units:{ r:'sec' } },
+  'Side Plank Leg Lift':       { fields:['r','rir'] },
+  'Wall Handstand':            { fields:['r'], units:{ r:'min' } },
+  'Freestanding Handstand':    { fields:['r'], units:{ r:'min' } },
+  'Crow Pose':                 { fields:['r'], units:{ r:'sec' } },
+  'Pike Push-up':              { fields:['r','rir'] },
+  'Handstand Push-up':         { fields:['r','rir'] },
+  'Dips':                      { hint:'added weight in the kg box, bodyweight is zero' },
+  'Bench Dip':                 { fields:['r','rir'] },
+};
 </script>
 
 <style>
@@ -153,11 +233,22 @@ body{
 
 /* exercise */
 .ex{border-bottom:1px solid var(--rule);padding:16px 0}
-.ex-head{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+.ex-head{display:flex;align-items:center;gap:10px;margin-bottom:4px}
 .ex-name{font-size:17px;font-weight:600;letter-spacing:-.01em;flex:1 1 auto}
+/* The exercise name, when it is also the swap control. Styled to look like
+   the heading rather than like a form field: the caret is the only hint, and
+   that is enough once you know it is there. */
+.ex-pick{appearance:none;-webkit-appearance:none;flex:1 1 auto;min-width:0;max-width:100%;
+  margin:0;padding:0 15px 0 0;border:0;border-radius:0;background:transparent;
+  color:var(--ink);font:600 17px/1.3 inherit;letter-spacing:-.01em;
+  text-overflow:ellipsis;white-space:nowrap;overflow:hidden;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23A0A299' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right center;background-size:9px 6px}
+.ex-pick:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:4px}
 .ex-target{font-size:13px;color:var(--ink-2);white-space:nowrap}
 .ex-sub{font-size:13px;color:var(--ink-2);margin-bottom:10px;max-width:46ch}
 .ex-sub.fresh{color:var(--pending)}
+.ex-was{color:var(--pending)}
 .ex-del{appearance:none;align-self:center;flex:0 0 auto;width:34px;height:34px;margin-right:-8px;
   border:0;border-radius:7px;background:transparent;color:var(--ghost);font:400 21px/1 inherit;cursor:pointer}
 .ex-del:hover{color:var(--danger)}
@@ -458,6 +549,70 @@ const fieldsOf = ex => ex.fields || ['w','r','rir'];
 const labelOf  = (ex, f) => (ex.units && ex.units[f]) || FIELD_LABEL[f];
 const gridOf   = ex => '20px ' + '1fr '.repeat(fieldsOf(ex).length) + '46px';
 
+/* ══ substitutions ═══════════════════════════════════════
+   A row remembers the program line it came from in `slot`. Everything else
+   keys off the name, which is what changes: carry-over, the comparison
+   numbers under each set, and what lands in the exercise column. The slot
+   is only there so the program can still recognise its own row — without
+   it, reconcile would see the line missing and put a second copy back. */
+
+const VARIANT_INDEX = (() => {
+  const m = new Map();
+  VARIANTS.forEach(g => g.forEach(n => { if (!m.has(n)) m.set(n, g); }));
+  return m;
+})();
+
+/* The group of the exercise on screen, falling back to the group of the line
+   it replaced so a name typed in by hand is still swappable. The line it
+   replaced is always first in the list whatever group it sits in, so undoing
+   a swap is one tap and never a search. */
+function altsFor(ex){
+  const g = VARIANT_INDEX.get(ex.name) || VARIANT_INDEX.get(ex.slot || '') ||
+            (ex.slot ? [ex.slot] : []);
+  const a = g.filter(n => n !== ex.name);
+  if (ex.slot && ex.slot !== ex.name && !a.includes(ex.slot)) a.unshift(ex.slot);
+  return a;
+}
+
+/* Today's program wins, then the variant table, then the defaults. Swapping
+   back to the line you started on therefore restores it exactly. */
+const cfgFor = name => planFor().find(p => p.name === name) || EX_CFG[name] || {};
+
+function applySwap(ex, name){
+  const cfg = cfgFor(name);
+  if (!ex.slot) ex.slot = ex.name;
+  ex.name = name;
+  if (ex.slot === ex.name) delete ex.slot;          // back where it started
+  ex.hint = cfg.hint;                               // the line's hint is about the line
+  ex.units = cfg.units; ex.fields = cfg.fields; ex.fixed = cfg.fixed;
+  ex.seed = cfg.seed; ex.progress = cfg.progress;
+  if (cfg.target) ex.target = cfg.target;           // otherwise keep the prescription
+}
+
+/* Anything untouched is refilled from the new exercise's own history, which
+   is the point: cable extensions open at the cable numbers. Sets already
+   ticked keep their numbers and move across, because the alternative is
+   losing work you did before you got round to fixing the label. */
+function swapExercise(ex, name){
+  if (!name || name === ex.name) { renderList(); return; }
+  /* Two rows under one name write the same set numbers for the same day and
+     the second one wins. Rare — it takes swapping onto something already on
+     the screen — but silent, so it gets asked about. */
+  if (state.rows.some(r => r !== ex && r.name === name) &&
+      !confirm(name + ' is already on this session. Two of them will overwrite each other when they save. Go ahead?')) {
+    renderList(); return;
+  }
+  const kept = ex.sets.some(s => s.done || !s.carried);
+  if (kept && !confirm('Log the sets already filled in as ' + name + '?')) { renderList(); return; }
+  applySwap(ex, name);
+  const fx = ex.fixed || {};
+  ex.sets.forEach(s => {
+    if (s.done || !s.carried) return;
+    ALL_FIELDS.forEach(f => { s[f] = fx[f] ?? ''; });
+  });
+  carryOver(); saveDraft(); renderList();
+}
+
 function renderList(){
   const list = $('#list'); list.innerHTML = '';
 
@@ -487,13 +642,36 @@ function renderList(){
     }
 
     const head = el('div','ex-head');
-    const nm = el('div','ex-name');
     if (mark) {
       const tag = el('span','ex-pair'); tag.textContent = mark;
       tag.title = 'Alternate sets with ' + partner;
-      nm.append(tag, document.createTextNode(ex.name));
-      nm.setAttribute('aria-label', ex.name + ', superset ' + mark + ' with ' + partner);
-    } else nm.textContent = ex.name;
+      head.appendChild(tag);
+    }
+
+    /* The name is a picker whenever something else trains the same thing.
+       A native select is deliberate: it is one tap, it is the control iOS
+       already knows how to put under a thumb, and it needs no layer of its
+       own over a page that is being used with sweaty hands. */
+    const alts = altsFor(ex);
+    const nm = el(alts.length ? 'select' : 'div', alts.length ? 'ex-pick' : 'ex-name');
+    if (alts.length) {
+      [ex.name].concat(alts).forEach(n => {
+        const o = el('option'); o.value = n; o.textContent = n; nm.appendChild(o);
+      });
+      const other = el('option'); other.value = '\u0000other'; other.textContent = 'Something else\u2026';
+      nm.appendChild(other);
+      nm.value = ex.name;
+      nm.setAttribute('aria-label', 'Exercise' + (mark ? ', superset ' + mark + ' with ' + partner : '') +
+        ' — currently ' + ex.name + ', tap to swap');
+      nm.onchange = () => {
+        if (nm.value !== '\u0000other') return swapExercise(ex, nm.value);
+        const typed = (prompt('Swap ' + ex.name + ' for', '') || '').trim();
+        swapExercise(ex, typed || ex.name);
+      };
+    } else {
+      nm.textContent = ex.name;
+      if (mark) nm.setAttribute('aria-label', ex.name + ', superset ' + mark + ' with ' + partner);
+    }
     const tg = el('div','ex-target'); tg.textContent = ex.target || '';
 
     const del = el('button','ex-del'); del.type = 'button'; del.textContent = '\u00D7';
@@ -503,7 +681,9 @@ function renderList(){
       const touched = ex.sets.some(s => s.done || !s.carried) || !!(ex.note && ex.note.trim());
       if (touched && !confirm('Remove ' + ex.name + ' and everything typed into it?')) return;
       state.rows.splice(xi, 1);
-      if (!state.removed.includes(ex.name)) state.removed.push(ex.name);
+      // Keyed on the program line, or deleting a substitute puts the original back.
+      const key = ex.slot || ex.name;
+      if (!state.removed.includes(key)) state.removed.push(key);
       saveDraft(); renderList();
     };
 
@@ -514,6 +694,12 @@ function renderList(){
     if (ex.hint) sub.textContent = ex.hint;
     else if (L) sub.textContent = 'Carried over from ' + fmtDate(L.date);
     else { sub.textContent = 'First time — nothing to carry over'; sub.className = 'ex-sub fresh'; }
+    /* Say what was dropped, so a swap made at the start of a session is still
+       legible at the end of it, and so an accidental one is obvious. */
+    if (ex.slot) {
+      const was = el('span','ex-was'); was.textContent = 'in place of ' + ex.slot;
+      sub.append(document.createTextNode(sub.textContent ? ' · ' : ''), was);
+    }
     box.appendChild(sub);
 
     const F = fieldsOf(ex), grid = gridOf(ex);
@@ -705,6 +891,19 @@ function reconcile(){
   const byName = new Map(plan.map(p => [p.name, p]));
 
   state.rows.forEach(ex => {
+    const slot = byName.get(ex.slot || '');
+    if (slot) {
+      /* A substitute: where it sits in the session is still the program's
+         business, what boxes it shows is the substitute's own. */
+      ex.target = slot.target || '';
+      ex.pair   = slot.pair;
+      ex.daily  = !!slot.daily;
+      const c = EX_CFG[ex.name] || {};
+      ex.hint = c.hint; ex.units = c.units; ex.fields = c.fields;
+      ex.fixed = c.fixed; ex.seed = c.seed; ex.progress = c.progress;
+      if (c.target) ex.target = c.target;
+      return;
+    }
     const p = byName.get(ex.name);
     if (!p) return;                                  // added by hand, nothing to sync
     ex.target = p.target || '';
@@ -725,9 +924,9 @@ function reconcile(){
   // An every-day item now excluded from this session leaves the screen. Only
   // rows flagged daily are touched, so one added by hand is left alone.
   const dailyHere = new Set(dailyFor().map(p => p.name));
-  state.rows = state.rows.filter(ex => !ex.daily || dailyHere.has(ex.name));
+  state.rows = state.rows.filter(ex => !ex.daily || dailyHere.has(ex.slot || ex.name));
 
-  const have = new Set(state.rows.map(r => r.name));
+  const have = new Set(state.rows.map(r => r.slot || r.name));
   const gone = state.removed.concat(readDailyStore().removed);
   plan.forEach(p => {
     if (have.has(p.name) || gone.includes(p.name)) return;
@@ -758,8 +957,11 @@ function mergeDaily(){
   if (!saved.length) return;
   state.rows.forEach(ex => {
     if (!ex.daily) return;
-    const m = saved.find(s => s.name === ex.name);
+    // Matched on the program line, so a habit swapped on one session is the
+    // same row on the next one rather than a second, empty copy of it.
+    const m = saved.find(s => (s.slot || s.name) === (ex.slot || ex.name));
     if (!m) return;
+    if (m.name && m.name !== ex.name) applySwap(ex, m.name);
     if (Array.isArray(m.sets)) ex.sets = m.sets;
     ex.note = m.note || '';
   });
@@ -792,8 +994,9 @@ const draftKey = () => 'lb.draft.' + state.user + '.' + state.session + '.' + lo
 function saveDraft(quiet){
   try {
     const rows = state.rows.map(ex => ({
-      name:ex.name, target:ex.target, hint:ex.hint, pair:ex.pair,
-      units:ex.units, fields:ex.fields, fixed:ex.fixed, daily:ex.daily, note:ex.note || '',
+      name:ex.name, slot:ex.slot, target:ex.target, hint:ex.hint, pair:ex.pair,
+      units:ex.units, fields:ex.fields, fixed:ex.fixed, seed:ex.seed, progress:ex.progress,
+      daily:ex.daily, note:ex.note || '',
       sets: ex.sets.map(s => ({ w:s.w, r:s.r, r2:s.r2, rir:s.rir, done:s.done, ts:s.ts, carried:s.carried })),
     }));
     store.set(draftKey(), JSON.stringify({ rows, notes: $('#notes').value, hr: state.hr, removed: state.removed }));
@@ -878,6 +1081,13 @@ function mergeServer(){
     const name = String(r.exercise || '');
     if (!name) return;
     let ex = state.rows.find(x => x.name === name);
+    /* Swapped on the phone, opened on the laptop: the stored name belongs to
+       a line that is still sitting there unswapped and untouched. Move that
+       line rather than adding a second one beside it. */
+    if (!ex) {
+      const host = state.rows.find(x => !x.sets.some(s => s.done) && altsFor(x).includes(name));
+      if (host) { applySwap(host, name); ex = host; }
+    }
     if (!ex) {
       // Stored under 'Daily' but not wanted on this session: it belongs to the
       // day, and to a session that does want it. Do not drag it back here.
