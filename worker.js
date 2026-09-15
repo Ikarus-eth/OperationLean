@@ -63,7 +63,7 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-09-01f';
+const VERSION  = '2026-09-15a';
 const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
