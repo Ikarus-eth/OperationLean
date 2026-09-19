@@ -114,7 +114,7 @@ Every exercise has a comment box under its buttons. It is for that exercise on t
 
 The **×** beside an exercise name removes it for today. Nothing is lost that was going to be saved — untapped sets were never going to be written — but it clears the screen when the rack is taken or a machine is broken, and stops a stale prefill tempting a wrong tick. If anything in the block was ticked or edited it asks first.
 
-**Add an exercise** at the bottom adds one. Type the name of something you removed and it comes back with its target, hint and unit labels intact. Type anything else and you get a plain three-row block, which carries over next week like everything else.
+**Add an exercise** at the bottom is a dropdown, in four groups: what is on this session and not on the screen, so putting back something you removed is one tap; the rest of your program; anything you have logged before, which is where a name typed in by hand weeks ago comes back from; and every substitute the app knows. Picking a name brings its target, hint and unit labels with it. **Something else…** at the end still takes a typed name, and a typed name that matches something the app knows is corrected to that spelling — `leg press` becomes `Leg Press` and keeps its history, rather than quietly starting a second exercise beside it. Anything genuinely new gets a plain three-row block and carries over next week like everything else.
 
 Both are for today only, and both are local to the device. Another device opening the same date shows the full program again, with the removed exercise back but empty and unticked — nothing was logged for it, so nothing is wrong, it is just clutter you have to clear twice. Next session the program is back as written everywhere.
 
@@ -336,7 +336,13 @@ The `DAILY` object below `PROGRAM` holds the every-day items, same shape.
 
 Renaming an exercise starts its history over — carry-over is keyed on the exact name, and the old rows keep the old name. Change a name only when you mean to break the line.
 
-Johanna trains the same program, so `PROGRAM.johanna.sessions` points at the same object as Ikarus's rather than holding a copy. Change one and both change, which is the point right now and the thing to remember when it stops being true — give her her own object at that moment and nothing else needs touching.
+Johanna trains the same program, but `PROGRAM.johanna.sessions` now holds a copy rather than pointing at the same object. The copy is taken on load, above the temporary block described below, so an ordinary edit to a session still reaches both of them and only the temporary block is Ikarus's alone. If that block goes and nothing has replaced it, the copy line can stay; it costs nothing and is what you would want back the next time one of them is hurt.
+
+### A temporary change to one person's program
+
+`Lower 1` and `Lower 2` are currently rewritten by an `Object.assign` block under the sessions, headed *TEMPORARY — right fifth toe*. Nothing above it is edited, so putting the normal lower days back is deleting the block, with no reconstruction from memory and no diff to read. Use the same shape for the next injury or travel week rather than editing the arrays in place.
+
+Names inside it are spelled exactly as they are spelled above. That matters more than it looks: carry-over is keyed on the exact string, so `Leg Press` with a changed hint keeps its whole history while `Leg Press, feet low` would start again from nothing.
 
 Only the program is shared. Sets, history, carry-over, drafts and heart rate are all per person, and `MAX_HR` is already 182 and 185.
 
@@ -366,6 +372,7 @@ For analysis, pivot on `exercise` and `date`. Volume per set is `weight_kg × re
 - **Drafts.** A part-finished session survives closing the tab, including an attached heart rate file. Keyed by person, session and date. Every-day items are kept separately, keyed by person and date only, so they follow you across the session dropdown. The draft is now a cache in front of the server rather than the only copy.
 - **Drafts follow the program.** A draft holds what you typed. Targets, hints, unit labels and which boxes appear are rebuilt from `PROGRAM` every time the page loads, so editing the program takes effect on an open draft instead of waiting for midnight. Set counts are not: if you removed a set, it stays removed. An exercise you added to the program today appears in the draft; one you deleted with the **×** stays deleted.
 - **Wrong date on a heart rate file** shows a warning but still saves against today.
+- **A hint hides the carry-over line.** The line under an exercise name shows its hint if it has one, and *Carried over from 12 Sep* only if it does not. Adding a hint to a program line trades the date for the note.
 
 ## The write secret is in this repository
 

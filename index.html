@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 3, at: '15 Sep 2026, 11:18' };
+const BUILD = { n: 4, at: '19 Sep 2026, 09:11' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -82,9 +82,46 @@ const SESSIONS_IKARUS = {
   'Other': [],
 };
 
+/* Johanna gets a copy rather than the same object, because the temporary
+   block below is Ikarus's toe and not hers. The copy is taken here, above
+   the override, so ordinary edits to the arrays still reach both of them;
+   only what the override rewrites is his alone. JSON round-trip and not
+   structuredClone — the program is plain data, and this runs on whatever
+   Safari the phone happens to be on. */
+const SESSIONS_JOHANNA = JSON.parse(JSON.stringify(SESSIONS_IKARUS));
+
+/* ══ TEMPORARY — right fifth toe, broken 19 Sep 2026 ═══════════════
+   Delete this block to put the normal lower days back. Nothing above
+   it is edited, so the revert is one deletion and no reconstruction.
+
+   The rule: nothing that loads the forefoot. Out for now are Jumps,
+   Perfect Squat, both calf raises and Carries. Every name that stays
+   is spelled exactly as it was, so carry-over and history run
+   straight through; only Dead Hang is new and starts empty.
+   ══════════════════════════════════════════════════════════════════ */
+Object.assign(SESSIONS_IKARUS, {
+    'Lower 1': [
+      { name: 'Hip Thrust',      target: '3 × 8-12',  sets: 3, hint: 'heel-driven — load the bar in place, never roll it over the foot' },
+      { name: 'Leg Press',       target: '3 × 8-12',  sets: 3, hint: 'rigid shoe on the right, feet low, about a fifth less depth' },
+      { name: 'Seated Leg Curl', target: '4 × 8-12',  sets: 4 },
+      { name: 'Leg Extension',   target: '3 × 12-15', sets: 3 },
+      { name: 'Dead Hang',       target: '3 × max',   sets: 3, fields: ['r'], units: { r: 'sec' },
+        hint: 'in place of carries — feet off the floor, log seconds' },
+    ],
+    'Lower 2': [
+      { name: 'Belt Squat',         target: '3 × 8-12',  sets: 3, hint: 'heels loaded, stop short of the depth that rolls onto the toes' },
+      { name: '45° Back Extension', target: '3 × 10-15', sets: 3, hint: 'DB at chest, round-back' },
+      { name: 'Leg Extension',      target: '3 × 12-15', sets: 3 },
+      { name: 'Seated Leg Curl',    target: '4 × 8-12',  sets: 4 },
+      { name: 'Copenhagen Plank',   target: '2 × 10-15', sets: 2 },
+      { name: 'Dead Hang',          target: '3 × max',   sets: 3, fields: ['r'], units: { r: 'sec' },
+        hint: 'in place of carries — feet off the floor, log seconds' },
+    ],
+});
+
 const PROGRAM = {
   ikarus:  { label: 'Ikarus',  sessions: SESSIONS_IKARUS },
-  johanna: { label: 'Johanna', sessions: SESSIONS_IKARUS },   // same program for now
+  johanna: { label: 'Johanna', sessions: SESSIONS_JOHANNA },   // same program, own copy
 };
 
 const WEEKDAY_SESSION = { 1:'Lower 1', 2:'Upper A', 4:'Lower 2', 5:'Upper B' };
@@ -134,7 +171,7 @@ const VARIANTS = [
   ['Standing Calf Raise','Seated Calf Raise','Leg Press Calf Raise','Smith Calf Raise','DB Calf Raise','Single-Leg Calf Raise'],
   ['Copenhagen Plank','Side Plank','Adductor Machine','Cable Hip Adduction','Short-Lever Copenhagen','Side Plank Leg Lift'],
   ['Jumps','Box Jump','Broad Jump','Depth Jump','Pogo Hops','Trap Bar Jump'],
-  ['Carries','Farmer\u2019s Walk','Suitcase Carry','Trap Bar Carry','Overhead Carry','Sled Push'],
+  ['Carries','Farmer\u2019s Walk','Suitcase Carry','Trap Bar Carry','Overhead Carry','Sled Push','Dead Hang'],
 
   // pulling
   ['Pull-ups','Lat Pulldown','Chin-ups','Neutral-Grip Pulldown','Assisted Pull-up Machine','Kneeling Cable Pulldown'],
@@ -178,6 +215,7 @@ const EX_CFG = {
   'Trap Bar Carry':            { hint:'log seconds in the reps box' },
   'Overhead Carry':            { hint:'log seconds in the reps box' },
   'Sled Push':                 { hint:'log seconds in the reps box' },
+  'Dead Hang':                 { fields:['r'], units:{ r:'sec' }, hint:'feet off the floor, log seconds' },
   'Side Plank':                { fields:['r'], units:{ r:'sec' } },
   'Short-Lever Copenhagen':    { fields:['r'], units:{ r:'sec' } },
   'Side Plank Leg Lift':       { fields:['r','rir'] },
@@ -334,8 +372,11 @@ body{
   background:var(--surface);color:var(--ink);font:400 15px/1.45 inherit;padding:10px}
 .tail textarea:focus{outline:2px solid var(--ink);outline-offset:-1px;background:#fff}
 .addex{appearance:none;width:100%;margin-top:12px;background:transparent;border:1px dashed var(--rule);
-  border-radius:7px;color:var(--ink-2);font:500 15px/1 inherit;height:var(--tap);cursor:pointer}
+  border-radius:7px;color:var(--ink-2);font:500 15px/1 inherit;height:var(--tap);cursor:pointer;
+  padding:0 12px;text-align:center;text-align-last:center}
 .addex:hover{border-color:var(--ink-2);color:var(--ink)}
+.addex:focus{outline:2px solid var(--ink);outline-offset:-1px}
+.addex option{text-align:left;color:var(--ink)}
 
 /* save bar */
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--paper);border-top:1px solid var(--rule);
@@ -430,7 +471,7 @@ body[data-firstrun] .date{visibility:hidden}
   <div class="tail">
     <label for="notes">Session notes</label>
     <textarea id="notes" placeholder="Sleep, energy, niggles, anything that explains the numbers later."></textarea>
-    <button class="addex" id="addex" type="button">Add an exercise</button>
+    <select class="addex" id="addex" aria-label="Add an exercise"></select>
     <div class="build num" id="build"></div>
   </div>
 </main>
@@ -612,6 +653,77 @@ function swapExercise(ex, name){
     ALL_FIELDS.forEach(f => { s[f] = fx[f] ?? ''; });
   });
   carryOver(); saveDraft(); renderList();
+}
+
+/* A typed name that differs only in case is a different exercise to the
+   database, and silently starts its history over. Anything the app already
+   knows about wins over what was typed; anything it does not is taken as
+   given, which is how a genuinely new exercise still gets in. */
+function canonicalName(raw){
+  const want = String(raw || '').trim();
+  if (!want) return '';
+  const pool = planFor().map(p => p.name)
+    .concat(VARIANTS.flat(), Object.keys(EX_CFG), Object.keys(state.last || {}));
+  return pool.find(n => n.toLowerCase() === want.toLowerCase()) || want;
+}
+
+/* Every name the app knows, minus what is already on the screen, in the
+   order it is worth scanning: today's session first, because the common
+   case is putting back something removed; then the rest of the program;
+   then anything with history, which is what catches a name typed in by
+   hand weeks ago; then the variant table. Grouped rather than one flat
+   alphabet, so the list is read and not searched. */
+function addOptions(){
+  const seen = new Set(state.rows.map(r => r.name));
+  const take = names => {
+    const out = [];
+    names.forEach(n => { if (n && !seen.has(n)) { seen.add(n); out.push(n); } });
+    return out;
+  };
+  const sessions = PROGRAM[state.user].sessions;
+  const mine = Object.keys(sessions).reduce((a, k) => a.concat(sessions[k].map(p => p.name)), [])
+    .concat((DAILY[state.user] || []).map(p => p.name));
+  return [
+    ['This session',    take(planFor().map(p => p.name))],
+    ['Your programme',  take(mine)],
+    ['Done before',     take(Object.keys(state.last || {}).sort())],
+    ['Everything else', take(VARIANTS.flat().concat(Object.keys(EX_CFG)).sort())],
+  ].filter(g => g[1].length);
+}
+
+/* Rebuilt on every render rather than on tap: iOS builds the wheel from
+   the options as they stand when it opens, and a touch handler that fills
+   them is a race with it. */
+function renderAddPicker(){
+  const sel = $('#addex');
+  if (!sel) return;
+  sel.innerHTML = '';
+  const head = el('option'); head.value = ''; head.textContent = 'Add an exercise';
+  sel.appendChild(head);
+  addOptions().forEach(([label, names]) => {
+    const g = el('optgroup'); g.label = label;
+    names.forEach(n => { const o = el('option'); o.value = n; o.textContent = n; g.appendChild(o); });
+    sel.appendChild(g);
+  });
+  const other = el('option'); other.value = '\u0000other'; other.textContent = 'Something else\u2026';
+  sel.appendChild(other);
+  sel.value = '';
+}
+
+/* Picking the name of something you removed brings its target, hint and
+   unit labels back with it, rather than a bare three-row block. */
+function addExercise(raw){
+  const name = canonicalName(raw);
+  if (!name) return;
+  if (state.rows.some(r => r.name === name) &&
+      !confirm(name + ' is already on this session. Two of them will overwrite each other when they save. Go ahead?')) return;
+  const row = makeRow({ ...cfgFor(name), name });
+  state.removed = state.removed.filter(n => n !== row.name);
+  const firstDaily = state.rows.findIndex(r => r.daily);
+  const at = (row.daily || firstDaily < 0) ? state.rows.length : firstDaily;
+  state.rows.splice(at, 0, row);
+  carryOver(); saveDraft(); renderList();
+  if (at === state.rows.length - 1) window.scrollTo({ top: document.body.scrollHeight });
 }
 
 function renderList(){
@@ -833,6 +945,7 @@ function renderList(){
     list.appendChild(box);
   });
 
+  renderAddPicker();
   renderSync();
 }
 
@@ -1628,20 +1741,12 @@ $('#hrdrop').onclick = () => { clearHR(); repaintAll(); saveDraft(); renderSync(
 $('#save').onclick = () => { state.lastShape = null; syncNow(); };
 $('#notes').oninput = saveDraft;
 
-$('#addex').onclick = () => {
-  const name = (prompt('Exercise name') || '').trim();
-  if (!name) return;
-  // Typing back the name of something you removed brings its target, hint and
-  // unit labels with it, rather than a bare three-row block.
-  const pool = planFor();
-  const p = pool.find(e => e.name.toLowerCase() === name.toLowerCase()) || { name };
-  const row = makeRow(p);
-  state.removed = state.removed.filter(n => n !== row.name);
-  const firstDaily = state.rows.findIndex(r => r.daily);
-  const at = (row.daily || firstDaily < 0) ? state.rows.length : firstDaily;
-  state.rows.splice(at, 0, row);
-  carryOver(); saveDraft(); renderList();
-  if (at === state.rows.length - 1) window.scrollTo({ top: document.body.scrollHeight });
+$('#addex').onchange = () => {
+  const sel = $('#addex');
+  const picked = sel.value;
+  sel.value = '';                                   // back to the label either way
+  if (!picked) return;
+  addExercise(picked === '\u0000other' ? (prompt('Exercise name') || '') : picked);
 };
 
 boot();
