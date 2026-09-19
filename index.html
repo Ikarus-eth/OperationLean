@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 4, at: '19 Sep 2026, 09:11' };
+const BUILD = { n: 5, at: '19 Sep 2026, 09:34' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -90,35 +90,63 @@ const SESSIONS_IKARUS = {
    Safari the phone happens to be on. */
 const SESSIONS_JOHANNA = JSON.parse(JSON.stringify(SESSIONS_IKARUS));
 
-/* ══ TEMPORARY — right fifth toe, broken 19 Sep 2026 ═══════════════
-   Delete this block to put the normal lower days back. Nothing above
-   it is edited, so the revert is one deletion and no reconstruction.
+/* ══ TEMPORARY — right 5th proximal phalanx, K-wire in situ ═══════
+   Fracture 12 Sep 2026, closed reduction and percutaneous K-wire
+   16 Sep. Wire out 7-21 Oct. DELETE THIS BLOCK once the wire is out
+   and the surgeon has cleared weight-bearing; nothing above it is
+   edited, so the revert is one deletion. Do not delete it early: the
+   dates below are the whole reason these two days look like this.
 
-   The rule: nothing that loads the forefoot. Out for now are Jumps,
-   Perfect Squat, both calf raises and Carries. Every name that stays
-   is spelled exactly as it was, so carry-over and history run
-   straight through; only Dead Hang is new and starts empty.
+   The constraint is not pain and it is not the forefoot. It is a
+   metal wire crossing the fracture, with its bent end sitting under
+   the skin of the lateral border of the foot, and an open tract
+   running from that skin down to bone. So, in order:
+
+     1. Nothing presses on the lateral border of the right foot.
+        That rules out any shoe with a toe box, which is why the
+        earlier 'rigid shoe' line is gone.
+     2. No axial load through the right forefoot. A leg press plate
+        is the exact thing the wire cannot take.
+     3. No standing under load on the right leg at all.
+     4. Sweat into the pin dressing is the likeliest complication,
+        so sessions are short and seated and the dressing is changed
+        after, not before.
+
+   What that leaves is load entering at the shin or the hips, and a
+   left leg trained on its own. The left-only work is not filler —
+   training one limb holds strength in the other one, so it is the
+   most useful thing available for the next month.
+
+   Names are spelled exactly as they are above, so carry-over and
+   history run straight through. Single-Leg Leg Press and Dead Hang
+   are new and start empty, which is correct: they are not the
+   bilateral lifts and should never share their numbers.
    ══════════════════════════════════════════════════════════════════ */
 Object.assign(SESSIONS_IKARUS, {
     'Lower 1': [
-      { name: 'Hip Thrust',      target: '3 × 8-12',  sets: 3, hint: 'heel-driven — load the bar in place, never roll it over the foot' },
-      { name: 'Leg Press',       target: '3 × 8-12',  sets: 3, hint: 'rigid shoe on the right, feet low, about a fifth less depth' },
-      { name: 'Seated Leg Curl', target: '4 × 8-12',  sets: 4 },
-      { name: 'Leg Extension',   target: '3 × 12-15', sets: 3 },
-      { name: 'Dead Hang',       target: '3 × max',   sets: 3, fields: ['r'], units: { r: 'sec' },
+      { name: 'Seated Leg Curl',       target: '4 × 8-12',  sets: 4 },
+      { name: 'Leg Extension',         target: '4 × 10-15', sets: 4 },
+      { name: 'Single-Leg Leg Press',  target: '3 × 8-12',  sets: 3,
+        hint: 'LEFT only — right foot stays off the sled and on the floor' },
+      { name: 'Machine Hip Thrust',    target: '3 × 8-12',  sets: 3,
+        hint: 'heels only, nothing through the right forefoot — machine, so no bar near the foot' },
+      { name: 'Adductor Machine',      target: '3 × 12-15', sets: 3 },
+      { name: 'Dead Hang',             target: '3 × max',   sets: 3, fields: ['r'], units: { r: 'sec' },
         hint: 'in place of carries — feet off the floor, log seconds' },
     ],
     'Lower 2': [
-      { name: 'Belt Squat',         target: '3 × 8-12',  sets: 3, hint: 'heels loaded, stop short of the depth that rolls onto the toes' },
-      { name: '45° Back Extension', target: '3 × 10-15', sets: 3, hint: 'DB at chest, round-back' },
-      { name: 'Leg Extension',      target: '3 × 12-15', sets: 3 },
-      { name: 'Seated Leg Curl',    target: '4 × 8-12',  sets: 4 },
-      { name: 'Copenhagen Plank',   target: '2 × 10-15', sets: 2 },
-      { name: 'Dead Hang',          target: '3 × max',   sets: 3, fields: ['r'], units: { r: 'sec' },
+      { name: 'Seated Leg Curl',       target: '4 × 8-12',  sets: 4 },
+      { name: 'Leg Extension',         target: '3 × 12-15', sets: 3 },
+      { name: 'Single-Leg Leg Press',  target: '3 × 8-12',  sets: 3,
+        hint: 'LEFT only — right foot stays off the sled and on the floor' },
+      { name: 'Machine Hip Thrust',    target: '3 × 8-12',  sets: 3,
+        hint: 'heels only, nothing through the right forefoot' },
+      { name: 'Seated Calf Raise',     target: '3 × 10-15', sets: 3,
+        hint: 'LEFT only — right foot flat on the floor, clear of the block' },
+      { name: 'Dead Hang',             target: '3 × max',   sets: 3, fields: ['r'], units: { r: 'sec' },
         hint: 'in place of carries — feet off the floor, log seconds' },
     ],
 });
-
 const PROGRAM = {
   ikarus:  { label: 'Ikarus',  sessions: SESSIONS_IKARUS },
   johanna: { label: 'Johanna', sessions: SESSIONS_JOHANNA },   // same program, own copy
@@ -164,7 +192,7 @@ const DAILY = {
    ══════════════════════════════════════════════════════════════════ */
 const VARIANTS = [
   // legs
-  ['Perfect Squat','Belt Squat','Leg Press','Hack Squat','Goblet Squat','Bulgarian Split Squat'],
+  ['Perfect Squat','Belt Squat','Leg Press','Hack Squat','Goblet Squat','Bulgarian Split Squat','Single-Leg Leg Press'],
   ['Hip Thrust','Machine Hip Thrust','Cable Pull-Through','Romanian Deadlift','45° Back Extension','Single-Leg Hip Thrust'],
   ['Seated Leg Curl','Lying Leg Curl','Standing Leg Curl','Cable Leg Curl','Nordic Curl','Slider Leg Curl'],
   ['Leg Extension','Single-Leg Extension','Cable Leg Extension','Sissy Squat','Reverse Nordic','Step-Up'],
@@ -216,6 +244,7 @@ const EX_CFG = {
   'Overhead Carry':            { hint:'log seconds in the reps box' },
   'Sled Push':                 { hint:'log seconds in the reps box' },
   'Dead Hang':                 { fields:['r'], units:{ r:'sec' }, hint:'feet off the floor, log seconds' },
+  'Single-Leg Leg Press':      { hint:'one leg at a time — say which in the comment if it is not both' },
   'Side Plank':                { fields:['r'], units:{ r:'sec' } },
   'Short-Lever Copenhagen':    { fields:['r'], units:{ r:'sec' } },
   'Side Plank Leg Lift':       { fields:['r','rir'] },
