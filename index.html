@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 5, at: '19 Sep 2026, 09:34' };
+const BUILD = { n: 6, at: '21 Sep 2026, 10:05' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -605,7 +605,7 @@ function renderSessions(){
     saveDraft(); parkSync();
     state.pinned = true; state.session = s.value;
     state.lastShape = null; state.sync = 'idle';
-    loadRows(); renderList(); fetchDay();
+    loadRows(); renderList(); fetchDay(); retryLast();
   };
 }
 
@@ -837,6 +837,16 @@ function renderList(){
     else if (L) sub.textContent = 'Carried over from ' + fmtDate(L.date);
     else if (state.lastOk === false) {
       sub.textContent = 'Could not reach your history — these boxes are empty, not new';
+      sub.className = 'ex-sub fresh';
+    }
+    /* Not asked yet, or asked and the answer has not landed. The list is
+       painted once before the lookup and again after it, and this is the
+       first of those two paints. Saying "first time" here was the same lie
+       the failed lookup used to tell, with a shorter fuse: it is true for
+       most rows on most days, so it reads as fact rather than as a screen
+       that has not finished loading. */
+    else if (state.lastOk !== true) {
+      sub.textContent = 'Looking up your history\u2026';
       sub.className = 'ex-sub fresh';
     }
     else { sub.textContent = 'First time — nothing to carry over'; sub.className = 'ex-sub fresh'; }
@@ -1165,6 +1175,17 @@ let inflight = 0;
 const context = () => state.user + '|' + state.date + '|' + state.session;
 function stale(token, ctx){ return token !== inflight || ctx !== context(); }
 
+/* Gym wifi that accepts a connection and then says nothing is the normal
+   failure, not a refused one. Without a deadline those fetches never settle,
+   the flags below never move off "not asked yet", and the screen waits for
+   an answer that is not coming. Eight seconds, then call it unreachable. */
+async function timed(url, ms = 8000){
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), ms);
+  try { return await fetch(url, { signal: ac.signal }); }
+  finally { clearTimeout(t); }
+}
+
 /* Whether this worked is part of the answer. A row with nothing behind it and
    a row whose history could not be reached look identical on screen, and the
    screen used to call both of them "first time" — which is a lie in a gym with
@@ -1175,7 +1196,7 @@ async function fetchLast(){
   const token = ++inflight, ctx = context();
   try {
     const u = ENDPOINT + '?action=last&user=' + encodeURIComponent(state.user) + '&secret=' + encodeURIComponent(SECRET);
-    const res = await fetch(u);
+    const res = await timed(u);
     const data = await res.json();
     if (stale(token, ctx)) return;
     if (data && data.ok) { state.last = data.last || {}; state.lastOk = true; }
@@ -1187,7 +1208,7 @@ async function fetchLast(){
    Carry-over only fills boxes that are still empty and untouched, so catching
    up mid-session cannot overwrite anything already done. */
 async function retryLast(){
-  if (state.lastOk !== false) return;
+  if (state.lastOk === true) return;   // loaded; a reply that never landed also lands here
   await fetchLast();
   if (state.lastOk) { carryOver(); renderList(); }
 }
@@ -1495,6 +1516,7 @@ function setDate(d){
   loadRows();
   renderList();
   fetchDay();
+  retryLast();
 }
 
 function renderDate(){
@@ -1572,7 +1594,7 @@ const syncKey = () => state.user + '|' + state.date + '|' + state.session;
 async function fetchHealth(){
   if (!configured()) { state.worker = null; return; }
   try {
-    const res = await fetch(ENDPOINT);
+    const res = await timed(ENDPOINT);
     const d = await res.json();
     state.worker = (d && typeof d === 'object' && d.worker) ? d : null;
   } catch(e){ state.worker = null; }
@@ -1739,8 +1761,10 @@ async function boot(){
 
   $('#setup').hidden = configured();
 
-  await fetchHealth();
-  await fetchLast();
+  /* Side by side, not one behind the other. The health check only decides
+     what the save button says; carry-over is what the first screen is for,
+     and it used to sit behind a request that has nothing to do with it. */
+  await Promise.all([fetchHealth(), fetchLast()]);
   carryOver();
   renderList();
   fetchDay();
