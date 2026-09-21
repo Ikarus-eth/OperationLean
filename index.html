@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 6, at: '21 Sep 2026, 10:05' };
+const BUILD = { n: 7, at: '21 Sep 2026, 10:25' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -1171,9 +1171,17 @@ function readDraft(){ try { const r = store.get(draftKey()); return r ? JSON.par
    numbers on another's screen, and the next save would store them under the
    wrong name. Every fetch records what it was asked for and drops its own
    answer if that has changed. */
-let inflight = 0;
+/* One counter per kind of question, and each question is only stale when
+   something it depends on has moved. They used to share one counter and one
+   context, which went wrong both ways: asking for history cancelled a day
+   read still on its way, and changing the session threw away a history
+   reply that does not depend on the session at all. A dropped day read is
+   not harmless — it is what pulls another device's ticks onto this screen
+   before this screen's next save replaces them. */
+const ask = { last: 0, day: 0 };
 const context = () => state.user + '|' + state.date + '|' + state.session;
-function stale(token, ctx){ return token !== inflight || ctx !== context(); }
+const scope = { last: () => state.user, day: context };
+function stale(kind, token, ctx){ return token !== ask[kind] || ctx !== scope[kind](); }
 
 /* Gym wifi that accepts a connection and then says nothing is the normal
    failure, not a refused one. Without a deadline those fetches never settle,
@@ -1193,15 +1201,15 @@ async function timed(url, ms = 8000){
    memory. The flag is what lets the row say which of the two it is. */
 async function fetchLast(){
   if (!configured()) { state.lastOk = false; return; }
-  const token = ++inflight, ctx = context();
+  const token = ++ask.last, ctx = scope.last();
   try {
     const u = ENDPOINT + '?action=last&user=' + encodeURIComponent(state.user) + '&secret=' + encodeURIComponent(SECRET);
     const res = await timed(u);
     const data = await res.json();
-    if (stale(token, ctx)) return;
+    if (stale('last', token, ctx)) return;
     if (data && data.ok) { state.last = data.last || {}; state.lastOk = true; }
     else state.lastOk = false;
-  } catch(e){ if (!stale(token, ctx)) state.lastOk = false; }
+  } catch(e){ if (!stale('last', token, ctx)) state.lastOk = false; }
 }
 
 /* Called when the phone comes back — off the lock screen, back on a network.
@@ -1217,7 +1225,7 @@ async function retryLast(){
    per-set matching now, so there is nothing to attach when this is filled in.
    Failing quietly is right: the manual picker below still works. */
 async function fetchDay(){
-  const token = ++inflight, ctx = context();
+  const token = ++ask.day, ctx = scope.day();
   state.day = [];
   state.dayRows = [];
   if (configured()) {
@@ -1226,7 +1234,7 @@ async function fetchDay(){
                 '&date=' + encodeURIComponent(state.date);
       const res = await fetch(u);
       const d = await res.json();
-      if (stale(token, ctx)) return;
+      if (stale('day', token, ctx)) return;
       if (d && d.ok) { state.day = d.hr || []; state.dayRows = d.sets || []; }
     } catch(e){}
   }
