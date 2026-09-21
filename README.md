@@ -135,9 +135,11 @@ Both are for today only, and both are local to the device. Another device openin
 
 A row with no numbers in it says which of three things happened. **Looking up your history…** means the answer is still on its way: the list is painted before the lookup returns, so this is what the first half-second looks like, and it is also what a dead connection looks like until the eight-second deadline turns it into the next one. **Could not reach your history** means the app asked and got nothing back, so the boxes are empty for a reason that has nothing to do with you. **First time — nothing to carry over** means the lookup came back and the database has no history for that exercise name; it is only ever shown once the answer is in hand.
 
-The middle one retries on its own when the phone comes off the lock screen, comes back onto a network, or when the session or date is changed, and fills the boxes in when it succeeds — it only ever fills boxes still empty and untouched, so catching up mid-session cannot overwrite a set you already did.
+The middle one retries on its own when the phone comes off the lock screen or comes back onto a network, and a session or date change always asks again. When the answer lands it fills every box nobody has typed into or ticked, replacing whatever suggestion was there, and leaves typed and ticked sets alone, so catching up mid-session cannot overwrite a set you already did.
 
 Carry-over has no time limit. It takes the most recent date that exercise appears on, whether that was Tuesday or in March. A gap of a fortnight changes nothing; an exercise that never got saved has nothing to offer.
+
+The session on screen is never its own history. The app asks with its date and session (`?action=last&user=ikarus&date=2026-09-21&session=Upper%20A`), and the Worker leaves out that session's rows and that day's every-day rows. Up to build 13 it did not, so the first save of a session became its history: the remaining sets were suggested from the first one, labelled as carried over from today, and the comparison with last time compared each set with itself. Another session earlier the same day does count, so an Upper B in the evening carries over from an Upper A that morning. Asked without date and session, the endpoint answers as it always did.
 
 ### Swapping an exercise
 

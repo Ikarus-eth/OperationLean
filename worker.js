@@ -6,6 +6,7 @@
  *
  *   GET  /                                   health check                (open)
  *   GET  ?action=last&user=ikarus            last session per exercise   (open)
+ *        [&date=&session=]                   ...not counting that session  
  *   GET  ?action=day&user=&date=             what the watch sent that day (open)
  *   GET  ?action=csv&table=sets              whole log as CSV            (open)
  *   POST { secret, sync, user, date, session, rows[], hr }   replace a day's
@@ -63,8 +64,8 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-09-15a';
-const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps'];
+const VERSION  = '2026-09-21a';
+const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps', 'last-scoped'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
 const SET_WINDOW_S = 90;      // seconds before a tick that count as "the set"
@@ -499,16 +500,26 @@ export default {
         // reps_assist belongs here for the same reason it is in `day`: the
         // pull-up ladder is three numbers, and a carry-over missing one of
         // them opens the row half empty every single week.
+        //
+        // With date and session, the session asking is left out, and so are
+        // that day's every-day rows, which belong to it. Otherwise the first
+        // save of a session made it its own history: the rest of the sets
+        // were suggested from the first one, labelled as carried over from
+        // today, and "beat last time" compared each set with itself. Without
+        // them nothing is left out, as before.
+        const date = url.searchParams.get('date') || '';
+        const session = url.searchParams.get('session') || '';
         const rs = await env.DB.prepare(`
           SELECT s.exercise, s.date, s.set_no, s.weight, s.reps, s.reps_assist, s.rir
           FROM sets s
           JOIN (
             SELECT exercise, MAX(date) AS d
-            FROM sets WHERE user = ?1 GROUP BY exercise
+            FROM sets WHERE user = ?1 AND NOT (date = ?2 AND (session = ?3 OR session = 'Daily'))
+            GROUP BY exercise
           ) m ON s.exercise = m.exercise AND s.date = m.d
-          WHERE s.user = ?1
+          WHERE s.user = ?1 AND NOT (s.date = ?2 AND (s.session = ?3 OR s.session = 'Daily'))
           ORDER BY s.exercise, s.set_no
-        `).bind(user).all();
+        `).bind(user, date, session).all();
 
         const last = {};
         for (const r of rs.results) {

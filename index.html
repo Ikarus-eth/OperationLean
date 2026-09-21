@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 12, at: '21 Sep 2026, 18:10' };
+const BUILD = { n: 13, at: '21 Sep 2026, 17:40' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -618,7 +618,7 @@ function renderSessions(){
     saveDraft(); parkSync();
     state.pinned = true; state.session = s.value;
     state.lastShape = null; state.sync = 'idle';
-    loadRows(); renderList(); fetchDay(); retryLast();
+    loadRows(); renderList(); fetchDay(); refreshLast();
   };
 }
 
@@ -1185,7 +1185,10 @@ function carryOver(){
       if (!g) return;
       ALL_FIELDS.forEach(f => {
         if (fx[f] != null) return;                  // a fixed default outranks both
-        if (s[f] === '' || s[f] == null) s[f] = g[f] ?? '';
+        /* History replaces an untouched suggestion outright, so a box nobody
+           has typed into or ticked always shows last time, even one filled
+           from a worse answer earlier. A seed only fills what is empty. */
+        if (hist || s[f] === '' || s[f] == null) s[f] = g[f] ?? '';
       });
     });
   });
@@ -1224,7 +1227,7 @@ function readDraft(){ try { const r = store.get(draftKey()); return r ? JSON.par
    before this screen's next save replaces them. */
 const ask = { last: 0, day: 0 };
 const context = () => state.user + '|' + state.date + '|' + state.session;
-const scope = { last: () => state.user, day: context };
+const scope = { last: context, day: context };      // history leaves out the session on screen
 function stale(kind, token, ctx){ return token !== ask[kind] || ctx !== scope[kind](); }
 
 /* Gym wifi that accepts a connection and then says nothing is the normal
@@ -1247,7 +1250,8 @@ async function fetchLast(){
   if (!configured()) { state.lastOk = false; return; }
   const token = ++ask.last, ctx = scope.last();
   try {
-    const u = ENDPOINT + '?action=last&user=' + encodeURIComponent(state.user) + '&secret=' + encodeURIComponent(SECRET);
+    const u = ENDPOINT + '?action=last&user=' + encodeURIComponent(state.user) +
+      '&date=' + encodeURIComponent(state.date || today()) + '&session=' + encodeURIComponent(state.session || '') + '&secret=' + encodeURIComponent(SECRET);
     const res = await timed(u);
     const data = await res.json();
     if (stale('last', token, ctx)) return;
@@ -1259,6 +1263,13 @@ async function fetchLast(){
 /* Called when the phone comes back — off the lock screen, back on a network.
    Carry-over only fills boxes that are still empty and untouched, so catching
    up mid-session cannot overwrite anything already done. */
+/* History now depends on which session is on screen, so a session or date
+   change always asks again rather than only when the last ask failed. */
+async function refreshLast(){
+  await fetchLast();
+  if (state.lastOk) { carryOver(); renderList(); }
+}
+
 async function retryLast(){
   if (state.lastOk === true) return;   // loaded; a reply that never landed also lands here
   await fetchLast();
@@ -1568,7 +1579,7 @@ function setDate(d){
   loadRows();
   renderList();
   fetchDay();
-  retryLast();
+  refreshLast();
 }
 
 function renderDate(){
