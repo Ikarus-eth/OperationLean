@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 10, at: '21 Sep 2026, 12:20' };
+const BUILD = { n: 11, at: '21 Sep 2026, 17:30' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -915,6 +915,7 @@ function renderList(){
           inp.dataset.typed = '1';
           set[f] = inp.value;
           set.carried = false;
+          set.typed = true;                        // the next tap confirms, see the tick
           if (!set.done) confirmSet(set);
           paint(); saveDraft(); renderSync();
         };
@@ -923,8 +924,17 @@ function renderList(){
 
       const tick = el('button','tick'); tick.type = 'button'; tick.textContent = '✓';
       tick.setAttribute('aria-label', 'Mark set ' + (si+1) + ' of ' + ex.name + ' as done');
+      /* Typing already ticks a set, so a tap straight after typing is someone
+         confirming what they typed. It used to be a plain toggle: type the
+         numbers, tap the tick the way the screen teaches, and the set was
+         unticked — and an unticked set is never saved. With no history to
+         carry over every number gets typed, so every set went this way and
+         the history never started. Now the first tap after any typing
+         confirms; only a tap on a set nobody has typed into since takes it
+         back. */
       tick.onclick = () => {
-        if (set.done) { set.done = false; set.ts = null; } else confirmSet(set);
+        if (set.done && !set.typed) { set.done = false; set.ts = null; }
+        else { confirmSet(set); set.typed = false; }
         paint(); saveDraft(); renderSync();
       };
       row.appendChild(tick);
@@ -1181,7 +1191,7 @@ function saveDraft(quiet){
       name:ex.name, slot:ex.slot, target:ex.target, hint:ex.hint, pair:ex.pair,
       units:ex.units, fields:ex.fields, fixed:ex.fixed, seed:ex.seed, progress:ex.progress,
       daily:ex.daily, note:ex.note || '',
-      sets: ex.sets.map(s => ({ w:s.w, r:s.r, r2:s.r2, rir:s.rir, done:s.done, ts:s.ts, carried:s.carried })),
+      sets: ex.sets.map(s => ({ w:s.w, r:s.r, r2:s.r2, rir:s.rir, done:s.done, ts:s.ts, carried:s.carried, typed:!!s.typed })),
     }));
     store.set(draftKey(), JSON.stringify({ rows, notes: $('#notes').value, hr: state.hr, removed: state.removed }));
     store.set(dailyKey(), JSON.stringify({
@@ -1841,8 +1851,10 @@ document.addEventListener('visibilitychange', async () => {
    where this phone remembers different ones, so an edit made on another
    device cannot be undone from here. Each payload is rebuilt from a fresh
    read just before it is sent, so two sessions on one day cannot undo each
-   other's Daily rows. Today, and whatever day is on screen, are left to the
-   screen. Heart rate is not touched; the server matches it to the sets. */
+   other's Daily rows. The session on screen saves itself and is left
+   alone, and so are today's every-day rows, which belong to it; today's
+   other sessions are fair game. Heart rate is not touched; the server
+   matches it to the sets. */
 
 const DRAFT_RE = /^lb\.draft\.([^.]+)\.(.+)\.(\d{4}-\d{2}-\d{2})$/;
 const setKey = r => r.session + '|' + r.exercise + '|' + r.set;
@@ -1859,8 +1871,8 @@ function draftsOnPhone(user){
     const m = k && k.match(DRAFT_RE);
     if (!m || m[1] !== user) return;
     const session = m[2], date = m[3];
-    if (date >= today()) return;                                     // today belongs to the screen
-    if (date === state.date && session === state.session) return;    // so does a day being edited
+    if (date > today()) return;
+    if (date === state.date && session === state.session) return;    // the session on screen saves itself
     let d = null;
     try { d = JSON.parse(localStorage.getItem(k)); } catch(e){}
     if (!d || !Array.isArray(d.rows)) return;
@@ -1868,6 +1880,7 @@ function draftsOnPhone(user){
     const rows = [];
     d.rows.forEach(ex => {
       if (!ex || !ex.name || !Array.isArray(ex.sets)) return;
+      if (date === today() && ex.daily) return;                      // today's every-day rows are the screen's
       ex.sets.forEach((st, i) => {
         if (!st || !st.done) return;
         rows.push({
@@ -2012,13 +2025,47 @@ function renderBuild(){
   const r = recovery;
   if (r.done) {
     const left = r.found - r.sent;
-    t += ' \u00b7 this phone: ' + r.total + ' past ' + (r.total === 1 ? 'session' : 'sessions') +
+    t += ' \u00b7 this phone: ' + r.total + ' other ' + (r.total === 1 ? 'session' : 'sessions') +
          (r.unread ? ', ' + r.unread + ' days unchecked' : left ? ', ' + left + ' not on the server' : ', all on the server');
     const others = Object.keys(PROGRAM).filter(u => u !== state.user)
       .map(u => [u, draftsOnPhone(u).length]).filter(x => x[1]);
     if (others.length) t += ' (+' + others.map(x => x[1] + ' ' + PROGRAM[x[0]].label).join(', ') + ')';
   }
   $('#build').textContent = t;
+}
+
+/* ══ one-off: sets typed and then tapped ════════════════
+   Up to build 10 the tap after typing unticked the set (see the tick), so
+   those sets sit in their drafts with their numbers in them, marked typed
+   (carried false) and not done, and nothing ever sent them. This ticks them
+   once, in every draft and every-day store on this phone, so the screen and
+   the recovery above both see them. Prefilled sets nobody touched stay as
+   they are. A set deliberately unticked after typing into it looks exactly
+   the same, and is ticked too. */
+function fixTypedTicks(){
+  if (store.get('lb.fix.typed-ticks') === '1') return 0;
+  const keys = [];
+  try { for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i)); }
+  catch(e){ return 0; }
+  let fixed = 0;
+  const hasValue = st => ['w','r','r2','rir'].some(f => st[f] !== '' && st[f] != null);
+  const fixRows = rows => (Array.isArray(rows) ? rows : []).forEach(ex => {
+    (ex && Array.isArray(ex.sets) ? ex.sets : []).forEach(st => {
+      if (st && !st.done && st.carried === false && hasValue(st)) { st.done = true; fixed++; }
+    });
+  });
+  keys.forEach(k => {
+    if (!k || !(k.startsWith('lb.draft.') || k.startsWith('lb.daily.'))) return;
+    try {
+      const d = JSON.parse(localStorage.getItem(k));
+      if (!d) return;
+      const before = fixed;
+      fixRows(Array.isArray(d) ? d : d.rows);
+      if (fixed !== before) localStorage.setItem(k, JSON.stringify(d));
+    } catch(e){}
+  });
+  store.set('lb.fix.typed-ticks', '1');
+  return fixed;
 }
 
 /* ══ boot ════════════════════════════════════════════════ */
@@ -2036,6 +2083,7 @@ async function boot(){
   }
   renderSessions();
   renderDate();
+  const refixed = fixTypedTicks();
   loadRows();
   renderList();
 
@@ -2051,6 +2099,7 @@ async function boot(){
 
   const n = readQueue().length;
   if (n) await pushQueue(); else renderSync();
+  if (refixed) await syncNow();            // the screen may have just gained ticks
   recoverAll();
 }
 

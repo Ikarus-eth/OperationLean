@@ -97,7 +97,9 @@ There is no submit step. Every tick and every typed number is written to the ser
 | **Not saved — tap to retry** (amber) | no connection; held on the device, sent when it comes back |
 | **Not saved — tap to retry**, red line underneath | the server answered and refused one save; the line gives its reason. The others still go up |
 
-Typing a weight or a rep count confirms that set on its own, so an edited row does not also need a tap. The tap is for a set you did exactly as prefilled.
+Typing a weight or a rep count confirms that set on its own, so an edited row does not also need a tap. The tap is for a set you did exactly as prefilled. A tap after typing confirms too, and stamps the time; only a tap on a set nobody has typed into since takes it back.
+
+Up to build 10 the tick was a plain toggle, so typing the numbers and then tapping the tick unticked the set, and an unticked set is never saved. With no history to carry over, every number gets typed, so every set went that way and the history never started. That is where Ikarus's first three weeks went. Build 11 ticks, once, every set on the phone that was typed into and left unticked, and the recovery below sends them. A set deliberately unticked after typing into it cannot be told apart and is ticked too.
 
 A save replaces the stored version of that person, date and session rather than adding to it. So the same screen can be sent a hundred times without piling up duplicates, and unticking a set removes it from the database. The screen is the record.
 
@@ -188,9 +190,9 @@ Three devices, two people, one database: his laptop and his phone both on Ikarus
 
 The phone keeps every session it has logged, as a draft per person, date and session, and never deletes one. So a session that never reached the server is usually still on the phone that logged it. On opening, the app compares those drafts with the server and sends whatever ticked sets the server is missing, without being asked. A banner says what it is doing and what it sent. If it could not finish, it tries again whenever the app comes back to the front or back online, at most once a minute, and the banner says what is still on the phone and why.
 
-Sending only ever adds. Each day goes back as everything the server already holds for that session, exactly as stored, plus the ticked sets only this phone has. Where both have the same set, the server's numbers win, so an edit made on another device cannot be undone from here. The one thing it can bring back is a set that was deliberately unticked on a different device after this phone saved it. Today, and a day open for editing, are left to the screen, and heart rate is not touched; the server matches it to the recovered sets itself.
+Sending only ever adds. Each day goes back as everything the server already holds for that session, exactly as stored, plus the ticked sets only this phone has. Where both have the same set, the server's numbers win, so an edit made on another device cannot be undone from here. The one thing it can bring back is a set that was deliberately unticked on a different device after this phone saved it. The session on screen saves itself and is left alone, and so are today's every-day rows, which belong to it; today's other sessions are included. Heart rate is not touched; the server matches it to the recovered sets itself.
 
-The footer says what this phone holds: how many past sessions for the person selected, whether they are all on the server, and how many are stored under the other name. That last number is the other way a history goes missing: a phone left on the wrong person.
+The footer says what this phone holds: how many sessions besides the one on screen, for the person selected, whether they are all on the server, and how many are stored under the other name. That last number is the other way a history goes missing: a phone left on the wrong person.
 
 The drafts are in the browser's storage for this site on this phone. A home-screen icon on iPhone has its own storage, separate from Safari, so open the app the way the sessions were logged or it will not see them.
 
