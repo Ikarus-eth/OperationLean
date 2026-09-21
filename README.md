@@ -95,6 +95,7 @@ There is no submit step. Every tick and every typed number is written to the ser
 | Saving… | uploading now |
 | **Saved · 7 sets** (green) | on the server, with the time underneath |
 | **Not saved — tap to retry** (amber) | no connection; held on the device, sent when it comes back |
+| **Not saved — tap to retry**, red line underneath | the server answered and refused one save; the line gives its reason. The others still go up |
 
 Typing a weight or a rep count confirms that set on its own, so an edited row does not also need a tap. The tap is for a set you did exactly as prefilled.
 
@@ -103,6 +104,8 @@ A save replaces the stored version of that person, date and session rather than 
 Open the same date on another device and the sets come back ticked, because the app now asks the server what it already has for that day. That is also why a session logged on the laptop shows up on the phone — but only after you set the phone to the same date. The app always opens on today.
 
 If two devices have the same session open at once, the last one to save wins. Log on one at a time.
+
+Saves go up one at a time, oldest first, and each one leaves the queue only once the server has said yes to that exact payload. Until build 8 two uploads could run side by side, and the slower one wrote back a stale copy of the queue after the faster one had failed: the newest save vanished from the phone, the older one landed, and the button still went green. That is how a session could end up stored as its first few sets. A save the server refuses is set aside for that round rather than holding up every session queued behind it.
 
 The app checks the worker before it sends anything. If the worker is older than the app the button turns red and says so, and nothing is written — an older worker would take each save as a fresh append, once a second, with nothing to deduplicate on. Whatever was ticked is held and goes up once they match.
 
@@ -180,6 +183,14 @@ Open the app, tap the name, done. Add it to the home screen and it opens like an
 A device with no name yet asks before it shows anything. That is deliberate: two people share one URL, and a session silently filed under the wrong name is not a mistake you notice for weeks. The answer is remembered on that device and the buttons at the top change it any time.
 
 Three devices, two people, one database: his laptop and his phone both on Ikarus, her phone on Johanna. Nothing is shared between people except the program itself.
+
+### Sessions stranded on the phone
+
+The phone keeps every session it has logged, as a draft per person, date and session, and never deletes one. So a session that never reached the server is usually still on the phone that logged it. On opening, the app compares those drafts with the server, and if the server is missing ticked sets it says how many and from which sessions, with a **Send them** button.
+
+Sending only ever adds. Each day goes back as everything the server already holds for that session, exactly as stored, plus the ticked sets only this phone has. Where both have the same set, the server's numbers win, so an edit made on another device cannot be undone from here. Today, and a day open for editing, are left to the screen, and heart rate is not touched; the server matches it to the recovered sets itself.
+
+The drafts are in the browser's storage for this site on this phone. A home-screen icon on iPhone has its own storage, separate from Safari, so open the app the way the sessions were logged or it will not see them.
 
 ## Logging from more than one device
 

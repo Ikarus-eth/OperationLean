@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 7, at: '21 Sep 2026, 10:25' };
+const BUILD = { n: 8, at: '21 Sep 2026, 11:10' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -478,6 +478,12 @@ body[data-firstrun] .date{visibility:hidden}
     <b id="backdate-when"></b>
     <span>Ticks still record the moment you tap, so per-set heart rate cannot line up with a session you did earlier. The workout summary still saves in full.</span>
     <button type="button" id="totoday">Back to today</button>
+  </div>
+
+  <div id="recover" hidden class="backdate">
+    <b id="recover-head"></b>
+    <span id="recover-body"></span>
+    <button type="button" id="recover-go" hidden>Send them</button>
   </div>
 
   <div id="list"></div>
@@ -1632,7 +1638,8 @@ function renderSync(){
   if (state.sync === 'saving') { b.textContent = 'Saving…'; setStatus(''); return; }
   if (state.sync === 'offline') {
     b.textContent = 'Not saved — tap to retry';
-    setStatus(q + (q === 1 ? ' change' : ' changes') + ' waiting for a connection.', 'pending');
+    if (state.refused) setStatus('The server did not take ' + state.refused.what + ': ' + state.refused.msg, 'bad');
+    else setStatus(q + (q === 1 ? ' change' : ' changes') + ' waiting for a connection.', 'pending');
     return;
   }
   if (state.sync === 'saved') {
@@ -1677,33 +1684,73 @@ function buildSync(){
   };
 }
 
+/* A refusal and a missing connection used to leave here looking identical,
+   and the screen called both of them "waiting for a connection". Only one of
+   those fixes itself when the signal comes back, so a refusal is now marked
+   as one and carries the server's own words. The deadline matters because
+   saves go up one at a time: a request that never answers would otherwise
+   hold every save behind it until the page is reloaded. */
 async function post(payload){
-  const res = await fetch(ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // avoids CORS preflight
-    body: JSON.stringify({ secret: SECRET, ...payload }),
-  });
-  const data = await res.json();
-  if (!data || !data.ok) throw new Error(data && data.error ? data.error : 'rejected by the server');
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), 20000);
+  let res, data = null;
+  try {
+    res = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // avoids CORS preflight
+      body: JSON.stringify({ secret: SECRET, ...payload }),
+      signal: ac.signal,
+    });
+    const text = await res.text();
+    try { data = JSON.parse(text); } catch(e){}
+  } finally { clearTimeout(t); }
+  if (!data || !data.ok) {
+    const err = new Error(data && data.error ? data.error : 'the server answered ' + res.status);
+    err.refused = true;
+    throw err;
+  }
   return data;
 }
 
-async function pushQueue(){
-  const q = readQueue();
-  if (!q.length) return false;
+/** One drain at a time. Two used to run side by side, each reading the
+ *  queue, sending, then writing back the copy it had read before sending —
+ *  so the slower one could put back a queue that no longer held the newest
+ *  save, and then call the screen saved. Running one at a time also keeps an
+ *  older save for a session from landing after a newer one and replacing it. */
+let draining = null;
+function pushQueue(){
+  if (!draining) draining = drainQueue().finally(() => { draining = null; });
+  return draining;
+}
+
+async function drainQueue(){
+  if (!readQueue().length) return false;
   if (workerStale()) { renderSync(); return false; }        // held, not lost
   if (!configured()) { state.sync = 'offline'; renderSync(); return false; }
   state.sync = 'saving'; renderSync();
-  while (readQueue().length) {
-    const cur = readQueue();
+  state.refused = null;
+  /* Each entry is a different session and stands on its own, so one the
+     server refuses is set aside for this round instead of blocking every
+     session queued after it. Tried is keyed on the payload itself: a session
+     edited again after a refusal is a new save and gets a fresh attempt. */
+  const tried = new Set();
+  for (;;) {
+    const head = readQueue().find(x => !tried.has(JSON.stringify(x)));
+    if (!head) break;
+    const sent = JSON.stringify(head);
+    tried.add(sent);
     try {
-      await post(cur[0]);
-      store.set('lb.sent.' + cur[0].user + '|' + cur[0].date + '|' + cur[0].session, '1');
-      cur.shift(); writeQueue(cur);
+      await post(head);
+      store.set('lb.sent.' + head.user + '|' + head.date + '|' + head.session, '1');
+      // Only what went up leaves. A newer save for the same session, queued
+      // while this one was on its way, stays and goes next.
+      writeQueue(readQueue().filter(x => JSON.stringify(x) !== sent));
     } catch(e){
-      state.sync = 'offline'; renderSync(); return false;
+      if (!(e && e.refused)) break;                  // no connection: the rest would fail too
+      state.refused = { what: head.session + ' on ' + fmtDate(head.date), msg: String(e.message || e) };
     }
   }
+  if (readQueue().length) { state.sync = 'offline'; renderSync(); return false; }
   state.sync = 'saved';
   state.savedAt = new Date().toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
   renderSync();
@@ -1749,6 +1796,162 @@ document.addEventListener('visibilitychange', async () => {
   pushQueue();
 });
 
+/* ══ recovery ════════════════════════════════════════════
+   Drafts are never deleted, so every session this phone logged is still on
+   it, whether or not the server ever got it. This finds ticked sets the
+   server is missing and sends them on one tap.
+
+   It only ever adds. Each day goes back up as everything the server already
+   holds for that session, exactly as stored, plus the ticked sets only this
+   phone has. A set the server already has keeps the server's numbers even
+   where this phone remembers different ones, so an edit made on another
+   device cannot be undone from here. Each payload is rebuilt from a fresh
+   read just before it is sent, so two sessions on one day cannot undo each
+   other's Daily rows. Today, and whatever day is on screen, are left to the
+   screen. Heart rate is not touched; the server matches it to the sets. */
+
+const DRAFT_RE = /^lb\.draft\.([^.]+)\.(.+)\.(\d{4}-\d{2}-\d{2})$/;
+const setKey = r => r.session + '|' + r.exercise + '|' + r.set;
+const isoOr = ts => { try { return ts ? new Date(ts).toISOString() : ''; } catch(e){ return ''; } };
+const recovery = { plan: [], sending: false, sent: 0, failed: [], done: false };
+
+function draftsOnPhone(user){
+  const keys = [];
+  try { for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i)); }
+  catch(e){ return []; }
+  const out = [];
+  keys.forEach(k => {
+    const m = k && k.match(DRAFT_RE);
+    if (!m || m[1] !== user) return;
+    const session = m[2], date = m[3];
+    if (date >= today()) return;                                     // today belongs to the screen
+    if (date === state.date && session === state.session) return;    // so does a day being edited
+    let d = null;
+    try { d = JSON.parse(localStorage.getItem(k)); } catch(e){}
+    if (!d || !Array.isArray(d.rows)) return;
+    const notes = String(d.notes || '').trim();
+    const rows = [];
+    d.rows.forEach(ex => {
+      if (!ex || !ex.name || !Array.isArray(ex.sets)) return;
+      ex.sets.forEach((st, i) => {
+        if (!st || !st.done) return;
+        rows.push({
+          date, user, session: ex.daily ? 'Daily' : session, exercise: ex.name,
+          set: i+1, weight: st.w ?? '', reps: st.r ?? '', reps_assist: st.r2 ?? '', rir: st.rir ?? '',
+          notes, ex_notes: String(ex.note || '').trim(), set_ts: isoOr(st.ts), hr_avg: '', hr_peak: '',
+        });
+      });
+    });
+    if (rows.length) out.push({ session, date, rows });
+  });
+  return out.sort((a, b) => (a.date + a.session).localeCompare(b.date + b.session));
+}
+
+async function serverSets(user, date){
+  const res = await timed(ENDPOINT + '?action=day&user=' + encodeURIComponent(user) +
+                          '&date=' + encodeURIComponent(date));
+  const d = await res.json();
+  if (!d || !d.ok) throw new Error((d && d.error) || 'could not read ' + date);
+  return (d.sets || []).map(r => ({
+    date, user, session: String(r.session), exercise: String(r.exercise), set: Number(r.set_no),
+    weight: r.weight ?? '', reps: r.reps ?? '', reps_assist: r.reps_assist ?? '', rir: r.rir ?? '',
+    notes: r.notes ?? '', ex_notes: r.ex_notes ?? '', set_ts: r.set_ts ?? '',
+    hr_avg: r.hr_avg ?? '', hr_peak: r.hr_peak ?? '',
+  }));
+}
+
+/* What the server holds for this session and day, plus what only the phone has. */
+async function mergedDay(user, draft){
+  const onServer = (await serverSets(user, draft.date))
+    .filter(r => r.session === draft.session || r.session === 'Daily');
+  const have = new Set(onServer.map(setKey));
+  const missing = draft.rows.filter(r => !have.has(setKey(r)));
+  return { rows: onServer.concat(missing), adds: missing.length };
+}
+
+async function scanRecovery(){
+  if (!configured() || workerStale() || recovery.sending) return;
+  const user = state.user;
+  const plan = [];
+  for (const d of draftsOnPhone(user)) {
+    let m;
+    try { m = await mergedDay(user, d); } catch(e){ continue; }    // unreadable day: next time
+    if (state.user !== user) return;                               // person changed mid-scan
+    if (m.adds) plan.push({ date: d.date, session: d.session, adds: m.adds });
+  }
+  if (state.user !== user) return;
+  recovery.plan = plan;
+  renderRecover();
+}
+
+async function runRecovery(){
+  if (recovery.sending || !recovery.plan.length) return;
+  const user = state.user;
+  recovery.sending = true; recovery.sent = 0; recovery.failed = []; recovery.done = false;
+  renderRecover();
+  for (const item of recovery.plan) {
+    if (state.user !== user) break;
+    const key = user + '|' + item.date + '|' + item.session;
+    try {
+      if (draining) await draining;                 // never alongside a queued save
+      const d = draftsOnPhone(user).find(x => x.date === item.date && x.session === item.session);
+      if (d) {
+        const m = await mergedDay(user, d);
+        if (m.adds) await post({ sync: true, user, date: item.date, session: item.session,
+                                 rows: m.rows, hr: null, notes: '' });
+      }
+      // A queued copy of this session is the phone's own screen, which the
+      // server now holds in full. Sent later, it would replace the merge.
+      writeQueue(readQueue().filter(x => (x.user + '|' + x.date + '|' + x.session) !== key));
+      store.set('lb.sent.' + key, '1');
+      recovery.sent++;
+    } catch(e){
+      recovery.failed.push(item.session + ' on ' + fmtDate(item.date) + ': ' + String(e && e.message || e));
+    }
+    renderRecover();
+  }
+  recovery.sending = false; recovery.done = true;
+  await fetchLast(); carryOver(); renderList();
+  await scanRecovery();                              // whatever is still missing says so
+  renderRecover();
+}
+
+function renderRecover(){
+  const box = $('#recover'), head = $('#recover-head'), body = $('#recover-body'), go = $('#recover-go');
+  if (!box) return;
+  const r = recovery;
+  const total = r.plan.reduce((a, p) => a + p.adds, 0);
+  go.onclick = runRecovery;
+  if (r.sending) {
+    box.hidden = false; go.hidden = true;
+    head.textContent = 'Sending ' + Math.min(r.sent + r.failed.length + 1, r.plan.length) + ' of ' + r.plan.length + '\u2026';
+    body.textContent = 'Keep this screen open until it finishes.';
+    return;
+  }
+  if (r.done && r.failed.length) {
+    box.hidden = false; go.hidden = !r.plan.length;
+    head.textContent = r.sent + ' sent, ' + r.failed.length + ' refused';
+    body.textContent = r.failed.join(' \u00b7 ');
+    go.textContent = 'Try the rest again';
+    return;
+  }
+  if (r.done && !total) {
+    box.hidden = false; go.hidden = true;
+    head.textContent = 'Back on the server';
+    body.textContent = r.sent + (r.sent === 1 ? ' session' : ' sessions') +
+      ' from this phone are in your history now, and carry-over runs from them.';
+    return;
+  }
+  if (!total) { box.hidden = true; return; }
+  box.hidden = false; go.hidden = false; go.textContent = 'Send them';
+  const n = r.plan.length;
+  head.textContent = 'This phone has ' + total + (total === 1 ? ' set' : ' sets') +
+    ' the server never got';
+  body.textContent = 'From ' + n + (n === 1 ? ' session: ' : ' sessions: ') +
+    r.plan.map(p => p.session + ' ' + fmtDate(p.date)).join(', ') +
+    '. Sending adds them to your history. Nothing already saved is changed.';
+}
+
 /* ══ boot ════════════════════════════════════════════════ */
 
 async function boot(){
@@ -1779,6 +1982,7 @@ async function boot(){
 
   const n = readQueue().length;
   if (n) await pushQueue(); else renderSync();
+  scanRecovery();
 }
 
 $('#hrfile').onchange = async (e) => {
