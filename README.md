@@ -105,7 +105,7 @@ Open the same date on another device and the sets come back ticked, because the 
 
 If two devices have the same session open at once, the last one to save wins. Log on one at a time.
 
-Saves go up one at a time, oldest first, and each one leaves the queue only once the server has said yes to that exact payload. Until build 8 two uploads could run side by side, and the slower one wrote back a stale copy of the queue after the faster one had failed: the newest save vanished from the phone, the older one landed, and the button still went green. That is how a session could end up stored as its first few sets. A save the server refuses is set aside for that round rather than holding up every session queued behind it.
+Saves go up one at a time, oldest first, and each one leaves the queue only once the server has said yes to that exact payload. Until build 8 two uploads could run side by side, and the slower one wrote back a stale copy of the queue after the faster one had failed: the newest save vanished from the phone, the older one landed, and the button still went green. That is how a session could end up stored as its first few sets. A save the server refuses is set aside for that round rather than holding up every session queued behind it, and so is one that breaks off on the way while the server still answers a small check. The session on screen always goes first, so a backlog of old days never makes today's ticks wait.
 
 The app checks the worker before it sends anything. If the worker is older than the app the button turns red and says so, and nothing is written — an older worker would take each save as a fresh append, once a second, with nothing to deduplicate on. Whatever was ticked is held and goes up once they match.
 
@@ -186,9 +186,11 @@ Three devices, two people, one database: his laptop and his phone both on Ikarus
 
 ### Sessions stranded on the phone
 
-The phone keeps every session it has logged, as a draft per person, date and session, and never deletes one. So a session that never reached the server is usually still on the phone that logged it. On opening, the app compares those drafts with the server, and if the server is missing ticked sets it says how many and from which sessions, with a **Send them** button.
+The phone keeps every session it has logged, as a draft per person, date and session, and never deletes one. So a session that never reached the server is usually still on the phone that logged it. On opening, the app compares those drafts with the server and sends whatever ticked sets the server is missing, without being asked. A banner says what it is doing and what it sent. If it could not finish, it tries again whenever the app comes back to the front or back online, at most once a minute, and the banner says what is still on the phone and why.
 
-Sending only ever adds. Each day goes back as everything the server already holds for that session, exactly as stored, plus the ticked sets only this phone has. Where both have the same set, the server's numbers win, so an edit made on another device cannot be undone from here. Today, and a day open for editing, are left to the screen, and heart rate is not touched; the server matches it to the recovered sets itself.
+Sending only ever adds. Each day goes back as everything the server already holds for that session, exactly as stored, plus the ticked sets only this phone has. Where both have the same set, the server's numbers win, so an edit made on another device cannot be undone from here. The one thing it can bring back is a set that was deliberately unticked on a different device after this phone saved it. Today, and a day open for editing, are left to the screen, and heart rate is not touched; the server matches it to the recovered sets itself.
+
+The footer says what this phone holds: how many past sessions for the person selected, whether they are all on the server, and how many are stored under the other name. That last number is the other way a history goes missing: a phone left on the wrong person.
 
 The drafts are in the browser's storage for this site on this phone. A home-screen icon on iPhone has its own storage, separate from Safari, so open the app the way the sessions were logged or it will not see them.
 
