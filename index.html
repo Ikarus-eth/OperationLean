@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 9, at: '21 Sep 2026, 11:55' };
+const BUILD = { n: 10, at: '21 Sep 2026, 12:20' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -52,9 +52,12 @@ const SESSIONS_IKARUS = {
       { name: 'Chest-Supported Row',  target: '3 × 8-12',  sets: 3, pair: 'A' },
       { name: 'Flat DB Press',        target: '3 × 8-12',  sets: 3, pair: 'B' },
       { name: 'Rear Delt Fly',        target: '3 × 12-20', sets: 3, pair: 'B' },
+      /* C is one giant set of ten: lateral, curl, triceps for three rounds,
+         then a last lateral. Four laterals against three of the others is
+         what makes them open and close it. Same on Upper B. */
+      { name: 'Lateral Raise',        target: '4 × 12-20', sets: 4, pair: 'C' },
       { name: 'Incline DB Curl',      target: '3 × 8-12',  sets: 3, pair: 'C' },
       { name: 'Overhead Triceps Ext', target: '3 × 10-15', sets: 3, pair: 'C' },
-      { name: 'Lateral Raise',        target: '4 × 12-20', sets: 4 },
     ],
     'Lower 2': [
       { name: 'Belt Squat',         target: '3 × 8-12',  sets: 3 },
@@ -75,9 +78,9 @@ const SESSIONS_IKARUS = {
       { name: 'Incline DB Press',  target: '3 × 8-12',  sets: 3, pair: 'A' },
       { name: 'Single-Arm DB Row', target: '3 × 8-12',  sets: 3, pair: 'B' },
       { name: 'DB Fly',            target: '3 × 10-15', sets: 3, pair: 'B' },
+      { name: 'Lateral Raise',     target: '4 × 12-20', sets: 4, pair: 'C' },
       { name: 'DB Curl',           target: '3 × 10-15', sets: 3, pair: 'C' },
       { name: 'Skullcrusher',      target: '3 × 10-15', sets: 3, pair: 'C' },
-      { name: 'Lateral Raise',     target: '4 × 12-20', sets: 4 },
     ],
   'Other': [],
 };
@@ -1097,6 +1100,24 @@ function reconcile(){
     const firstDaily = state.rows.findIndex(r => r.daily);
     state.rows.splice((row.daily || firstDaily < 0) ? state.rows.length : firstDaily, 0, row);
   });
+
+  /* Order is config too. Superset marks are numbered by position on screen,
+     so a draft opened before the program moved an exercise would otherwise
+     number the group in the old order. Program rows take the program's
+     order; a row added by hand stays behind the furthest program row it
+     came after, so one added at the end of an old-order draft is not
+     dropped into the middle of a group that just moved. The typed half
+     moves with its row untouched. */
+  const at = new Map(plan.map((p, i) => [p.name, i]));
+  let anchor = -1;
+  state.rows = state.rows
+    .map((r, i) => {
+      const k = at.get(r.slot || r.name);
+      if (k != null) anchor = Math.max(anchor, k);
+      return { r, i, k: k != null ? k : anchor + 0.5 };
+    })
+    .sort((a, b) => a.k - b.k || a.i - b.i)
+    .map(x => x.r);
 }
 
 /* Daily items are the same items whatever session is picked, so they are kept
