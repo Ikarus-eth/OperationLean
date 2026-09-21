@@ -97,9 +97,17 @@ There is no submit step. Every tick and every typed number is written to the ser
 | **Not saved — tap to retry** (amber) | no connection; held on the device, sent when it comes back |
 | **Not saved — tap to retry**, red line underneath | the server answered and refused one save; the line gives its reason. The others still go up |
 
-Typing a weight or a rep count confirms that set on its own, so an edited row does not also need a tap. The tap is for a set you did exactly as prefilled. A tap after typing confirms too, and stamps the time; only a tap on a set nobody has typed into since takes it back.
+The tick is the only thing that saves a set, and the only thing that takes one back: tap it and the set is saved with the time of the tap, tap it again and it is gone. Typing changes the numbers and nothing else. A row reads three ways:
 
-Up to build 10 the tick was a plain toggle, so typing the numbers and then tapping the tick unticked the set, and an unticked set is never saved. With no history to carry over, every number gets typed, so every set went that way and the history never started. That is where Ikarus's first three weeks went. Build 11 ticks, once, every set on the phone that was typed into and left unticked, and the recovery below sends them. A set deliberately unticked after typing into it cannot be told apart and is ticked too.
+| Row | Meaning |
+|---|---|
+| grey numbers, plain tick | last time's numbers, a suggestion; not saved |
+| dark numbers, **amber tick** | you typed here but have not ticked it; not saved |
+| bold numbers, black tick | saved |
+
+While any typed row is left unticked, the line under the save button counts them.
+
+Up to build 10, typing ticked a set by itself and the tick was a plain toggle, so typing the numbers and then tapping the tick unticked the set, and an unticked set is never saved. With no history to carry over, every number gets typed, so every set went that way and the history never started. That is where Ikarus's first three weeks went. Build 11 ticked, once, every set on the phone that had been typed into and left unticked, and the recovery below sent them; a set deliberately unticked after typing could not be told apart and was ticked too. Build 12 took typing out of ticking altogether.
 
 A save replaces the stored version of that person, date and session rather than adding to it. So the same screen can be sent a hundred times without piling up duplicates, and unticking a set removes it from the database. The screen is the record.
 

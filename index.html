@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 11, at: '21 Sep 2026, 17:30' };
+const BUILD = { n: 12, at: '21 Sep 2026, 18:10' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -359,6 +359,10 @@ body{
   color:var(--ghost);font-size:19px;line-height:1;padding:0;
 }
 .row.done .tick{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+/* Typed but not ticked: the numbers are yours rather than a suggestion, so
+   they lose the grey, and the tick turns amber because it is what saves them. */
+.row.edited input{color:var(--ink)}
+.row.edited .tick{border:2px solid var(--pending);color:var(--pending);background:#FAF6EC}
 .tick:focus-visible{outline:2px solid var(--gain);outline-offset:2px}
 
 .meta{display:grid;grid-template-columns:20px 1fr 1fr 1fr 46px;gap:6px;font-size:12px;color:var(--ghost);
@@ -914,9 +918,7 @@ function renderList(){
         inp.oninput = () => {
           inp.dataset.typed = '1';
           set[f] = inp.value;
-          set.carried = false;
-          set.typed = true;                        // the next tap confirms, see the tick
-          if (!set.done) confirmSet(set);
+          set.carried = false;                     // yours now, not a suggestion; not ticked by this
           paint(); saveDraft(); renderSync();
         };
         row.appendChild(inp);
@@ -924,23 +926,24 @@ function renderList(){
 
       const tick = el('button','tick'); tick.type = 'button'; tick.textContent = '✓';
       tick.setAttribute('aria-label', 'Mark set ' + (si+1) + ' of ' + ex.name + ' as done');
-      /* Typing already ticks a set, so a tap straight after typing is someone
-         confirming what they typed. It used to be a plain toggle: type the
-         numbers, tap the tick the way the screen teaches, and the set was
-         unticked — and an unticked set is never saved. With no history to
-         carry over every number gets typed, so every set went this way and
-         the history never started. Now the first tap after any typing
-         confirms; only a tap on a set nobody has typed into since takes it
-         back. */
+      /* The tick is the only thing that saves a set and the only thing that
+         takes one back; what it shows is what the server has. Typing used to
+         tick a set by itself, so the same button meant "save" on one row and
+         "undo" on the next, and typing a changed number then tapping the tick
+         unsaved the set. That cost Ikarus three weeks. Build 11 patched it by
+         making the tap depend on whether you had typed, which fixed the data
+         and kept the confusion. Now typing only changes the numbers, a typed
+         row that is not ticked shows its tick in amber, and the line under
+         the save button counts any left behind. */
       tick.onclick = () => {
-        if (set.done && !set.typed) { set.done = false; set.ts = null; }
-        else { confirmSet(set); set.typed = false; }
+        if (set.done) { set.done = false; set.ts = null; } else confirmSet(set);
         paint(); saveDraft(); renderSync();
       };
       row.appendChild(tick);
 
       function paint(){
         row.classList.toggle('done', !!set.done);
+        row.classList.toggle('edited', !set.done && set.carried === false && setHasValue(set));
         const g = lastSet(ex.name, si);
         // Without a weight box there is nothing to multiply, so reps alone decide.
         // Weight times reps, unless the exercise names the number it is really
@@ -1008,6 +1011,10 @@ function renderList(){
 }
 
 function confirmSet(set){ set.done = true; set.ts = set.ts || Date.now(); }
+const setHasValue = st => ['w','r','r2','rir'].some(f => st[f] !== '' && st[f] != null);
+/* Sets with typed numbers and no tick: not saved, and easy to leave behind. */
+const looseSets = () => state.rows.reduce((a, ex) =>
+  a + ex.sets.filter(st => !st.done && st.carried === false && setHasValue(st)).length, 0);
 function repaintAll(){ state.rows.forEach(ex => ex.sets.forEach(s => s._paint && s._paint())); }
 
 function fmtDate(d){
@@ -1191,7 +1198,7 @@ function saveDraft(quiet){
       name:ex.name, slot:ex.slot, target:ex.target, hint:ex.hint, pair:ex.pair,
       units:ex.units, fields:ex.fields, fixed:ex.fixed, seed:ex.seed, progress:ex.progress,
       daily:ex.daily, note:ex.note || '',
-      sets: ex.sets.map(s => ({ w:s.w, r:s.r, r2:s.r2, rir:s.rir, done:s.done, ts:s.ts, carried:s.carried, typed:!!s.typed })),
+      sets: ex.sets.map(s => ({ w:s.w, r:s.r, r2:s.r2, rir:s.rir, done:s.done, ts:s.ts, carried:s.carried })),
     }));
     store.set(draftKey(), JSON.stringify({ rows, notes: $('#notes').value, hr: state.hr, removed: state.removed }));
     store.set(dailyKey(), JSON.stringify({
@@ -1673,9 +1680,13 @@ function renderSync(){
     else setStatus(q + (q === 1 ? ' change' : ' changes') + ' waiting for a connection.', 'pending');
     return;
   }
+  const loose = looseSets();
+  const looseMsg = loose + ' typed ' + (loose === 1 ? 'set is' : 'sets are') + ' not ticked, so not saved';
   if (state.sync === 'saved') {
     b.textContent = n ? 'Saved · ' + n + (n === 1 ? ' set' : ' sets') : 'Saved · nothing ticked';
-    if (missingFeature('assist-reps')) {
+    if (loose) {
+      setStatus(looseMsg, 'pending');
+    } else if (missingFeature('assist-reps')) {
       setStatus('Saved, but assisted reps are being dropped — deploy worker.js.', 'pending');
     } else {
       setStatus(state.savedAt ? 'Last saved ' + state.savedAt : '', 'ok');
@@ -1684,7 +1695,7 @@ function renderSync(){
   }
   b.textContent = n === 0 && !state.hr ? 'Tick the sets you did'
     : 'Saving in a moment…';
-  setStatus('', null);
+  if (loose) setStatus(looseMsg, 'pending'); else setStatus('', null);
 }
 
 function setStatus(msg, tone){
