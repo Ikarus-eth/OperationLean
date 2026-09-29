@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 14, at: '29 Sep 2026' };
+const BUILD = { n: 15, at: '29 Sep 2026, 13:36' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -1168,14 +1168,18 @@ function reconcile(){
     state.rows.splice((row.daily || firstDaily < 0) ? state.rows.length : firstDaily, 0, row);
   });
 
-  /* Order is config too. Superset marks are numbered by position on screen,
-     so a draft opened before the program moved an exercise would otherwise
-     number the group in the old order. Program rows take the session's
-     order — the program's, or yours once you have dragged one (see
-     orderFor); a row added by hand stays behind the furthest program row it
-     came after, so one added at the end of an old-order draft is not
-     dropped into the middle of a group that just moved. The typed half
-     moves with its row untouched. */
+  sortRows();
+}
+
+/* Order is config too. Superset marks are numbered by position on screen,
+   so a draft opened before the order changed would otherwise number the
+   group the old way. Program rows take the session's order — the program's,
+   or yours once you have dragged one (see orderFor); a row added by hand
+   stays behind the furthest program row it came after, so one added at the
+   end of an old-order draft is not dropped into the middle of a group that
+   just moved. The typed half moves with its row untouched. Called again
+   whenever a newer order arrives from the other device. */
+function sortRows(){
   const at = new Map(orderFor().concat(dailyFor().map(p => p.name)).map((n, i) => [n, i]));
   let anchor = -1;
   state.rows = state.rows
@@ -1267,11 +1271,13 @@ function readDraft(){ try { const r = store.get(draftKey()); return r ? JSON.par
 /* ══ order ═══════════════════════════════════════════════
    The circle at the top left of an exercise moves it, and the order is
    remembered for the next time that session comes round. What is kept is
-   the order of the program's lines, per person and session, on this device;
-   like the draft it is never sent anywhere, and nothing in the data depends
-   on it. A row added by hand can be moved but is not remembered, since it is
-   not on the program next time. Every-day items keep their block at the
-   bottom and do not move.
+   the order of the program's lines, per person and session — on the device
+   for the screen to read straight away, and on the server so the other
+   phone and the laptop open the same way. It is not training data: no date,
+   no sets, nothing in the log depends on it, and a drag is not a save.
+   A row added by hand can be moved but is not remembered, since it is not
+   on the program next time. Every-day items keep their block at the bottom
+   and do not move.
 
    The program can change under a remembered order in two ways. A line
    added or deleted is absorbed: a new one goes in straight after the line
@@ -1281,9 +1287,40 @@ function readDraft(){ try { const r = store.get(draftKey()); return r ? JSON.par
    changed last is what the screen shows, which is why the program as it
    stood at the drag is kept alongside the order. */
 
-const orderKey = () => 'lb.order.' + state.user + '.' + state.session;
+const orderKeyFor = (user, session) => 'lb.order.' + user + '.' + session;
+const orderKey = () => orderKeyFor(state.user, state.session);
+const ORDER_RE = /^lb\.order\.([^.]+)\.(.+)$/;
+const ORDER_Q  = 'lb.orderq';
 const programNames = () => (PROGRAM[state.user].sessions[state.session] || []).map(p => p.name);
 const movableRows = () => state.rows.filter(r => !r.daily);
+
+/* A record is {order, program, ts}. `ts` is the dragging device's own clock,
+   and is what decides whose drag is the newer when both phones have dragged.
+   A record written before the order went to the server has no clock; 1
+   stands in for it, which is older than any real drag and newer than a
+   server that has never been told anything. */
+function readOrder(session, user){
+  try {
+    const raw = JSON.parse(store.get(orderKeyFor(user || state.user, session)) || 'null');
+    if (raw && Array.isArray(raw.order) && Array.isArray(raw.program))
+      return { order: raw.order, program: raw.program, ts: Number(raw.ts) || 1 };
+  } catch(e){}
+  return null;
+}
+const writeOrder = (user, session, rec) => store.set(orderKeyFor(user, session), JSON.stringify(rec));
+
+function ordersOnDevice(user){
+  const keys = [], out = [];
+  try { for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i)); }
+  catch(e){ return out; }
+  keys.forEach(k => {
+    const m = k && ORDER_RE.exec(k);
+    if (!m || m[1] !== user) return;
+    const rec = readOrder(m[2], user);
+    if (rec) out.push({ session: m[2], rec });
+  });
+  return out;
+}
 
 /* `want` in its own order, minus anything `all` lacks, plus anything in
    `all` that `want` lacks — each put straight after what it follows in
@@ -1313,7 +1350,75 @@ function saveOrder(){
   const prog = programNames();
   if (!prog.length) return;
   const shown = movableRows().map(r => r.slot || r.name).filter(n => prog.includes(n));
-  store.set(orderKey(), JSON.stringify({ order: mergeOrder(shown, orderFor()), program: prog }));
+  const rec = { order: mergeOrder(shown, orderFor()), program: prog, ts: Date.now() };
+  writeOrder(state.user, state.session, rec);
+  queueOrder(state.user, state.session, rec);
+  sendOrders();
+}
+
+/* A drag waits here until the server has it, so one made on gym wifi that
+   accepts the connection and then says nothing is not lost, and does not
+   hold a session save up behind it. Newest wins per session, like the
+   session queue: a queue of every drag would be pointless when each one
+   replaces the last. */
+function readOrderQ(){ try { return JSON.parse(store.get(ORDER_Q) || '[]'); } catch(e){ return []; } }
+function queueOrder(user, session, rec){
+  const q = readOrderQ().filter(x => !(x.user === user && x.session === session));
+  q.push({ user, session, order: rec.order, program: rec.program, ts: rec.ts });
+  store.set(ORDER_Q, JSON.stringify(q));
+}
+const orderId = x => x.user + '|' + x.session + '|' + x.ts;
+
+async function sendOrders(){
+  const q = readOrderQ();
+  if (!q.length || !configured() || missingFeature('order')) return;
+  try { await post({ orders: q }); } catch(e){ return; }      // stays queued for the next try
+  // Only what went up leaves. A drag made while this was on its way stays.
+  const sent = new Set(q.map(orderId));
+  store.set(ORDER_Q, JSON.stringify(readOrderQ().filter(x => !sent.has(orderId(x)))));
+}
+
+/* What the other device dragged. Asked once per person on opening and again
+   when the app comes back to the front — a drag is rare and the answer is a
+   few hundred bytes, so there is nothing to be clever about. Whichever side
+   dragged later wins; the server refuses an older drag rather than letting
+   a phone that was offline for a week undo a newer one. */
+async function fetchOrders(){
+  if (!configured() || missingFeature('order')) return false;
+  const token = ++ask.order, ctx = scope.order();
+  let data = null;
+  try {
+    const res = await timed(ENDPOINT + '?action=order&user=' + encodeURIComponent(state.user));
+    data = await res.json();
+  } catch(e){ return false; }
+  if (!data || !data.ok || stale('order', token, ctx)) return false;
+
+  const server = data.order || {};
+  let here = false;
+  Object.keys(server).forEach(session => {
+    const s = server[session];
+    if (!s || !Array.isArray(s.order)) return;
+    const mine = readOrder(session);
+    if (mine && mine.ts >= (Number(s.ts) || 0)) return;        // this device dragged later
+    writeOrder(state.user, session, {
+      order: s.order, program: Array.isArray(s.program) ? s.program : [], ts: Number(s.ts) || 0 });
+    if (session === state.session) here = true;
+  });
+  // Anything this device holds that the server has not heard about goes up.
+  ordersOnDevice(state.user).forEach(o => {
+    const s = server[o.session];
+    if (s && (Number(s.ts) || 0) >= o.rec.ts) return;
+    queueOrder(state.user, o.session, o.rec);
+  });
+  sendOrders();
+  return here;
+}
+
+/* Mid-drag the rows under the finger are not ours to move. It asks again
+   the next time the app comes to the front, which is soon enough. */
+async function refreshOrders(){
+  if (drag) return;
+  if (await fetchOrders()) { sortRows(); saveDraft(true); renderList(); }
 }
 
 /* `before` and `after` hold the same rows. The places `before` has in
@@ -1489,9 +1594,9 @@ window.addEventListener('blur', () => dragEnd(null));
    reply that does not depend on the session at all. A dropped day read is
    not harmless — it is what pulls another device's ticks onto this screen
    before this screen's next save replaces them. */
-const ask = { last: 0, day: 0 };
+const ask = { last: 0, day: 0, order: 0 };
 const context = () => state.user + '|' + state.date + '|' + state.session;
-const scope = { last: context, day: context };      // history leaves out the session on screen
+const scope = { last: context, day: context, order: () => state.user };   // history leaves out the session on screen; an order is per person
 function stale(kind, token, ctx){ return token !== ask[kind] || ctx !== scope[kind](); }
 
 /* Gym wifi that accepts a connection and then says nothing is the normal
@@ -1963,6 +2068,8 @@ function renderSync(){
       setStatus(looseMsg, 'pending');
     } else if (missingFeature('assist-reps')) {
       setStatus('Saved, but assisted reps are being dropped — deploy worker.js.', 'pending');
+    } else if (missingFeature('order') && ordersOnDevice(state.user).length) {
+      setStatus('Saved. The exercise order is staying on this phone — deploy worker.js.', 'pending');
     } else {
       setStatus(state.savedAt ? 'Last saved ' + state.savedAt : '', 'ok');
     }
@@ -2115,12 +2222,13 @@ function parkSync(){
   if (p) { enqueue(p); state.lastShape = null; pushQueue(); }
 }
 
-window.addEventListener('online', async () => { await fetchHealth(); retryLast(); pushQueue(); maybeRecover(); });
+window.addEventListener('online', async () => { await fetchHealth(); retryLast(); pushQueue(); refreshOrders(); maybeRecover(); });
 document.addEventListener('visibilitychange', async () => {
   if (document.hidden) return;
   if (workerStale() || !state.worker) await fetchHealth();
   retryLast();
   pushQueue();
+  refreshOrders();
   maybeRecover();
 });
 
@@ -2377,14 +2485,18 @@ async function boot(){
 
   /* Side by side, not one behind the other. The health check only decides
      what the save button says; carry-over is what the first screen is for,
-     and it used to sit behind a request that has nothing to do with it. */
-  await Promise.all([fetchHealth(), fetchLast()]);
+     and it used to sit behind a request that has nothing to do with it. The
+     order does wait for the health check, because asking a Worker that has
+     never heard of it is a wasted round trip on gym wifi. */
+  const [moved] = await Promise.all([fetchHealth().then(fetchOrders), fetchLast()]);
+  if (moved) { sortRows(); saveDraft(true); }
   carryOver();
   renderList();
   fetchDay();
 
   const n = readQueue().length;
   if (n) await pushQueue(); else renderSync();
+  sendOrders();                            // a drag made while offline, still waiting
   if (refixed) await syncNow();            // the screen may have just gained ticks
   recoverAll();
 }

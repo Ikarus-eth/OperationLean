@@ -9,6 +9,8 @@
  *        [&date=&session=]                   ...not counting that session  
  *   GET  ?action=day&user=&date=             what the watch sent that day (open)
  *   GET  ?action=csv&table=sets              whole log as CSV            (open)
+ *   GET  ?action=order&user=ikarus           exercise order per session  (open)
+ *   POST { secret, orders:[…] }              remember an exercise order  (secret)
  *   POST { secret, sync, user, date, session, rows[], hr }   replace a day's
  *                                            session, sent continuously (secret)
  *   POST { secret, batchId, rows[], hr }     append a session, legacy (secret)
@@ -64,8 +66,8 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-09-21a';
-const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps', 'last-scoped'];
+const VERSION  = '2026-09-29a';
+const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps', 'last-scoped', 'order'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
 const SET_WINDOW_S = 90;      // seconds before a tick that count as "the set"
@@ -381,6 +383,14 @@ const SCHEMA_TABLES = [
      pct_max REAL, min_above_80 REAL, z1 REAL, z2 REAL, z3 REAL, z4 REAL, z5 REAL,
      samples INTEGER, series_10s TEXT, workout_id TEXT, workout_type TEXT)`,
   `CREATE TABLE IF NOT EXISTS batches (batch_id TEXT PRIMARY KEY, ts TEXT)`,
+  /* The order the exercises of a session are shown in, once someone has
+     dragged them into one. One row per person and session, holding the
+     order, the program it was dragged against, and the clock of the device
+     that did it. `ts` is that device's clock and is only ever compared with
+     itself, which is enough for last-drag-wins between two phones. */
+  `CREATE TABLE IF NOT EXISTS ex_order (
+     user TEXT, session TEXT, ord TEXT, program TEXT, ts INTEGER, saved TEXT,
+     PRIMARY KEY (user, session))`,
 ];
 
 // Columns added after a table first shipped. Appending here is the whole
@@ -548,6 +558,21 @@ export default {
         return json({ ok: true, hr: rs.results || [], sets: ss.results || [] });
       }
 
+      if (action === 'order') {
+        const user = str(url.searchParams.get('user'));
+        const rs = await env.DB.prepare(
+          'SELECT session, ord, program, ts FROM ex_order WHERE user = ?1'
+        ).bind(user).all();
+        const order = {};
+        for (const r of rs.results || []) {
+          let ord = null, program = null;
+          try { ord = JSON.parse(r.ord); program = JSON.parse(r.program || '[]'); } catch (e) { continue; }
+          if (!Array.isArray(ord)) continue;
+          order[str(r.session)] = { order: ord, program: Array.isArray(program) ? program : [], ts: Number(r.ts) || 0 };
+        }
+        return json({ ok: true, order });
+      }
+
       if (action === 'csv') {
         const table = url.searchParams.get('table') === 'hr' ? 'hr' : 'sets';
         const rs = await env.DB.prepare(
@@ -626,6 +651,47 @@ export default {
       }
 
       if (body.secret !== SECRET) return json({ ok: false, error: 'unauthorized' }, 401);
+
+      /* ── exercise order ─────────────────────────────────────────
+       * Not training data: no date, no sets, one row per person and session
+       * that says what order the screen puts the exercises in. It is sent on
+       * its own rather than with a sync, because dragging is not a save and
+       * happens on days nothing is ticked.
+       *
+       * Last drag wins, judged by the dragging device's own clock. A phone
+       * that was offline for a week and comes back with an older drag is
+       * refused by the WHERE below rather than undoing a newer one. Two
+       * devices whose clocks disagree by more than the gap between two drags
+       * would decide it wrong, which is a fair trade for not needing a
+       * server clock the offline case cannot ask for.
+       */
+      if (Array.isArray(body.orders) || body.order) {
+        const list = Array.isArray(body.orders) ? body.orders : [body.order];
+        const now = new Date().toISOString();
+        const stmts = [];
+        const up = env.DB.prepare(`
+          INSERT INTO ex_order (user, session, ord, program, ts, saved)
+          VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+          ON CONFLICT(user, session) DO UPDATE SET
+            ord = excluded.ord, program = excluded.program,
+            ts = excluded.ts, saved = excluded.saved
+          WHERE excluded.ts >= ex_order.ts`);
+        for (const o of list) {
+          const user = str(o && o.user), session = str(o && o.session);
+          if (!user || !session || !Array.isArray(o.order)) {
+            return json({ ok: false, error: 'an order needs user, session and order[]' }, 400);
+          }
+          stmts.push(up.bind(user, session, JSON.stringify(o.order),
+            JSON.stringify(Array.isArray(o.program) ? o.program : []), Number(o.ts) || 0, now));
+        }
+        if (!stmts.length) return json({ ok: true, saved: 0 });
+        try {
+          await env.DB.batch(stmts);
+        } catch (e) {
+          return json({ ok: false, error: 'database write failed: ' + e.message }, 500);
+        }
+        return json({ ok: true, saved: stmts.length });
+      }
 
       /* ── continuous save ────────────────────────────────────────
        * The app saves as you tick rather than once at the end, so the same

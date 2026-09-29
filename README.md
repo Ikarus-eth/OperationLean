@@ -135,7 +135,9 @@ Both are for today only, and both are local to the device. Another device openin
 
 The circle at the top left of an exercise moves it. Press it and the list folds to its headings — one open exercise is about a screen tall, so folding is what lets you see the session while you move something through it — then drag and let go. The list opens again with the exercise where your finger left it. Held near the top or the bottom the list scrolls on its own. On a keyboard the same circle takes the arrow keys, one place per press.
 
-The new order is remembered for the next time that session comes round, per person and per session. It lives on the device, like the draft: another phone, or the laptop, still shows the program's order until you drag it there too. Nothing in the data changes — order is not a column, and a reorder is not a save.
+The new order is remembered for the next time that session comes round, per person and per session, and it follows you: the drag goes up to the Worker on its own and the other phone and the laptop open the same way. It is not training data — no date, no sets, nothing in the log depends on it, and a drag is not a save. A drag made with no signal waits on the device and goes up with the next connection, like an unsent set.
+
+Both phones dragging the same session is settled by whichever dragged last, judged by the dragging device's own clock. The Worker refuses an older drag rather than letting a phone that was offline for a week undo a newer one. Two clocks would have to disagree by more than the gap between the two drags for that to decide it the wrong way round.
 
 Only program lines are remembered. An exercise added by hand moves with the rest and keeps its place for the day, but it is not on the program next session, so there is nothing to remember. Every-day items keep their own block at the bottom and have no circle. An exercise taken off for today with the **×** keeps its place in the remembered order, so putting it back next week does not put it back at the end.
 
@@ -229,7 +231,7 @@ A session in progress is not. Drafts and the day's every-day ticks live in the b
 - **Fine:** tick Pulls on both. A save replaces rather than appends, so it stays one set of rows rather than two.
 - **Not fine:** both devices open on the same date at once. Neither knows about the other and the last save wins, silently.
 
-Three things still live only on the device you typed them on: an unsent change made offline, the heart rate file you attached by hand, and the order you dragged the exercises into. Everything else is on the server the moment the button turns green.
+Two things still live only on the device you typed them on: an unsent change made offline, and the heart rate file you attached by hand. The order you dragged the exercises into is not one of them any more: it is on the server, and the other device picks it up when it opens or comes back to the front. Everything else is on the server the moment the button turns green.
 
 ## Heart rate
 
@@ -392,6 +394,12 @@ The pull-up ladder seeds at 8/2, 7/3, 6/4 for both. Those are Ikarus's numbers; 
 
 ## How the data is stored
 
+**`ex_order` table** — one row per person and session, written only by a drag:
+
+| user | session | ord | program | ts | saved |
+
+`ord` is the exercise names in the order they are shown, as JSON. `program` is what `PROGRAM` held at the time, which is how a later program edit can tell it was reordered on purpose and overrule the drag. `ts` is the dragging device's clock and decides which of two devices dragged last. Nothing here is training data and nothing else reads it — deleting the table loses nothing but the orders.
+
 `batch_id` is `sync` on anything written by the app now. The old random value only appears on rows from before continuous saving.
 
 **`sets` table** — one row per set:
@@ -444,6 +452,7 @@ The second is fine if nobody is looking for this repository. The first is what t
 - **"No heart rate values in that file."** The export didn't include heart rate, or it's a FIT file. Re-export as CSV or TCX with heart rate enabled.
 - **Every save is held on the device after a Worker update.** Open the Worker URL. If `schema` is not `ok` the migration could not run — the message says why. If `ready` is false but `schema` is `ok`, the secret or the D1 binding is missing.
 - **"Saved, but assisted reps are being dropped."** The worker predates the `reps_assist` column. Everything else is saving normally. Deploy `worker.js` and it stops.
+- **A drag is not following you to the other device.** Open the Worker URL: `features` has to include `order` and `version` has to be the one in `worker.js`. If it is older, the Worker did not deploy; the app keeps the order on the device in the meantime and says so under the save button, and everything goes up once the Worker catches up.
 - **The button is red and says the worker is out of date.** The app on this device is newer than the worker it is talking to. Deploy `worker.js`. Nothing is lost: everything ticked is held and uploads once they match. `?action=day` returning `unknown action` is the same cause.
 - **A Cloudflare build fails.** Check `database_id` in `wrangler.toml` against D1 ▸ `workoutlog` ▸ Settings. The Worker that was already running keeps running.
 - **The watch automation returns 401.** The `X-Logbook-Secret` header does not match `LOGBOOK_SECRET`.

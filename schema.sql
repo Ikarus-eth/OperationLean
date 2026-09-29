@@ -48,6 +48,20 @@ CREATE TABLE IF NOT EXISTS hr (
   workout_type  TEXT    -- 'Traditional Strength Training', 'Surfing', …
 );
 
+-- The order the exercises of a session are shown in, once someone has
+-- dragged them into one. Not training data: no date and no sets, one row
+-- per person and session. `ts` is the clock of the device that dragged,
+-- and decides which of two devices' drags is the newer.
+CREATE TABLE IF NOT EXISTS ex_order (
+  user      TEXT,
+  session   TEXT,
+  ord       TEXT,     -- JSON array of exercise names, in order
+  program   TEXT,     -- JSON array: PROGRAM's order at the time of the drag
+  ts        INTEGER,  -- the dragging device's clock, ms
+  saved     TEXT,     -- when the server stored it, ISO
+  PRIMARY KEY (user, session)
+);
+
 CREATE INDEX IF NOT EXISTS idx_sets_lookup  ON sets (user, exercise, date);
 CREATE INDEX IF NOT EXISTS idx_sets_batch   ON sets (batch_id);
 CREATE INDEX IF NOT EXISTS idx_sets_session ON sets (user, date);
