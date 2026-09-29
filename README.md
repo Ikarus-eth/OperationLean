@@ -131,6 +131,18 @@ The **×** beside an exercise name removes it for today. Nothing is lost that wa
 
 Both are for today only, and both are local to the device. Another device opening the same date shows the full program again, with the removed exercise back but empty and unticked — nothing was logged for it, so nothing is wrong, it is just clutter you have to clear twice. Next session the program is back as written everywhere.
 
+### Reordering
+
+The circle at the top left of an exercise moves it. Press it and the list folds to its headings — one open exercise is about a screen tall, so folding is what lets you see the session while you move something through it — then drag and let go. The list opens again with the exercise where your finger left it. Held near the top or the bottom the list scrolls on its own. On a keyboard the same circle takes the arrow keys, one place per press.
+
+The new order is remembered for the next time that session comes round, per person and per session. It lives on the device, like the draft: another phone, or the laptop, still shows the program's order until you drag it there too. Nothing in the data changes — order is not a column, and a reorder is not a save.
+
+Only program lines are remembered. An exercise added by hand moves with the rest and keeps its place for the day, but it is not on the program next session, so there is nothing to remember. Every-day items keep their own block at the bottom and have no circle. An exercise taken off for today with the **×** keeps its place in the remembered order, so putting it back next week does not put it back at the end.
+
+Editing `PROGRAM` still works over the top of it. A line added or deleted is absorbed: a new one appears straight after the line it follows in `PROGRAM`. A line *moved* in `PROGRAM` is different — the program was reordered on purpose after the drag — so the program's order wins and the drag is forgotten. Whichever was changed last is what the screen shows.
+
+A superset letter is numbered by what sits next to it on the screen, so dragging `B2` above `B1` renumbers them. Drag one away from its partner and neither is a superset any more: both lose the number and the gutter bracket, the same way a pair left with one member after a **×** does.
+
 ### When carry-over is empty
 
 A row with no numbers in it says which of three things happened. **Looking up your history…** means the answer is still on its way: the list is painted before the lookup returns, so this is what the first half-second looks like, and it is also what a dead connection looks like until the eight-second deadline turns it into the next one. **Could not reach your history** means the app asked and got nothing back, so the boxes are empty for a reason that has nothing to do with you. **First time — nothing to carry over** means the lookup came back and the database has no history for that exercise name; it is only ever shown once the answer is in hand.
@@ -217,7 +229,7 @@ A session in progress is not. Drafts and the day's every-day ticks live in the b
 - **Fine:** tick Pulls on both. A save replaces rather than appends, so it stays one set of rows rather than two.
 - **Not fine:** both devices open on the same date at once. Neither knows about the other and the last save wins, silently.
 
-Two things still live only on the device you typed them on: an unsent change made offline, and the heart rate file you attached by hand. Everything else is on the server the moment the button turns green.
+Three things still live only on the device you typed them on: an unsent change made offline, the heart rate file you attached by hand, and the order you dragged the exercises into. Everything else is on the server the moment the button turns green.
 
 ## Heart rate
 
@@ -349,8 +361,8 @@ Edit the `PROGRAM` object in `index.html`. Nothing else changes — not the shee
 ```
 
 - `sets` is only how many rows appear. Add or remove more in the app.
-- `pair` marks a superset. Everything sharing a letter is bracketed in the left gutter and numbered in program order — `A1`, `A2` — so the screen says which exercises alternate. A letter can hold three: on both upper days `C` is a giant set of ten, `C1` Lateral Raise ×4 then the curl and the triceps ×3 each, taken in turn, so the laterals open and close it. A letter left with one exercise, because the others were taken off for the day, shows no number. Omit for unpaired work.
-- Order is program order, and it applies to a session already open: moving an exercise in `PROGRAM` moves it on today's screen at the next load, with whatever was typed into it. A row added by hand stays behind the furthest program row it came after.
+- `pair` marks a superset. Exercises sharing a letter and sitting next to each other are bracketed in the left gutter and numbered down the screen — `A1`, `A2` — so the screen says which ones alternate. A letter can hold three: on both upper days `C` is a giant set of ten, `C1` Lateral Raise ×4 then the curl and the triceps ×3 each, taken in turn, so the laterals open and close it. A letter left with one exercise on screen, because the others were taken off for the day or dragged away from it, shows no number and no bracket. Omit for unpaired work.
+- Order is program order until someone drags an exercise into a different one on their phone, which is remembered per person and session (see *Reordering*). Either way it applies to a session already open: moving an exercise in `PROGRAM` moves it on today's screen at the next load, with whatever was typed into it, and a line moved in `PROGRAM` also clears a remembered order for that session. A row added by hand stays behind the furthest program row it came after.
 - `units: { w: 'in' }` relabels a box. `fields: ['r']` shows only that box.
 - `fixed: { r: '4' }` opens the row at that value every time and ignores what you did last time. For prescriptions, not for progression.
 - `seed: [{ r:'8' }, { r:'7' }]` is a per-set starting point for an exercise with no history yet. Unlike `fixed` it steps out of the way as soon as there is a real session to carry over from.

@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 13, at: '21 Sep 2026, 17:40' };
+const BUILD = { n: 14, at: '29 Sep 2026' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -337,6 +337,34 @@ body{
 .ex[data-pair]::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:2px;background:var(--rule);border-radius:1px}
 .ex[data-pair-first]::before{top:24px}
 .ex[data-pair-last]::before{bottom:24px}
+
+/* reorder — the circle at the top left of an exercise. A finger on it folds
+   the list to its headings, because one open exercise is about a screen tall
+   and dragging it over the others would be dragging a wall. Letting go opens
+   the list again with the moved exercise where the finger left it. The
+   button is wider and taller than the circle so a thumb finds it; negative
+   margins keep that from pushing the heading about. */
+.ex-grip{appearance:none;-webkit-appearance:none;flex:0 0 auto;align-self:center;
+  display:flex;align-items:center;justify-content:center;
+  width:36px;height:44px;margin:-5px -8px -5px -10px;padding:0;border:0;background:transparent;cursor:grab;
+  touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+.ex-grip::before{content:"";box-sizing:border-box;width:15px;height:15px;border-radius:50%;border:1.5px solid var(--ghost)}
+.ex-grip:hover::before{border-color:var(--ink-2)}
+.ex-grip:focus-visible{outline:2px solid var(--ink);outline-offset:-5px;border-radius:10px}
+.ex.lift .ex-grip::before{background:var(--ink);border-color:var(--ink)}
+#list.reorder .ex{padding-top:7px;padding-bottom:7px}
+#list.reorder .ex > :not(.ex-head){display:none}
+#list.reorder .ex-head{margin-bottom:0}
+#list.reorder .ex::before{display:none}
+#list.reorder .ex-del{visibility:hidden}
+#list.reorder .ex:not(.lift){transition:transform .15s ease}
+#list.reorder .dayhead,
+#list.reorder .ex[data-daily]{opacity:.4}
+#list .ex.lift{position:relative;z-index:10;margin:0 -8px;padding-left:8px;padding-right:8px;
+  background:var(--surface);border-bottom-color:transparent;border-radius:9px;
+  box-shadow:0 4px 14px rgba(26,30,28,.18);cursor:grabbing}
+#list .ex.lift[data-pair]{padding-left:21px}
+body.dragging{-webkit-user-select:none;user-select:none;cursor:grabbing}
 
 /* ledger */
 .cols{display:grid;grid-template-columns:20px 1fr 1fr 1fr 46px;gap:6px;font-size:12px;color:var(--ink-2);margin-bottom:5px}
@@ -769,7 +797,12 @@ function addExercise(raw){
 }
 
 function renderList(){
+  /* Rebuilding the list mid-drag would take the row out from under the
+     finger. A history or day reply that lands then is held and drawn on
+     release instead. */
+  if (drag) { drag.stale = true; return; }
   const list = $('#list'); list.innerHTML = '';
+  const movable = movableRows().length;
 
   state.rows.forEach((ex, xi) => {
     const prev = state.rows[xi-1];
@@ -779,24 +812,41 @@ function renderList(){
     }
 
     const box = el('div','ex');
+    box.dataset.i = xi;
+    if (ex.daily) box.dataset.daily = '1';
     /* Paired exercises run in parallel — a set of one, then a set of the other.
        The gutter rule alone did not read as "these two alternate", so each one
-       also carries its position in the pair: A1, A2. A group left with one
-       member after a delete is not a superset any more and loses the mark. */
+       also carries its position in the pair: A1, A2. A pair is the run of rows
+       that share a letter and sit next to each other, numbered top to bottom,
+       so dragging B2 above B1 renumbers them. One dragged away from its
+       partner, or left alone by a delete, is not a superset any more and
+       loses both the mark and the gutter rule. */
     let mark = null, partner = null;
     if (ex.pair) {
-      box.dataset.pair = ex.pair;
-      const next = state.rows[xi+1];
-      if (!prev || prev.pair !== ex.pair) box.dataset.pairFirst = '1';
-      if (!next || next.pair !== ex.pair) box.dataset.pairLast  = '1';
-      const group = state.rows.filter(r => r.pair === ex.pair);
-      if (group.length > 1) {
-        mark = ex.pair + (group.indexOf(ex) + 1);
-        partner = group.filter(r => r !== ex).map(r => r.name).join(', ');
+      let a = xi, b = xi;
+      while (a > 0 && state.rows[a-1].pair === ex.pair) a--;
+      while (b < state.rows.length - 1 && state.rows[b+1].pair === ex.pair) b++;
+      if (b > a) {
+        box.dataset.pair = ex.pair;
+        if (xi === a) box.dataset.pairFirst = '1';
+        if (xi === b) box.dataset.pairLast  = '1';
+        mark = ex.pair + (xi - a + 1);
+        partner = state.rows.slice(a, b + 1).filter(r => r !== ex).map(r => r.name).join(', ');
       }
     }
 
     const head = el('div','ex-head');
+    /* Every-day items keep their own block and do not get one. */
+    if (!ex.daily && movable > 1) {
+      box.dataset.move = '1';
+      const grip = el('button','ex-grip'); grip.type = 'button';
+      grip.title = 'Drag to reorder';
+      grip.setAttribute('aria-label', 'Move ' + ex.name + ' — drag, or use the arrow keys');
+      grip.onpointerdown = e => grab(e, ex);
+      grip.oncontextmenu = e => e.preventDefault();
+      grip.onkeydown = e => nudge(e, ex);
+      head.appendChild(grip);
+    }
     if (mark) {
       const tag = el('span','ex-pair'); tag.textContent = mark;
       tag.title = 'Alternate sets with ' + partner;
@@ -1120,12 +1170,13 @@ function reconcile(){
 
   /* Order is config too. Superset marks are numbered by position on screen,
      so a draft opened before the program moved an exercise would otherwise
-     number the group in the old order. Program rows take the program's
-     order; a row added by hand stays behind the furthest program row it
+     number the group in the old order. Program rows take the session's
+     order — the program's, or yours once you have dragged one (see
+     orderFor); a row added by hand stays behind the furthest program row it
      came after, so one added at the end of an old-order draft is not
      dropped into the middle of a group that just moved. The typed half
      moves with its row untouched. */
-  const at = new Map(plan.map((p, i) => [p.name, i]));
+  const at = new Map(orderFor().concat(dailyFor().map(p => p.name)).map((n, i) => [n, i]));
   let anchor = -1;
   state.rows = state.rows
     .map((r, i) => {
@@ -1212,6 +1263,219 @@ function saveDraft(quiet){
   if (!quiet) scheduleSync();
 }
 function readDraft(){ try { const r = store.get(draftKey()); return r ? JSON.parse(r) : null; } catch(e){ return null; } }
+
+/* ══ order ═══════════════════════════════════════════════
+   The circle at the top left of an exercise moves it, and the order is
+   remembered for the next time that session comes round. What is kept is
+   the order of the program's lines, per person and session, on this device;
+   like the draft it is never sent anywhere, and nothing in the data depends
+   on it. A row added by hand can be moved but is not remembered, since it is
+   not on the program next time. Every-day items keep their block at the
+   bottom and do not move.
+
+   The program can change under a remembered order in two ways. A line
+   added or deleted is absorbed: a new one goes in straight after the line
+   it follows in PROGRAM, and a deleted one drops out. A line moved in
+   PROGRAM is different — the program was reordered on purpose after the
+   drag — so the program's order wins and the drag is forgotten. Whichever
+   changed last is what the screen shows, which is why the program as it
+   stood at the drag is kept alongside the order. */
+
+const orderKey = () => 'lb.order.' + state.user + '.' + state.session;
+const programNames = () => (PROGRAM[state.user].sessions[state.session] || []).map(p => p.name);
+const movableRows = () => state.rows.filter(r => !r.daily);
+
+/* `want` in its own order, minus anything `all` lacks, plus anything in
+   `all` that `want` lacks — each put straight after what it follows in
+   `all`, or first when it follows nothing. */
+function mergeOrder(want, all){
+  const out = want.filter((n, i) => all.includes(n) && want.indexOf(n) === i);
+  all.forEach((n, i) => { if (!out.includes(n)) out.splice(i ? out.indexOf(all[i-1]) + 1 : 0, 0, n); });
+  return out;
+}
+// Whether the names two lists share come in the same order in both.
+const sameOrder = (a, b) =>
+  JSON.stringify(a.filter(n => b.includes(n))) === JSON.stringify(b.filter(n => a.includes(n)));
+
+function orderFor(){
+  const prog = programNames();
+  let saved = null;
+  try { saved = JSON.parse(store.get(orderKey()) || 'null'); } catch(e){}
+  if (!saved || !Array.isArray(saved.order) || !Array.isArray(saved.program)) return prog;
+  if (!sameOrder(saved.program, prog)) return prog;        // the program moved since: it wins
+  return mergeOrder(saved.order, prog);
+}
+
+/* The program lines on screen in their new order. One taken off for today
+   goes back beside the line it followed, so removing an exercise for a day
+   and then dragging does not lose where it belongs. */
+function saveOrder(){
+  const prog = programNames();
+  if (!prog.length) return;
+  const shown = movableRows().map(r => r.slot || r.name).filter(n => prog.includes(n));
+  store.set(orderKey(), JSON.stringify({ order: mergeOrder(shown, orderFor()), program: prog }));
+}
+
+/* `before` and `after` hold the same rows. The places `before` has in
+   state.rows are refilled from `after`, so anything else — every-day rows,
+   a row the server added mid-drag — stays exactly where it was. Only the
+   draft is written: order is not in the data, so there is nothing to sync. */
+function commitOrder(before, after){
+  let k = 0;
+  state.rows = state.rows.map(r => before.includes(r) ? after[k++] : r);
+  saveOrder();
+  saveDraft(true);
+}
+
+/* Arrow keys on a focused circle move its exercise one place. */
+function nudge(e, ex){
+  const step = e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : 0;
+  if (!step || drag) return;
+  e.preventDefault();
+  const rows = movableRows(), from = rows.indexOf(ex), to = from + step;
+  if (from < 0 || to < 0 || to >= rows.length) return;
+  const after = rows.slice();
+  after.splice(to, 0, after.splice(from, 1)[0]);
+  commitOrder(rows, after);
+  renderList();
+  const g = $('#list').querySelector('.ex[data-i="' + state.rows.indexOf(ex) + '"] .ex-grip');
+  if (g) g.focus();
+}
+
+let drag = null;
+const DRAG_EDGE = 44;     // px from the header or the save bar where the list scrolls by itself
+/* A drag done on purpose takes longer than this, because the list folding
+   up takes a moment to read. A scroll flicked from the circle does not,
+   and should not reorder the session. */
+const DRAG_MIN_MS = 200;
+
+function grab(e, ex){
+  if (drag || !e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  const list = $('#list');
+  const boxes = [...list.querySelectorAll('.ex[data-move]')];
+  const rows = boxes.map(b => state.rows[+b.dataset.i]);
+  const from = rows.indexOf(ex);
+  if (from < 0 || rows.length < 2) return;
+  e.preventDefault();
+  const a = document.activeElement;
+  if (a && a !== document.body && a.blur) a.blur();       // puts the keyboard away
+
+  const grip = e.currentTarget, box = boxes[from];
+  const within = e.clientY - grip.getBoundingClientRect().top;
+  const scroll0 = window.scrollY;
+
+  list.classList.add('reorder');
+  document.body.classList.add('dragging');
+  box.classList.add('lift');
+
+  /* Fold, then bring the folded heading back under the finger: by scrolling
+     where the page allows it, and where it is too short to scroll that far —
+     which folding makes common — by pushing the list down. Whatever is still
+     left over is absorbed into the finger's offset, so the row follows the
+     finger's movement rather than jumping to it, and a grab held still never
+     moves anything. */
+  const gTop = grip.getBoundingClientRect().top, bTop = box.getBoundingClientRect().top;
+  const aim = e.clientY - within - (gTop - bTop);        // where the box's top has to be
+  window.scrollBy(0, Math.round(bTop - aim));
+  const short = Math.round(aim - box.getBoundingClientRect().top);
+  if (short > 0) list.style.paddingTop = short + 'px';
+  const grabAt = e.clientY - box.getBoundingClientRect().top;
+
+  const sy = window.scrollY;
+  const rects = boxes.map(b => b.getBoundingClientRect());
+  const tops = rects.map(r => r.top + sy);
+  const last = rects.length - 1;
+  drag = {
+    id: e.pointerId, grip, box, boxes, rows, from, to: from,
+    y: e.clientY, grabAt, scroll0, t0: Date.now(), ctx: context(), stale: false, raf: 0,
+    top0: tops[from], h: rects[from].height,
+    mids: rects.map((r, i) => tops[i] + r.height / 2),
+    min: tops[0], max: tops[last] + rects[last].height,
+    edgeTop: $('.top').getBoundingClientRect().bottom,
+    edgeBottom: $('.bar').getBoundingClientRect().top,
+  };
+  try { grip.setPointerCapture(e.pointerId); } catch(_){}
+  window.addEventListener('pointermove', dragMove);
+  window.addEventListener('pointerup', dragEnd);
+  window.addEventListener('pointercancel', dragEnd);
+  dragPlace();
+}
+
+function dragMove(e){
+  if (!drag || e.pointerId !== drag.id) return;
+  drag.y = e.clientY;
+  if (!drag.raf) drag.raf = requestAnimationFrame(dragFrame);
+}
+
+/* Held near the header or the save bar the list scrolls, faster the closer
+   the finger, but only while there is more list that way. */
+function dragFrame(){
+  const d = drag;
+  if (!d) return;
+  d.raf = 0;
+  const sy = window.scrollY;
+  let v = 0;
+  if (d.y < d.edgeTop + DRAG_EDGE && d.min - sy < d.edgeTop) v = d.y - (d.edgeTop + DRAG_EDGE);
+  else if (d.y > d.edgeBottom - DRAG_EDGE && d.max - sy > d.edgeBottom) v = d.y - (d.edgeBottom - DRAG_EDGE);
+  if (v) window.scrollBy(0, Math.sign(v) * Math.min(10, Math.max(1, Math.round(Math.abs(v) / 4))));
+  dragPlace();
+  if (v && window.scrollY !== sy) d.raf = requestAnimationFrame(dragFrame);
+}
+
+/* The lifted row follows the finger, kept inside the list; the rows it
+   passes slide one row's height the other way to show where it will land. */
+function dragPlace(){
+  const d = drag, sy = window.scrollY;
+  const top = Math.max(d.min, Math.min(d.max - d.h, d.y + sy - d.grabAt));
+  d.box.style.transform = 'translateY(' + (top - d.top0) + 'px)';
+  const mid = top + d.h / 2;
+  let to = 0;
+  d.mids.forEach((m, i) => { if (i !== d.from && m < mid) to++; });
+  if (to === d.to) return;
+  d.to = to;
+  d.boxes.forEach((b, i) => {
+    if (i === d.from) return;
+    const dy = (i > d.from && i <= to) ? -d.h : (i < d.from && i >= to) ? d.h : 0;
+    b.style.transform = dy ? 'translateY(' + dy + 'px)' : '';
+  });
+}
+
+function dragEnd(e){
+  const d = drag;
+  if (!d || (e && e.pointerId !== d.id)) return;
+  drag = null;
+  cancelAnimationFrame(d.raf);
+  window.removeEventListener('pointermove', dragMove);
+  window.removeEventListener('pointerup', dragEnd);
+  window.removeEventListener('pointercancel', dragEnd);
+  try { d.grip.releasePointerCapture(d.id); } catch(_){}
+  const at = d.box.getBoundingClientRect().top;           // where the heading was let go
+  d.boxes.forEach(b => { b.style.transform = ''; });
+  d.box.classList.remove('lift');
+  $('#list').style.paddingTop = '';
+  $('#list').classList.remove('reorder');
+  document.body.classList.remove('dragging');
+
+  const keep = !!e && e.type === 'pointerup' && d.to !== d.from &&
+               Date.now() - d.t0 >= DRAG_MIN_MS && context() === d.ctx &&
+               d.rows.every(r => state.rows.includes(r));
+  if (!keep) {
+    if (d.stale) renderList();
+    window.scrollTo(0, d.scroll0);
+    return;
+  }
+  const after = d.rows.slice();
+  after.splice(d.to, 0, after.splice(d.from, 1)[0]);
+  commitOrder(d.rows, after);
+  renderList();
+  // Open the list again with the moved exercise where the finger left it.
+  const box = $('#list').querySelector('.ex[data-i="' + state.rows.indexOf(d.rows[d.from]) + '"]');
+  if (box) window.scrollTo(0, Math.round(box.getBoundingClientRect().top + window.scrollY - at));
+}
+
+// Leaving the app mid-drag can take the finger's release with it.
+document.addEventListener('visibilitychange', () => { if (document.hidden) dragEnd(null); });
+window.addEventListener('blur', () => dragEnd(null));
 
 /* A reply can arrive after the screen has moved on — another person picked,
    another date, another session. Applying it then would put one person's
