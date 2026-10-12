@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 17, at: '12 Oct 2026, 10:21' };
+const BUILD = { n: 18, at: '12 Oct 2026, 10:27' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -37,7 +37,7 @@ const SESSIONS_IKARUS = {
       { name: 'Jumps',               target: '3-4 × 3-5',  sets: 3, units: { w: 'in' }, hint: 'box height in inches, then reps' },
       { name: 'Perfect Squat',       target: '3 × 6-10',   sets: 3 },
       { name: 'Hip Thrust',          target: '3 × 8-12',   sets: 3 },
-      { name: 'Leg Press',           target: '3 × 8-12',   sets: 3, hint: 'deep, feet low, shoulder-width, toes out' },
+      { name: 'Incline Leg Press',   target: '3 × 8-12',   sets: 3, hint: 'deep, feet low, shoulder-width, toes out' },
       { name: 'Seated Leg Curl',     target: '4 × 8-12',   sets: 4 },
       { name: 'Standing Calf Raise', target: '3 × 8-12',   sets: 3 },
       { name: 'Carries',             target: '2 sets',     sets: 2, hint: 'log seconds in the reps box' },
@@ -130,19 +130,25 @@ const SESSIONS_JOHANNA = JSON.parse(JSON.stringify(SESSIONS_IKARUS));
    only exception to rules 2 and 3. Everything else in this block
    stands until the end condition in the header is met. Their first
    pre-fill is from before the fracture, about four weeks old.
+
+   12 Oct 2026, later: Monday's leg press is the incline sled, both legs,
+   standard from now on (it is also the normal program's Monday press).
+   It shares a room with the Perfect Squat and the hip thrust machine,
+   so those three open the session together, in the order Ikarus had
+   already dragged them into. Lower 2 is unchanged.
    ══════════════════════════════════════════════════════════════════ */
 Object.assign(SESSIONS_IKARUS, {
     'Lower 1': [
       { name: 'Perfect Squat',         target: '3 × 6-10',  sets: 3 },
-      { name: 'Seated Leg Curl',       target: '4 × 8-12',  sets: 4 },
-      { name: 'Leg Extension',         target: '4 × 10-15', sets: 4 },
-      { name: 'Single-Leg Leg Press',  target: '3 × 8-12',  sets: 3,
-        hint: 'LEFT only — right foot stays off the sled and on the floor' },
+      { name: 'Incline Leg Press',     target: '3 × 8-12',  sets: 3,
+        hint: 'feet low, shoulder-width, toes out — stop the descent where the right heel starts to lift' },
       { name: 'Machine Hip Thrust',    target: '3 × 8-12',  sets: 3,
         hint: 'heels only, nothing through the right forefoot — machine, so no bar near the foot' },
-      { name: 'Adductor Machine',      target: '3 × 12-15', sets: 3 },
+      { name: 'Leg Extension',         target: '4 × 10-15', sets: 4 },
+      { name: 'Seated Leg Curl',       target: '4 × 8-12',  sets: 4 },
       { name: 'Dead Hang',             target: '3 × max',   sets: 3, fields: ['r'], units: { r: 'sec' },
         hint: 'in place of carries — feet off the floor, log seconds' },
+      { name: 'Adductor Machine',      target: '3 × 12-15', sets: 3 },
     ],
     'Lower 2': [
       { name: 'Belt Squat',            target: '3 × 8-12',  sets: 3 },
