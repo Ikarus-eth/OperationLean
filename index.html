@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 16, at: '12 Oct 2026, 09:46' };
+const BUILD = { n: 17, at: '12 Oct 2026, 10:21' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -203,7 +203,7 @@ const DAILY = {
    ══════════════════════════════════════════════════════════════════ */
 const VARIANTS = [
   // legs
-  ['Perfect Squat','Belt Squat','Leg Press','Hack Squat','Goblet Squat','Bulgarian Split Squat','Single-Leg Leg Press'],
+  ['Perfect Squat','Belt Squat','Leg Press','Incline Leg Press','Hack Squat','Goblet Squat','Bulgarian Split Squat','Single-Leg Leg Press'],
   ['Hip Thrust','Machine Hip Thrust','Cable Pull-Through','Romanian Deadlift','45° Back Extension','Single-Leg Hip Thrust'],
   ['Seated Leg Curl','Lying Leg Curl','Standing Leg Curl','Cable Leg Curl','Nordic Curl','Slider Leg Curl'],
   ['Leg Extension','Single-Leg Extension','Cable Leg Extension','Sissy Squat','Reverse Nordic','Step-Up'],
@@ -256,6 +256,7 @@ const EX_CFG = {
   'Sled Push':                 { hint:'log seconds in the reps box' },
   'Dead Hang':                 { fields:['r'], units:{ r:'sec' }, hint:'feet off the floor, log seconds' },
   'Single-Leg Leg Press':      { hint:'one leg at a time — say which in the comment if it is not both' },
+  'Incline Leg Press':         { hint:'the 45° sled — its own numbers, never mixed with Leg Press' },
   'Side Plank':                { fields:['r'], units:{ r:'sec' } },
   'Short-Lever Copenhagen':    { fields:['r'], units:{ r:'sec' } },
   'Side Plank Leg Lift':       { fields:['r','rir'] },
@@ -266,6 +267,14 @@ const EX_CFG = {
   'Handstand Push-up':         { fields:['r','rir'] },
   'Dips':                      { hint:'added weight in the kg box, bodyweight is zero' },
   'Bench Dip':                 { fields:['r','rir'] },
+};
+
+/* Names typed by hand before the app had a proper one. The old rows stay
+   in the database under the old name; this only folds their history into
+   the new name when it loads, so carry-over continues and the picker does
+   not offer the same machine twice. A typed old name lands on the new one. */
+const RENAMED = {
+  'Incline leg press machine': 'Incline Leg Press',
 };
 </script>
 
@@ -740,6 +749,8 @@ function swapExercise(ex, name){
 function canonicalName(raw){
   const want = String(raw || '').trim();
   if (!want) return '';
+  const old = Object.keys(RENAMED).find(k => k.toLowerCase() === want.toLowerCase());
+  if (old) return RENAMED[old];
   const pool = planFor().map(p => p.name)
     .concat(VARIANTS.flat(), Object.keys(EX_CFG), Object.keys(state.last || {}));
   return pool.find(n => n.toLowerCase() === want.toLowerCase()) || want;
@@ -1632,9 +1643,19 @@ async function fetchLast(){
     const res = await timed(u);
     const data = await res.json();
     if (stale('last', token, ctx)) return;
-    if (data && data.ok) { state.last = data.last || {}; state.lastOk = true; }
+    if (data && data.ok) { state.last = foldRenamed(data.last || {}); state.lastOk = true; }
     else state.lastOk = false;
   } catch(e){ if (!stale('last', token, ctx)) state.lastOk = false; }
+}
+
+/* The newer of the two wins: dates are YYYY-MM-DD, so they compare as text. */
+function foldRenamed(last){
+  for (const [old, now] of Object.entries(RENAMED)) {
+    if (!last[old]) continue;
+    if (!last[now] || last[old].date > last[now].date) last[now] = last[old];
+    delete last[old];
+  }
+  return last;
 }
 
 /* Called when the phone comes back — off the lock screen, back on a network.
