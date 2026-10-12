@@ -384,7 +384,7 @@ Johanna trains the same program, but `PROGRAM.johanna.sessions` now holds a copy
 
 `Lower 1` and `Lower 2` are currently rewritten by an `Object.assign` block under the sessions, headed *TEMPORARY — right 5th proximal phalanx, K-wire in situ*. Nothing above it is edited, so putting the normal lower days back is deleting the block, with no reconstruction from memory and no diff to read. Use the same shape for the next injury or travel week rather than editing the arrays in place.
 
-The block has a date in its header and an event that ends it — wire out, surgeon's clearance — rather than a vague *for a while*. Write the next one the same way. A temporary block with no stated end is a permanent block nobody remembers agreeing to.
+The block has a date in its header and an event that ends it — wire out, surgeon's clearance — rather than a vague *for a while*. A partial clearance goes in as a dated line inside the block, not as a deletion: from 12 Oct, Perfect Squat and Belt Squat are back at the top of the two lower days while the rest of the block stands. Write the next one the same way. A temporary block with no stated end is a permanent block nobody remembers agreeing to.
 
 Names inside it are spelled exactly as they are spelled above. That matters more than it looks: carry-over is keyed on the exact string, so `Leg Press` with a changed hint keeps its whole history while `Leg Press, feet low` would start again from nothing.
 

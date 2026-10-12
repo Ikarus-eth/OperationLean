@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 15, at: '29 Sep 2026, 13:36' };
+const BUILD = { n: 16, at: '12 Oct 2026, 09:46' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -124,9 +124,16 @@ const SESSIONS_JOHANNA = JSON.parse(JSON.stringify(SESSIONS_IKARUS));
    history run straight through. Single-Leg Leg Press and Dead Hang
    are new and start empty, which is correct: they are not the
    bilateral lifts and should never share their numbers.
+
+   12 Oct 2026: cleared to squat again. Perfect Squat and Belt Squat
+   are back, first on each day as in the normal program, and are the
+   only exception to rules 2 and 3. Everything else in this block
+   stands until the end condition in the header is met. Their first
+   pre-fill is from before the fracture, about four weeks old.
    ══════════════════════════════════════════════════════════════════ */
 Object.assign(SESSIONS_IKARUS, {
     'Lower 1': [
+      { name: 'Perfect Squat',         target: '3 × 6-10',  sets: 3 },
       { name: 'Seated Leg Curl',       target: '4 × 8-12',  sets: 4 },
       { name: 'Leg Extension',         target: '4 × 10-15', sets: 4 },
       { name: 'Single-Leg Leg Press',  target: '3 × 8-12',  sets: 3,
@@ -138,6 +145,7 @@ Object.assign(SESSIONS_IKARUS, {
         hint: 'in place of carries — feet off the floor, log seconds' },
     ],
     'Lower 2': [
+      { name: 'Belt Squat',            target: '3 × 8-12',  sets: 3 },
       { name: 'Seated Leg Curl',       target: '4 × 8-12',  sets: 4 },
       { name: 'Leg Extension',         target: '3 × 12-15', sets: 3 },
       { name: 'Single-Leg Leg Press',  target: '3 × 8-12',  sets: 3,
