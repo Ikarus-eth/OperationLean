@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 19, at: '12 Oct 2026, 10:38' };
+const BUILD = { n: 20, at: '12 Oct 2026, 10:44' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -143,7 +143,7 @@ Object.assign(SESSIONS_IKARUS, {
       { name: 'Incline Leg Press',     target: '3 × 8-12',  sets: 3,
         hint: 'feet low, shoulder-width, toes out — stop the descent where the right heel starts to lift' },
       { name: 'Machine Hip Thrust',    target: '3 × 8-12',  sets: 3,
-        hint: 'heels only, nothing through the right forefoot — machine, so no bar near the foot' },
+        hint: 'shins vertical at the top, knees at 90° — quads burning: feet further out; hamstrings cramping: feet closer. Push through the heels, right forefoot light' },
       { name: 'Leg Extension',         target: '4 × 10-15', sets: 4 },
       { name: 'Seated Leg Curl',       target: '4 × 8-12',  sets: 4 },
       { name: 'Dead Hang',             target: '3 × 30-45 s', sets: 3, fields: ['w','r'],
@@ -158,7 +158,7 @@ Object.assign(SESSIONS_IKARUS, {
       { name: 'Single-Leg Leg Press',  target: '3 × 8-12',  sets: 3,
         hint: 'LEFT only — right foot stays off the sled and on the floor' },
       { name: 'Machine Hip Thrust',    target: '3 × 8-12',  sets: 3,
-        hint: 'heels only, nothing through the right forefoot' },
+        hint: 'shins vertical at the top, knees at 90° — quads burning: feet further out; hamstrings cramping: feet closer. Push through the heels, right forefoot light' },
       { name: 'Seated Calf Raise',     target: '3 × 10-15', sets: 3,
         hint: 'LEFT only — right foot flat on the floor, clear of the block' },
       { name: 'Dead Hang',             target: '3 × 30-45 s', sets: 3, fields: ['w','r'],
@@ -266,6 +266,7 @@ const EX_CFG = {
                                  hint:'belt kg on top of bodyweight, blank for none; seconds hanging' },
   'Single-Leg Leg Press':      { hint:'one leg at a time — say which in the comment if it is not both' },
   'Incline Leg Press':         { hint:'the 45° sled — its own numbers, never mixed with Leg Press' },
+  'Machine Hip Thrust':        { hint:'shins vertical at the top, knees at 90° — quads burning: feet further out; hamstrings cramping: feet closer. Push through the heels' },
   'Side Plank':                { fields:['r'], units:{ r:'sec' } },
   'Short-Lever Copenhagen':    { fields:['r'], units:{ r:'sec' } },
   'Side Plank Leg Lift':       { fields:['r','rir'] },
