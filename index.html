@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 21, at: '15 Oct 2026, 09:05' };
+const BUILD = { n: 22, at: '15 Oct 2026, 09:08' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -789,6 +789,7 @@ function addExercise(raw){
   if (state.rows.some(r => r.name === name) &&
       !confirm(name + ' is already on this session. Two of them will overwrite each other when they save. Go ahead?')) return;
   const row = makeRow({ ...cfgFor(name), name });
+  row.added = true;                                 // yours, so a program change never drops it
   state.removed = state.removed.filter(n => n !== row.name);
   const firstDaily = state.rows.findIndex(r => r.daily);
   const at = (row.daily || firstDaily < 0) ? state.rows.length : firstDaily;
@@ -1128,6 +1129,15 @@ function reconcile(){
   const plan = planFor();
   const byName = new Map(plan.map(p => [p.name, p]));
 
+  /* A line taken out of PROGRAM used to stay on a draft opened before the
+     change, looking exactly like part of today's session. It goes now, as
+     long as nothing was done or typed on it. Rows you added by hand, and
+     anything with a tick, a typed number or a note, stay. */
+  state.rows = state.rows.filter(ex =>
+    ex.daily || ex.added || byName.has(ex.slot || ex.name) ||
+    !!(ex.note && ex.note.trim()) ||
+    ex.sets.some(s => s.done || (s.carried === false && setHasValue(s))));
+
   state.rows.forEach(ex => {
     const slot = byName.get(ex.slot || '');
     if (slot) {
@@ -1260,7 +1270,7 @@ function saveDraft(quiet){
     const rows = state.rows.map(ex => ({
       name:ex.name, slot:ex.slot, target:ex.target, hint:ex.hint, pair:ex.pair,
       units:ex.units, fields:ex.fields, fixed:ex.fixed, seed:ex.seed, progress:ex.progress,
-      daily:ex.daily, note:ex.note || '',
+      daily:ex.daily, note:ex.note || '', added:!!ex.added,
       sets: ex.sets.map(s => ({ w:s.w, r:s.r, r2:s.r2, rir:s.rir, done:s.done, ts:s.ts, carried:s.carried })),
     }));
     store.set(draftKey(), JSON.stringify({ rows, notes: $('#notes').value, hr: state.hr, removed: state.removed }));
