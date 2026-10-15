@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EFEEE8">
+<title>Program to Hevy</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23EFEEE8'/><rect x='3' y='4' width='10' height='1.6' fill='%231A1E1C'/><rect x='3' y='7.2' width='10' height='1.6' fill='%231A1E1C'/><rect x='3' y='10.4' width='7' height='1.6' fill='%233F6B3A'/></svg>">
+
+<!-- ══════════════════════════════════════════════════════════════════
+     Program to Hevy — the current program as Hevy routines.
+
+     Hevy cannot import routines from a file; its API (Hevy Pro, key under
+     Settings ▸ Developer) can write them. This page reads the program
+     straight out of index.html, so it is always the program the app is
+     showing, including the temporary fracture block; maps names through
+     the HEVY table in hevy.html, so both pages agree on what an exercise
+     is called in Hevy; and writes one routine per session into a folder
+     called "Logbook". Running it again updates those routines in place.
+
+     Calls go through the Worker (?action=hevy), which passes them to Hevy
+     with the key this page sends. The key stays on this device.
+     ══════════════════════════════════════════════════════════════════ -->
+<script>
+const ENDPOINT = 'https://wild-haze-fac9.74vshck6t7.workers.dev';   // same Worker as index.html
+</script>
+
+<style>
+:root{
+  --paper:#EFEEE8; --surface:#F8F7F2; --ink:#1A1E1C; --ink-2:#4C534E;
+  --ghost:#A0A299; --rule:#D4D3CA; --gain:#3F6B3A; --pending:#8A6216; --danger:#8C3A2B;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font:400 15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-text-size-adjust:100%;
+  padding:calc(14px + env(safe-area-inset-top)) 0 calc(40px + env(safe-area-inset-bottom));
+}
+.wrap{max-width:540px;margin:0 auto;padding:0 16px}
+.back{font-size:13px;color:var(--ink-2);text-decoration:none}
+h1{font-size:22px;line-height:1.2;margin:10px 0 4px}
+.lede{color:var(--ink-2);margin:0 0 18px;font-size:14px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+.lbl{font-size:13px;color:var(--ink-2);min-width:64px}
+.who{display:flex;border:1px solid var(--ink);border-radius:7px;overflow:hidden}
+.who button{appearance:none;border:0;background:transparent;color:var(--ink-2);font:500 14px/1 inherit;padding:0 14px;height:36px;cursor:pointer}
+.who button[aria-pressed="true"]{background:var(--ink);color:var(--paper);font-weight:600}
+.who button+button{border-left:1px solid var(--rule)}
+.key{flex:1 1 220px;height:40px;border:1px solid var(--rule);border-radius:7px;background:#fff;color:var(--ink);
+  font:400 15px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:0 10px;min-width:0}
+.key:focus{outline:2px solid var(--ink);outline-offset:-1px}
+.check{display:flex;gap:9px;align-items:flex-start;font-size:14px;line-height:1.4;cursor:pointer}
+.check input{width:18px;height:18px;margin:1px 0 0;flex:0 0 auto;accent-color:var(--ink)}
+.check small{display:block;color:var(--ink-2);font-size:12.5px}
+.go{appearance:none;width:100%;height:52px;border:0;border-radius:9px;background:var(--ink);
+  color:var(--paper);font:600 17px/1 inherit;cursor:pointer;margin-top:4px}
+.go:disabled{background:var(--rule);color:var(--ink-2);cursor:default}
+.alt{appearance:none;width:100%;height:44px;margin-top:8px;border:1px solid var(--ink);border-radius:9px;
+  background:transparent;color:var(--ink);font:500 15px/1 inherit;cursor:pointer}
+.alt:disabled{border-color:var(--rule);color:var(--ghost);cursor:default}
+.status{font-size:13px;color:var(--ink-2);min-height:18px;text-align:center;margin-top:8px}
+.status[data-tone="ok"]{color:var(--gain)}
+.status[data-tone="bad"]{color:var(--danger)}
+.card{margin:18px 0;padding:14px;border:1px solid var(--rule);border-radius:9px;background:var(--surface)}
+.rt{margin:0 0 16px}
+.rt h2{font-size:16px;margin:0 0 2px}
+.rt .act{font-size:12.5px;color:var(--ink-2);margin:0 0 6px}
+.rt table{width:100%;border-collapse:collapse;font-size:13.5px}
+.rt td{padding:5px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+.rt td:first-child{width:46%;padding-right:8px}
+.rt td:last-child{color:var(--ink-2)}
+.rt em{font-style:normal;font-size:11.5px;color:var(--pending);display:block}
+.rt .ss{font-size:11.5px;color:var(--ghost)}
+.note{font-size:13px;color:var(--ink-2);margin:8px 0 10px}
+details{margin:14px 0;border-top:1px solid var(--rule);padding-top:12px}
+summary{cursor:pointer;font-weight:600;font-size:15px}
+ol{padding-left:20px;margin:8px 0}
+ol li{margin:4px 0}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <a class="back" href="./">&larr; Logbook</a>
+  <h1>Program to Hevy</h1>
+  <p class="lede">The program on the Logbook, written into Hevy as one routine per session. Run it again after the program changes and the routines update in place.</p>
+
+  <div class="row">
+    <span class="lbl">Person</span>
+    <div class="who" id="who"></div>
+  </div>
+  <div class="row">
+    <span class="lbl">API key</span>
+    <input class="key" id="key" type="password" autocomplete="off" spellcheck="false" placeholder="Hevy ▸ Settings ▸ Developer">
+  </div>
+  <div class="row">
+    <label class="check"><input type="checkbox" id="weights" checked>
+      <span>Pre-fill weights from your last session<small>Each set opens at what you lifted last time in the Logbook. Off: sets open empty, with the rep range only.</small></span></label>
+  </div>
+
+  <section class="card" aria-live="polite">
+    <button class="alt" id="check" type="button">Check</button>
+    <button class="go" id="write" type="button" disabled>Write to Hevy</button>
+    <div class="status" id="status" role="status"></div>
+  </section>
+
+  <div id="plan"></div>
+
+  <details>
+    <summary>How it maps</summary>
+    <ol>
+      <li>One routine per session (Lower 1, Upper A, Lower 2, Upper B), in a folder called <i>Logbook</i>. A routine with the same title is updated, not duplicated. Edits made to these routines in Hevy are overwritten on the next run, so change the program in the Logbook.</li>
+      <li>Names go through the same table as the history export, so routines and imported history land on the same Hevy exercises. A name Hevy does not have is created once as a custom exercise.</li>
+      <li>Rep targets become Hevy's rep range; timed sets (dead hang) keep the seconds and belt kg from last time.</li>
+      <li>Superset pairs (A, B, C on the upper days) become Hevy supersets with 75 s rest. Every-day items (pulls, handstand) are left out.</li>
+      <li>Target and hint from the Logbook go into each exercise's note.</li>
+    </ol>
+  </details>
+</main>
+
+<script>
+'use strict';
+
+/* ══ pure part: program in, routines out ════════════════════════════
+   No DOM and no network, so it runs under node for a test. */
+
+const TITLES = { 'Lower 1': 'Lower 1 · Mon', 'Upper A': 'Upper A · Tue', 'Lower 2': 'Lower 2 · Thu', 'Upper B': 'Upper B · Fri' };
+const FOLDER = 'Logbook';
+const SUPERSET_REST = 75;
+
+/* For a name Hevy does not have, what to create. Only the fields Hevy
+   insists on; a wrong muscle group is cosmetic. */
+const CUSTOM_MUSCLE = {
+  'Perfect Squat': 'quadriceps', 'Belt Squat': 'quadriceps',
+  'Short-Lever Copenhagen': 'adductors', 'Copenhagen Plank': 'adductors',
+  'Dead Hang': 'forearms',
+};
+
+/* A program line carries its own boxes, as it does in the app: EX_CFG is
+   only for names that exist nowhere but the swap list. Merging the two
+   would give the short-lever Copenhagen the seconds box its swap-list
+   entry has, when the program logs it in reps. */
+function cfgOf(line, EX_CFG){ return line.fields || line.units ? line : { ...(EX_CFG[line.name] || {}), ...line }; }
+
+function hevyTypeOf(cfg){
+  const f = cfg.fields || ['w','r','rir'], u = cfg.units || {};
+  const timed = u.r === 'sec' || u.r === 'min';
+  if (timed) return f.includes('w') ? 'weight_duration' : 'duration';
+  if (!f.includes('w')) return 'reps_only';
+  if (u.w === 'assist kg') return 'bodyweight_reps';
+  return 'weight_reps';
+}
+
+function customBody(name, hevyName, cfg){
+  const equipment = /DB|Dumbbell/i.test(name) ? 'dumbbell'
+    : /Machine|Press|Squat|Curl|Extension|Thrust/i.test(name) ? 'machine' : 'none';
+  return { exercise: {
+    title: hevyName, exercise_type: hevyTypeOf(cfg), equipment_category: equipment,
+    muscle_group: CUSTOM_MUSCLE[name] || 'other', other_muscles: [],
+  }};
+}
+
+function parseTarget(t){
+  const range = /(\d+)\s*-\s*(\d+)/.exec(t || '');
+  if (range) return { start: +range[1], end: +range[2] };
+  const one = /×\s*(\d+)\b/.exec(t || '');
+  if (one) return { start: +one[1], end: +one[1] };
+  return null;
+}
+
+const numOr = v => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
+
+/* One routine body per session. `templateId(name)` answers with Hevy's id,
+   or null when the exercise still has to be created. */
+function buildRoutines(PROGRAM, EX_CFG, HEVY, user, last, templateId, withWeights){
+  const sessions = PROGRAM[user].sessions;
+  return Object.keys(TITLES).filter(s => (sessions[s] || []).length).map(session => {
+    const pairs = {};
+    const exercises = sessions[session].map(line => {
+      const cfg = cfgOf(line, EX_CFG);
+      const type = hevyTypeOf(cfg);
+      const u = cfg.units || {};
+      const range = parseTarget(cfg.target);
+      const prev = (withWeights && last[line.name] && last[line.name].sets) || [];
+      const sets = Array.from({ length: cfg.sets || 3 }, (_, i) => {
+        const p = prev[i] || prev[prev.length - 1] || null;
+        const s = { type: 'normal', weight_kg: null, reps: null, distance_meters: null,
+                    duration_seconds: null, custom_metric: null, rep_range: null };
+        if (type === 'duration' || type === 'weight_duration') {
+          if (p && numOr(p.r) != null) s.duration_seconds = Math.round(numOr(p.r) * (u.r === 'min' ? 60 : 1));
+          else if (range) s.duration_seconds = range.start;
+          if (type === 'weight_duration' && p) s.weight_kg = numOr(p.w);
+        } else {
+          if (range) s.rep_range = range;
+          if (type === 'weight_reps' && p) s.weight_kg = numOr(p.w);
+        }
+        return s;
+      });
+      let superset_id = null;
+      if (line.pair) {
+        if (!(line.pair in pairs)) pairs[line.pair] = Object.keys(pairs).length;
+        superset_id = pairs[line.pair];
+      }
+      return {
+        name: line.name,
+        hevyName: HEVY[line.name] || line.name,
+        cfg,
+        body: {
+          exercise_template_id: templateId(HEVY[line.name] || line.name),
+          superset_id,
+          rest_seconds: line.pair ? SUPERSET_REST : null,
+          notes: [cfg.target, cfg.hint].filter(Boolean).join(' — ') || null,
+          sets,
+        },
+      };
+    });
+    return {
+      session, title: TITLES[session], exercises,
+      notes: 'Written from the Logbook program. Change the program there; the next run overwrites edits made here.',
+    };
+  });
+}
+
+/* Ids come back in more than one shape across Hevy's endpoints. */
+function findId(o){
+  if (!o || typeof o !== 'object') return null;
+  if (o.id != null && (typeof o.id === 'string' || typeof o.id === 'number')) return o.id;
+  for (const v of Object.values(o)) {
+    const hit = Array.isArray(v) ? (v.length ? findId(v[0]) : null) : findId(v);
+    if (hit != null) return hit;
+  }
+  return null;
+}
+
+/* Every page of a Hevy list. */
+async function listAll(api, path, key, pageSize){
+  const out = [];
+  for (let page = 1; page < 200; page++) {
+    const r = await api('GET', `${path}?page=${page}&pageSize=${pageSize}`);
+    if (r.status === 404) break;                     // Hevy answers 404 past the last page
+    if (!r.ok) throw new Error(`${path}: ${r.status} ${r.text.slice(0, 120)}`);
+    out.push(...(r.json[key] || []));
+    if (!r.json.page_count || page >= r.json.page_count) break;
+  }
+  return out;
+}
+
+/* Reads what Hevy has and works out what a write would do. Writes nothing. */
+async function plan(api, ctx){
+  const [templates, routines, folders] = await Promise.all([
+    listAll(api, '/v1/exercise_templates', 'exercise_templates', 100),
+    listAll(api, '/v1/routines', 'routines', 10),
+    listAll(api, '/v1/routine_folders', 'routine_folders', 10),
+  ]);
+  const byTitle = new Map(templates.map(t => [String(t.title).toLowerCase(), t.id]));
+  const templateId = n => byTitle.get(String(n).toLowerCase()) || null;
+  const built = buildRoutines(ctx.PROGRAM, ctx.EX_CFG, ctx.HEVY, ctx.user, ctx.last, templateId, ctx.withWeights);
+  const existing = new Map(routines.map(r => [r.title, r.id]));
+  built.forEach(r => { r.id = existing.get(r.title) || null; });
+  const folder = folders.find(f => f.title === FOLDER);
+  const customs = new Map();
+  built.forEach(r => r.exercises.forEach(x => {
+    if (!x.body.exercise_template_id && !customs.has(x.hevyName)) customs.set(x.hevyName, customBody(x.name, x.hevyName, x.cfg));
+  }));
+  return { built, folderId: folder ? folder.id : null, customs, byTitle };
+}
+
+async function write(api, p, say){
+  for (const [title, body] of p.customs) {
+    say(`Creating custom exercise ${title}…`);
+    const r = await api('POST', '/v1/exercise_templates', body);
+    if (!r.ok) throw new Error(`custom exercise ${title}: ${r.status} ${r.text.slice(0, 160)}`);
+    let id = findId(r.json);
+    if (id == null && /^[\w-]+$/.test(r.text.trim().replace(/"/g, ''))) id = r.text.trim().replace(/"/g, '');
+    if (id == null) throw new Error(`custom exercise ${title}: created, but Hevy sent no id back. Run Check again.`);
+    p.byTitle.set(title.toLowerCase(), String(id));
+  }
+  let folderId = p.folderId;
+  if (folderId == null) {
+    say('Creating the Logbook folder…');
+    const r = await api('POST', '/v1/routine_folders', { routine_folder: { title: FOLDER } });
+    if (!r.ok) throw new Error(`folder: ${r.status} ${r.text.slice(0, 160)}`);
+    folderId = findId(r.json);
+  }
+  const done = [];
+  for (const rt of p.built) {
+    const exercises = rt.exercises.map(x => ({
+      ...x.body, exercise_template_id: x.body.exercise_template_id || p.byTitle.get(x.hevyName.toLowerCase()),
+    }));
+    say(`${rt.id ? 'Updating' : 'Creating'} ${rt.title}…`);
+    const r = rt.id
+      ? await api('PUT', `/v1/routines/${rt.id}`, { routine: { title: rt.title, notes: rt.notes, exercises } })
+      : await api('POST', '/v1/routines', { routine: { title: rt.title, folder_id: folderId, notes: rt.notes, exercises } });
+    if (!r.ok) {
+      const why = r.status === 403 ? ' — Hevy refused: routine limit, which means the account is not on Pro yet' : '';
+      throw new Error(`${rt.title}: ${r.status}${why} ${r.text.slice(0, 160)}`);
+    }
+    if (!rt.id) rt.id = findId(r.json);
+    done.push(rt.title);
+  }
+  return done;
+}
+
+if (typeof module !== 'undefined') module.exports = { buildRoutines, plan, write, hevyTypeOf, parseTarget, findId, TITLES };
+</script>
+
+<script>
+'use strict';
+/* ══ page ═══════════════════════════════════════════════════════════ */
+if (typeof document !== 'undefined') (function(){
+  const $ = s => document.querySelector(s);
+  const store = {
+    get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+    set(k, v){ try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch(e){} },
+  };
+  const state = { user: store.get('hr.user') || 'ikarus', ctx: null, plan: null };
+
+  function status(msg, tone){ const s = $('#status'); s.textContent = msg || ''; s.dataset.tone = tone || ''; }
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+
+  /* The program and the name table are read out of the two pages they live
+     in, so this page can never drift from either. */
+  async function loadSources(){
+    const [app, exp] = await Promise.all([
+      fetch('index.html', { cache: 'no-store' }).then(r => r.text()),
+      fetch('hevy.html',  { cache: 'no-store' }).then(r => r.text()),
+    ]);
+    const block = [...app.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]).find(b => b.includes('const SESSIONS_IKARUS'));
+    if (!block) throw new Error('could not find the program in index.html');
+    const prog = new Function(block + '\nreturn { PROGRAM, EX_CFG };')();
+    const hevyMatch = /const HEVY = \{[\s\S]*?\n\};/.exec(exp);
+    if (!hevyMatch) throw new Error('could not find the name table in hevy.html');
+    const HEVY = new Function(hevyMatch[0] + '\nreturn HEVY;')();
+    return { ...prog, HEVY };
+  }
+
+  async function loadLast(user){
+    try {
+      const r = await fetch(ENDPOINT + '?action=last&user=' + encodeURIComponent(user), { cache: 'no-store' });
+      const j = await r.json();
+      return (j && j.ok && j.last) || {};
+    } catch(e){ return {}; }
+  }
+
+  function api(key){
+    return async (method, path, body) => {
+      const res = await fetch(ENDPOINT + '?action=hevy&path=' + encodeURIComponent(path), {
+        method, headers: { 'x-hevy-key': key, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const text = await res.text();
+      let json = null; try { json = JSON.parse(text); } catch(e){}
+      return { ok: res.ok, status: res.status, text, json: json || {} };
+    };
+  }
+
+  function renderWho(sources){
+    const box = $('#who'); box.innerHTML = '';
+    Object.keys(sources.PROGRAM).forEach(k => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = sources.PROGRAM[k].label;
+      b.setAttribute('aria-pressed', String(k === state.user));
+      b.onclick = () => { state.user = k; store.set('hr.user', k); $('#key').value = store.get('hr.key.' + k) || ''; reset(); renderWho(sources); };
+      box.appendChild(b);
+    });
+  }
+
+  function reset(){ state.plan = null; $('#write').disabled = true; $('#plan').innerHTML = ''; status(''); }
+
+  function renderPlan(p){
+    const html = p.built.map(rt => {
+      const rows = rt.exercises.map(x => {
+        const sets = x.body.sets;
+        const s0 = sets[0] || {};
+        const what = s0.duration_seconds != null
+          ? `${sets.length} × ${s0.duration_seconds} s${s0.weight_kg != null ? ' @ ' + s0.weight_kg + ' kg' : ''}`
+          : `${sets.length} × ${s0.rep_range ? s0.rep_range.start + '-' + s0.rep_range.end : '—'}${s0.weight_kg != null ? ' @ ' + s0.weight_kg + ' kg' : ''}`;
+        const custom = x.body.exercise_template_id ? '' : '<em>new custom exercise</em>';
+        const ss = x.body.superset_id != null ? ` <span class="ss">superset ${'ABC'[x.body.superset_id] || x.body.superset_id + 1}</span>` : '';
+        return `<tr><td>${esc(x.name)}${ss}<br><span class="ss">${esc(x.hevyName)}</span>${custom}</td><td>${esc(what)}</td></tr>`;
+      }).join('');
+      return `<section class="rt"><h2>${esc(rt.title)}</h2><p class="act">${rt.id ? 'Updates the existing routine' : 'New routine'}${p.folderId == null && !rt.id ? ', in a new Logbook folder' : ''}</p><table>${rows}</table></section>`;
+    }).join('');
+    $('#plan').innerHTML = `<div class="card">${html}<p class="note">${p.customs.size ? p.customs.size + ' custom exercise' + (p.customs.size > 1 ? 's' : '') + ' will be created. ' : ''}Nothing has been written yet.</p></div>`;
+  }
+
+  async function check(){
+    const key = $('#key').value.trim();
+    if (!key) { status('Paste your Hevy API key first.', 'bad'); return; }
+    store.set('hr.key.' + state.user, key);
+    $('#check').disabled = true; $('#write').disabled = true;
+    try {
+      status('Reading the program and your last session…');
+      const sources = state.ctx || (state.ctx = await loadSources());
+      const last = await loadLast(state.user);
+      status('Reading Hevy…');
+      state.plan = await plan(api(key), { ...sources, user: state.user, last, withWeights: $('#weights').checked });
+      renderPlan(state.plan);
+      $('#write').disabled = false;
+      status('Checked. Look it over, then write.', 'ok');
+    } catch(e){
+      status(/401|403/.test(e.message) ? 'Hevy refused the key. Check it, and that the account has Pro. ' + e.message : e.message, 'bad');
+    } finally { $('#check').disabled = false; }
+  }
+
+  async function doWrite(){
+    if (!state.plan) return;
+    $('#write').disabled = true; $('#check').disabled = true;
+    try {
+      const done = await write(api($('#key').value.trim()), state.plan, m => status(m));
+      status('Done: ' + done.join(', ') + '. Open Hevy ▸ Workout to see them.', 'ok');
+      state.plan = null;
+    } catch(e){ status(e.message, 'bad'); }
+    finally { $('#check').disabled = false; }
+  }
+
+  $('#check').onclick = check;
+  $('#write').onclick = doWrite;
+  $('#weights').onchange = reset;
+  $('#key').oninput = reset;
+  $('#key').value = store.get('hr.key.' + state.user) || '';
+  loadSources().then(s => { state.ctx = s; renderWho(s); })
+    .catch(e => status('Could not read the program: ' + e.message, 'bad'));
+})();
+</script>
+</body>
+</html>

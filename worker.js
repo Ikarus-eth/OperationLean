@@ -17,6 +17,9 @@
  *   POST ?user=ikarus  {data:{workouts}}     Health Auto Export push  (secret)
  *   POST ?user=ikarus&day=…  112,118,125       a bare list of readings,
  *                                            for an iOS Shortcut
+ *   GET|POST|PUT ?action=hevy&path=/v1/…     pass-through to Hevy's API with
+ *                                            the caller's own key in x-hevy-key,
+ *                                            for hevy-routines.html
  *
  * Reads are deliberately open: the log is training data and nothing here can
  * reach any other account. Writes still need the secret, so nobody can drop
@@ -37,8 +40,8 @@
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, x-hevy-key',
   'Access-Control-Max-Age': '86400',
 };
 
@@ -66,8 +69,8 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-09-29a';
-const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps', 'last-scoped', 'order'];
+const VERSION  = '2026-10-15a';
+const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps', 'last-scoped', 'order', 'hevy'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
 const SET_WINDOW_S = 90;      // seconds before a tick that count as "the set"
@@ -433,11 +436,42 @@ async function columnsOf(env, table) {
   } catch (e) { return null; }
 }
 
+/* ── Hevy pass-through ─────────────────────────────────────────────────
+ * hevy-routines.html writes the program into Hevy as routines. Hevy's API
+ * is not known to accept calls from a web page, so the page calls this and
+ * this calls Hevy. The key is the caller's own, sent per request and never
+ * stored; nothing touches the database. Only the three collections the page
+ * needs are reachable, so this is not a general relay. */
+const HEVY_PATH = /^\/v1\/(exercise_templates|routines|routine_folders)(\/[A-Za-z0-9-]+)?(\?(page|pageSize)=\d+(&(page|pageSize)=\d+)?)?$/;
+
+async function hevyProxy(request, url) {
+  const path = url.searchParams.get('path') || '';
+  const key = request.headers.get('x-hevy-key') || '';
+  if (!HEVY_PATH.test(path)) return json({ ok: false, error: 'path not allowed' }, 400);
+  if (!/^[0-9a-fA-F-]{20,64}$/.test(key)) return json({ ok: false, error: 'missing or malformed Hevy API key' }, 401);
+  if (!['GET', 'POST', 'PUT'].includes(request.method)) return json({ ok: false, error: 'method not allowed' }, 405);
+  const init = { method: request.method, headers: { 'api-key': key, 'accept': 'application/json' } };
+  if (request.method !== 'GET') {
+    init.headers['content-type'] = 'application/json';
+    init.body = await request.text();
+  }
+  let res;
+  try { res = await fetch('https://api.hevyapp.com' + path, init); }
+  catch (e) { return json({ ok: false, error: 'could not reach Hevy: ' + e.message }, 502); }
+  return new Response(await res.text(), {
+    status: res.status,
+    headers: { ...CORS, 'Content-Type': res.headers.get('content-type') || 'application/json' },
+  });
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
 
     const url = new URL(request.url);
+
+    // Before the database and the secret: it uses neither.
+    if (url.searchParams.get('action') === 'hevy') return hevyProxy(request, url);
 
     // Accept either a plain secret variable or a Secrets Store binding,
     // which hands back an object with an async get() instead of a string.
