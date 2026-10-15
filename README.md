@@ -70,6 +70,21 @@ For the heart rate table, add `&table=hr`.
 
 Reads need no secret. You can open that URL in any browser, hand it to anyone, or point a second sheet at it. Writes still need the secret — not to keep the log private, but so nobody can add junk rows and poison the values the app carries over each week.
 
+## Getting it into Hevy
+
+Hevy imports one format only: the CSV the Strong app exports. `hevy.html`, next to the app on the same Pages site, reads the log from the same CSV endpoint and writes it out in Strong's columns. Open it, pick the person, download, then in Hevy: Profile ▸ Settings ▸ Export & Import Data ▸ Import Data ▸ Import Strong CSV.
+
+It is a separate page so it can never break logging, and it writes nothing back. What it changes on the way:
+
+- Exercise names become Hevy's own where one fits (`HEVY` in the page), so the import joins Hevy's library instead of creating duplicates. The page shows every name with its Hevy match and lets you correct one before downloading; a name Hevy does not know arrives as a custom exercise.
+- Pull-ups split per set: bodyweight reps to Pull Up, assisted reps to Pull Up (Assisted) with the assist kg as the weight.
+- RIR becomes RPE as 10 − RIR. Hevy's RPE starts at 6, so RIR 5 and above goes across blank.
+- Seconds and minutes go into Strong's seconds column; a box height goes into the exercise note.
+- Start times come from the matched watch workout, else the first and last ticked set, else 07:00 for an hour.
+- Daily habits are left out unless ticked, since a handstand is not a workout in Hevy's counts.
+
+Hevy allows one import per account. A wrong one can be reverted from the same screen and redone.
+
 ## Logging a session
 
 Every field arrives pre-filled with what you did last time — weight, reps and RIR.

@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EFEEE8">
+<title>Logbook to Hevy</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23EFEEE8'/><rect x='3' y='4' width='10' height='1.6' fill='%231A1E1C'/><rect x='3' y='7.2' width='10' height='1.6' fill='%231A1E1C'/><rect x='3' y='10.4' width='7' height='1.6' fill='%233F6B3A'/></svg>">
+
+<!-- ══════════════════════════════════════════════════════════════════
+     Logbook to Hevy — the whole log as a Strong CSV.
+
+     Hevy imports exactly one format: the CSV the Strong app exports
+     (Profile ▸ Settings ▸ Export & Import Data ▸ Import Data ▸ Import
+     Strong CSV). So this page reads the log from the Worker's open CSV
+     endpoint, the same one anyone can open in a browser, rewrites it in
+     Strong's columns, and hands it over as a file. Nothing is written
+     anywhere; it is a read and a download.
+
+     It is its own page rather than a button in index.html so that it
+     cannot break the logging app, and so a change here never needs a
+     BUILD bump or a cache wait on the gym phone.
+     ══════════════════════════════════════════════════════════════════ -->
+<script>
+const ENDPOINT = 'https://wild-haze-fac9.74vshck6t7.workers.dev';   // same Worker as index.html
+</script>
+
+<style>
+:root{
+  --paper:#EFEEE8; --surface:#F8F7F2; --ink:#1A1E1C; --ink-2:#4C534E;
+  --ghost:#A0A299; --rule:#D4D3CA; --gain:#3F6B3A; --pending:#8A6216; --danger:#8C3A2B;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font:400 15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-text-size-adjust:100%;
+  padding:calc(14px + env(safe-area-inset-top)) 0 calc(40px + env(safe-area-inset-bottom));
+}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.wrap{max-width:540px;margin:0 auto;padding:0 16px}
+a{color:var(--ink)}
+.back{font-size:13px;color:var(--ink-2);text-decoration:none}
+h1{font-size:22px;line-height:1.2;margin:10px 0 4px}
+.lede{color:var(--ink-2);margin:0 0 18px;font-size:14px}
+
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+.lbl{font-size:13px;color:var(--ink-2);min-width:64px}
+.who{display:flex;border:1px solid var(--ink);border-radius:7px;overflow:hidden}
+.who button{appearance:none;border:0;background:transparent;color:var(--ink-2);font:500 14px/1 inherit;padding:0 14px;height:36px;cursor:pointer}
+.who button[aria-pressed="true"]{background:var(--ink);color:var(--paper);font-weight:600}
+.who button+button{border-left:1px solid var(--rule)}
+.who button[aria-pressed="true"]+button{border-left-color:var(--ink)}
+.check{display:flex;gap:9px;align-items:flex-start;font-size:14px;line-height:1.4;cursor:pointer}
+.check input{width:18px;height:18px;margin:1px 0 0;flex:0 0 auto;accent-color:var(--ink)}
+.check small{display:block;color:var(--ink-2);font-size:12.5px}
+
+.card{margin:18px 0;padding:14px;border:1px solid var(--rule);border-radius:9px;background:var(--surface)}
+.figs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 4px}
+.fig b{display:block;font-size:22px;line-height:1.1}
+.fig span{font-size:12px;color:var(--ink-2)}
+.range{font-size:13px;color:var(--ink-2);margin:6px 0 0}
+
+.go{appearance:none;width:100%;height:52px;border:0;border-radius:9px;background:var(--ink);
+  color:var(--paper);font:600 17px/1 inherit;cursor:pointer;margin-top:4px}
+.go:disabled{background:var(--rule);color:var(--ink-2);cursor:default}
+.go:focus-visible{outline:3px solid var(--gain);outline-offset:2px}
+.alt{appearance:none;width:100%;height:42px;margin-top:8px;border:1px solid var(--ink);border-radius:9px;
+  background:transparent;color:var(--ink);font:500 15px/1 inherit;cursor:pointer}
+.status{font-size:13px;color:var(--ink-2);min-height:18px;text-align:center;margin-top:8px}
+.status[data-tone="ok"]{color:var(--gain)}
+.status[data-tone="bad"]{color:var(--danger)}
+
+details{margin:14px 0;border-top:1px solid var(--rule);padding-top:12px}
+summary{cursor:pointer;font-weight:600;font-size:15px;list-style-position:inside}
+summary small{font-weight:400;color:var(--ink-2)}
+.note{font-size:13px;color:var(--ink-2);margin:8px 0 10px}
+.map{width:100%;border-collapse:collapse;font-size:14px}
+.map td{padding:6px 0;border-bottom:1px solid var(--rule);vertical-align:middle}
+.map td:first-child{width:42%;padding-right:10px;color:var(--ink-2);overflow-wrap:anywhere}
+.map td:first-child em{display:block;font-style:normal;font-size:12px;color:var(--ghost)}
+.map input{width:100%;height:36px;border:1px solid var(--rule);border-radius:7px;background:#fff;
+  color:var(--ink);font:400 15px/1 inherit;padding:0 9px}
+.map input[data-custom]{border-color:var(--pending);background:#FAF6EC}
+.map input:focus{outline:2px solid var(--ink);outline-offset:-1px}
+.reset{appearance:none;background:none;border:0;padding:6px 0;color:var(--ink-2);font:400 13px/1 inherit;text-decoration:underline;cursor:pointer}
+pre{font:400 11.5px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;background:#fff;border:1px solid var(--rule);
+  border-radius:7px;padding:10px;overflow:auto;max-height:340px;white-space:pre}
+ol{padding-left:20px;margin:8px 0}
+ol li{margin:4px 0}
+ul.changes{padding-left:18px;margin:8px 0;font-size:14px}
+ul.changes li{margin:5px 0}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <a class="back" href="./">&larr; Logbook</a>
+  <h1>Export to Hevy</h1>
+  <p class="lede">Your log as a Strong CSV, the only file Hevy imports.</p>
+
+  <div class="row">
+    <span class="lbl">Person</span>
+    <div class="who" id="who"></div>
+  </div>
+  <div class="row">
+    <label class="check"><input type="checkbox" id="daily">
+      <span>Include daily habits<small>Pulls and handstand, each day as its own short workout named "Daily".</small></span></label>
+  </div>
+  <div class="row">
+    <label class="check"><input type="checkbox" id="utc">
+      <span>Write times in UTC<small>Leave off. Turn it on only if Hevy shows the workouts hours later than they happened; then revert the import and redo it.</small></span></label>
+  </div>
+
+  <section class="card" aria-live="polite">
+    <div class="figs num">
+      <div class="fig"><b id="nW">–</b><span>workouts</span></div>
+      <div class="fig"><b id="nX">–</b><span>exercises</span></div>
+      <div class="fig"><b id="nS">–</b><span>sets</span></div>
+    </div>
+    <p class="range num" id="range">Reading the log…</p>
+    <button class="go" id="dl" type="button" disabled>Download CSV</button>
+    <button class="alt" id="share" type="button" hidden>Share…</button>
+    <div class="status" id="status" role="status"></div>
+  </section>
+
+  <details id="names">
+    <summary>Exercise names <small id="namesSum"></small></summary>
+    <p class="note">Right column is the Hevy exercise each one lands on. A name that matches Hevy's library joins that exercise; anything else is created as a custom exercise, so nothing is lost either way. Shaded ones have no Hevy match that I know of and will arrive as custom exercises. Check the rest against Hevy's exercise list before importing; a wrong guess also arrives as a custom exercise. Edits are kept on this phone.</p>
+    <table class="map" id="map"></table>
+    <button class="reset" id="reset" type="button">Reset all names</button>
+  </details>
+
+  <details>
+    <summary>What changes on the way</summary>
+    <ul class="changes">
+      <li><b>Pull-ups</b> split per set: bodyweight reps go to <i>Pull Up</i>, the reps finished on the machine go to <i>Pull Up (Assisted)</i> with the assist kg as weight.</li>
+      <li><b>RIR becomes RPE</b> as 10 &minus; RIR. Hevy's scale starts at RPE 6, so RIR 5 and above is left blank.</li>
+      <li><b>Timed sets</b> (dead hang, carries, handstand) go into Strong's seconds column, minutes converted.</li>
+      <li><b>Jumps</b>: box height goes into the exercise note, since the kg column would read it as load.</li>
+      <li><b>Times</b> come from the watch workout when one was matched to the session, otherwise from the first and last ticked set. Sessions from before set times were recorded start at 07:00 and last an hour.</li>
+      <li>Session notes become workout notes; exercise comments become exercise notes.</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>Import into Hevy</summary>
+    <ol>
+      <li>Download the CSV above. On iPhone it lands in Files &rsaquo; Downloads.</li>
+      <li>Hevy &rsaquo; Profile &rsaquo; Settings &rsaquo; Export &amp; Import Data &rsaquo; Import Data.</li>
+      <li>Import Strong CSV, then pick the file.</li>
+    </ol>
+    <p class="note">Hevy takes one import per account. A wrong one can be reverted from the same screen and imported again, so open a recent workout afterwards and check the date, time and a pull-up set.</p>
+  </details>
+
+  <details>
+    <summary>Preview <small>first 30 lines</small></summary>
+    <pre id="preview"></pre>
+  </details>
+</main>
+
+<script>
+'use strict';
+
+/* ══ conversion ══════════════════════════════════════════════════════
+   Pure: rows in, CSV out. Kept apart from the page so it can be run
+   on its own (node, a test) without a browser. */
+
+/* Names typed by hand before the app had a proper one — the same fold
+   index.html does, so the two never disagree about what an exercise is. */
+const RENAMED = {
+  'Incline leg press machine': 'Incline Leg Press',
+};
+
+/* Logbook name → Hevy exercise. Hevy's own names where one fits, so the
+   import joins its library instead of creating a duplicate; the program's
+   name where nothing in Hevy is the same lift. A name missing here keeps
+   its Logbook name and becomes a custom exercise, which is safe. */
+const HEVY = {
+  // legs
+  'Perfect Squat':          'Perfect Squat',                 // the Matrix machine; nothing in Hevy is it
+  'Belt Squat':             'Belt Squat (Machine)',
+  'Leg Press':              'Leg Press Horizontal (Machine)', // kept apart from the 45° sled, as in the app
+  'Incline Leg Press':      'Leg Press (Machine)',
+  'Single-Leg Leg Press':   'Single Leg Press (Machine)',
+  'Hack Squat':             'Hack Squat (Machine)',
+  'Goblet Squat':           'Goblet Squat',
+  'Bulgarian Split Squat':  'Bulgarian Split Squat',
+  'Hip Thrust':             'Hip Thrust (Barbell)',
+  'Machine Hip Thrust':     'Hip Thrust (Machine)',
+  'Romanian Deadlift':      'Romanian Deadlift (Barbell)',
+  '45° Back Extension':     'Back Extension (Weighted Hyperextension)',
+  'Seated Leg Curl':        'Seated Leg Curl (Machine)',
+  'Lying Leg Curl':         'Lying Leg Curl (Machine)',
+  'Leg Extension':          'Leg Extension (Machine)',
+  'Standing Calf Raise':    'Standing Calf Raise (Machine)',
+  'Seated Calf Raise':      'Seated Calf Raise',
+  'Adductor Machine':       'Hip Adduction (Machine)',
+  'Abducter machine':       'Hip Abduction (Machine)',
+  'Copenhagen Plank':       'Copenhagen Plank',
+  'Jumps':                  'Box Jump',
+  'Box Jump':               'Box Jump',
+  'Carries':                'Farmers Walk',
+  'Farmer\u2019s Walk':     'Farmers Walk',
+  'Dead Hang':              'Dead Hang',
+  // pulling
+  'Pull-ups':               'Pull Up',
+  'Chin-ups':               'Chin Up',
+  'Lat Pulldown':           'Lat Pulldown (Cable)',
+  'Chest-Supported Row':    'Chest Supported Incline Row (Dumbbell)',
+  'Single-Arm DB Row':      'Dumbbell Row',
+  'Seated Cable Row':       'Seated Cable Row - V Grip (Cable)',
+  'Machine Row':            'Seated Row (Machine)',
+  // pushing
+  'Incline DB Press':       'Incline Bench Press (Dumbbell)',
+  'Flat DB Press':          'Bench Press (Dumbbell)',
+  'Machine Chest Press':    'Chest Press (Machine)',
+  'DB Fly':                 'Chest Fly (Dumbbell)',
+  'Cable Crossover':        'Cable Fly Crossovers',
+  'Dips':                   'Chest Dip',
+  'Dip bodyweight':         'Chest Dip',
+  'Bench Dip':              'Bench Dip',
+  'Push-ups':               'Push Up',
+  // shoulders and arms
+  'Rear Delt Fly':          'Rear Delt Reverse Fly (Dumbbell)',
+  'Reverse Pec Deck':       'Rear Delt Reverse Fly (Machine)',
+  'Lateral Raise':          'Lateral Raise (Dumbbell)',
+  'Cable Lateral Raise':    'Single Arm Lateral Raise (Cable)',
+  'Machine Lateral Raise':  'Lateral Raise (Machine)',
+  'DB Curl':                'Bicep Curl (Dumbbell)',
+  'Incline DB Curl':        'Seated Incline Curl (Dumbbell)',
+  'Hammer Curl':            'Hammer Curl (Dumbbell)',
+  'Cable Curl':             'Bicep Curl (Cable)',
+  'Barbell Curl':           'Bicep Curl (Barbell)',
+  'Overhead Triceps Ext':   'Triceps Extension (Dumbbell)',
+  'Cable Overhead Ext':     'Triceps Extension (Cable)',
+  'Skullcrusher':           'Skullcrusher (Dumbbell)',
+  'Rope Pushdown':          'Triceps Rope Pushdown',
+  'Bar Pushdown':           'Triceps Pushdown',
+  // daily habits
+  'Pulls':                  'Pull Up',
+  'Handstand':              'Handstand Hold',
+};
+
+/* Where the reps finished on the assist machine go. Hevy logs an assisted
+   pull-up as its own exercise, with the assistance as the weight. */
+const ASSISTED = {
+  'Pull-ups': 'Pull Up (Assisted)',
+  'Chin-ups': 'Chin Up (Assisted)',
+};
+
+/* What the boxes mean, where it is not kg and reps (see EX_CFG in
+   index.html). 'secs': the reps box holds seconds. 'mins': minutes.
+   'height': the kg box holds a box height in inches. 'assist': reps are
+   bodyweight, reps_assist are on the machine at `weight` kg of help. */
+const KIND = {
+  'Pull-ups': 'assist', 'Chin-ups': 'assist',
+  'Dead Hang': 'secs', 'Carries': 'secs', 'Farmer\u2019s Walk': 'secs', 'Suitcase Carry': 'secs',
+  'Trap Bar Carry': 'secs', 'Overhead Carry': 'secs', 'Sled Push': 'secs',
+  'Side Plank': 'secs', 'Short-Lever Copenhagen': 'secs', 'Crow Pose': 'secs',
+  'Handstand': 'mins', 'Wall Handstand': 'mins', 'Freestanding Handstand': 'mins',
+  'Jumps': 'height', 'Box Jump': 'height', 'Depth Jump': 'height',
+};
+
+/* Names above that Hevy has no exercise for, as far as is known. They go
+   across under their own name and arrive as custom exercises; the page
+   shades them so they get a look before the one import Hevy allows. */
+const CUSTOM = new Set(['Perfect Squat', 'Copenhagen Plank']);
+
+const ASSIST_SUFFIX = ' \u00b7 assisted reps';   // key for the second half of an assist exercise
+
+const STRONG_COLS = ['Workout #','Date','Workout Name','Duration (sec)','Exercise Name','Set Order',
+  'Weight (kg)','Reps','RPE','Distance (meters)','Seconds','Notes','Workout Notes'];
+
+/** The Worker's CSV: comma separated, quoted only where needed, and the
+ *  heart-rate table carries a whole trace inside one quoted field. */
+function parseCSV(text) {
+  const rows = []; let row = [], f = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; }
+      else f += c;
+    } else if (c === '"') q = true;
+    else if (c === ',') { row.push(f); f = ''; }
+    else if (c === '\n') { row.push(f); rows.push(row); row = []; f = ''; }
+    else if (c !== '\r') f += c;
+  }
+  if (f !== '' || row.length) { row.push(f); rows.push(row); }
+  const head = rows.shift() || [];
+  return rows.filter(r => r.length > 1)
+    .map(r => Object.fromEntries(head.map((h, i) => [h, r[i] === undefined ? '' : r[i]])));
+}
+
+const num = v => (v === '' || v === null || v === undefined) ? NaN : Number(v);
+const canon = n => { const s = String(n || '').trim(); return RENAMED[s] || s; };
+const pad = n => String(n).padStart(2, '0');
+
+/* Same reading of a watch time as the Worker's parseHRDate: ISO, or
+   "2026-09-01 09:00:00 +0800". */
+function parseTs(v) {
+  const s = String(v || '').trim();
+  if (!s) return NaN;
+  const m = s.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}(?::\d{2})?)(?:\.\d+)?\s*([+-]\d{2}):?(\d{2})?$/);
+  if (m) return Date.parse(`${m[1]}T${m[2].length === 5 ? m[2] + ':00' : m[2]}${m[3]}:${m[4] || '00'}`);
+  return Date.parse(s.replace(' ', 'T'));
+}
+
+/* Local mode writes the session's own date with the clock time of the
+   phone doing the export: a Bali session read in Bali comes out as it was.
+   Hevy was built to read Strong's files, and Strong writes local time. */
+function stamp(ms, date, utc) {
+  const d = new Date(ms);
+  if (utc) return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ` +
+                  `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+  return `${date} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+const kg   = w => Number.isFinite(w) ? (Number.isInteger(w) ? w.toFixed(1) : String(Math.round(w * 100) / 100)) : '0.0';
+const ints = n => Number.isFinite(n) ? String(Math.round(n)) : '0';
+const rpeOf = rir => {
+  const r = num(rir);
+  if (!Number.isFinite(r)) return '';
+  const p = 10 - r;
+  return p >= 6 && p <= 10 ? String(p) : '';
+};
+// Notes travel in a quoted field, but nobody promises Hevy's reader handles
+// a line break or a semicolon inside one.
+const clean = s => String(s || '').replace(/\s*[\r\n]+\s*/g, ' / ').replace(/;/g, ',').trim();
+
+function hevyName(key, map) {
+  if (map && map[key]) return map[key];
+  if (key.endsWith(ASSIST_SUFFIX)) {
+    const base = key.slice(0, -ASSIST_SUFFIX.length);
+    return ASSISTED[base] || base + ' (Assisted)';
+  }
+  return HEVY[key] || key;
+}
+
+/**
+ * sets: rows of the `sets` table. hr: rows of the `hr` table (may be []).
+ * o: { user, daily, utc, map }.
+ * Returns the CSV and enough about it to show before downloading.
+ */
+function convert(sets, hr, o) {
+  const map = o.map || {};
+  const mine = sets.filter(r => r.user === o.user && r.date && r.exercise &&
+                                (o.daily || r.session !== 'Daily'));
+
+  /* One row per set. The sync path replaces a session wholesale, but rows
+     written by the old append path before it can sit beside a later copy
+     of the same set; the newest write is the one the screen last showed. */
+  const latest = new Map();
+  for (const r of mine) {
+    const k = [r.date, r.session, canon(r.exercise), r.set_no].join('|');
+    const p = latest.get(k);
+    if (!p || num(r.id) > num(p.id)) latest.set(k, r);
+  }
+
+  const groups = new Map();
+  for (const r of latest.values()) {
+    const k = r.date + '|' + r.session;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(r);
+  }
+
+  const workouts = [];
+  const used = new Set();
+  const counts = new Map();   // key → sets, for the names table
+
+  for (const rows of groups.values()) {
+    const { date, session } = rows[0];
+    const ticks = rows.map(r => parseTs(r.set_ts)).filter(Number.isFinite);
+
+    let start, end;
+    const watch = session === 'Daily' ? [] : (hr || [])
+      .filter(h => h.user === o.user && h.date === date && h.session === session)
+      .map(h => [parseTs(h.start), parseTs(h.finish)])
+      .filter(([a, b]) => Number.isFinite(a) && Number.isFinite(b) && b > a);
+    if (watch.length) {
+      start = Math.min(...watch.map(w => w[0]));
+      end   = Math.max(...watch.map(w => w[1]));
+    } else if (ticks.length) {
+      start = Math.min(...ticks) - 120000;      // the first tick is the end of the first set
+      end   = Math.max(...ticks);
+    } else {
+      const daily = session === 'Daily';
+      start = new Date(date + (daily ? 'T06:00:00' : 'T07:00:00')).getTime();
+      end   = start + (daily ? 900000 : 3600000);
+    }
+    // Two workouts on one start time look like one to an importer.
+    while (used.has(o.user + stamp(start, date, o.utc))) { start += 60000; end += 60000; }
+    used.add(o.user + stamp(start, date, o.utc));
+
+    // Exercises in the order they were done, else the order they were saved.
+    const byEx = new Map();
+    for (const r of rows) {
+      const n = canon(r.exercise);
+      if (!byEx.has(n)) byEx.set(n, []);
+      byEx.get(n).push(r);
+    }
+    const firstAt = list => {
+      const t = list.map(r => parseTs(r.set_ts)).filter(Number.isFinite);
+      return t.length ? Math.min(...t) : Infinity;
+    };
+    const firstId = list => Math.min(...list.map(r => num(r.id)).filter(Number.isFinite));
+    const order = [...byEx.entries()].sort((a, b) =>
+      (firstAt(a[1]) - firstAt(b[1])) || (firstId(a[1]) - firstId(b[1])));
+
+    // Blocks keyed by Hevy name, so two Logbook names landing on one Hevy
+    // exercise in the same workout become one exercise with its sets in a row.
+    const blocks = new Map();
+    const add = (key, set, ...notes) => {
+      const name = hevyName(key, map);
+      if (!blocks.has(name)) blocks.set(name, { sets: [], notes: [] });
+      const b = blocks.get(name);
+      b.sets.push(set);
+      for (const note of notes) if (note && !b.notes.includes(note)) b.notes.push(note);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    };
+
+    for (const [n, list] of order) {
+      list.sort((a, b) => num(a.set_no) - num(b.set_no));
+      const kind = KIND[n] || 'reps';
+      const exNote = clean((list.find(r => r.ex_notes) || {}).ex_notes);
+      for (const r of list) {
+        const w = num(r.weight), reps = num(r.reps), r2 = num(r.reps_assist);
+        if (kind === 'assist') {
+          if (reps > 0) add(n, { w: 0, reps, rpe: rpeOf(r.rir) }, exNote);
+          if (r2 > 0)   add(n + ASSIST_SUFFIX, { w: Number.isFinite(w) ? w : 0, reps: r2 }, exNote);
+        } else if (kind === 'secs' || kind === 'mins') {
+          const secs = Number.isFinite(reps) ? reps * (kind === 'mins' ? 60 : 1) : NaN;
+          if (!(secs > 0) && !(w > 0)) continue;
+          add(n, { w: Number.isFinite(w) ? w : 0, reps: 0, secs }, exNote);
+        } else if (kind === 'height') {
+          if (!(reps > 0)) continue;
+          add(n, { w: 0, reps, rpe: rpeOf(r.rir) }, exNote, w > 0 ? `Box ${w} in` : '');
+        } else {
+          if (!(reps > 0) && !(w > 0)) continue;
+          add(n, { w: Number.isFinite(w) ? w : 0, reps, rpe: rpeOf(r.rir) }, exNote);
+        }
+      }
+    }
+    if (!blocks.size) continue;
+
+    workouts.push({
+      date, session, start,
+      duration: Math.max(60, Math.round((end - start) / 1000)),
+      notes: clean((rows.find(r => r.notes) || {}).notes),
+      blocks,
+    });
+  }
+
+  workouts.sort((a, b) => a.start - b.start);
+
+  const q = v => '"' + String(v).replace(/"/g, '""') + '"';
+  const lines = [STRONG_COLS.map(q).join(';')];
+  let nSets = 0;
+  const exNames = new Set();
+  workouts.forEach((wk, i) => {
+    for (const [name, b] of wk.blocks) {
+      exNames.add(name);
+      b.sets.forEach((s, j) => {
+        nSets++;
+        lines.push([
+          i + 1, stamp(wk.start, wk.date, o.utc), wk.session, wk.duration,
+          name, j + 1, kg(s.w), ints(s.reps), s.rpe || '', '',
+          Number.isFinite(s.secs) && s.secs > 0 ? ints(s.secs) : '',
+          j === 0 ? b.notes.join(' / ') : '', wk.notes,
+        ].map(q).join(';'));
+      });
+    }
+  });
+
+  const names = [...counts.entries()]
+    .map(([key, n]) => ({ key, sets: n, hevy: hevyName(key, map),
+                          known: !CUSTOM.has(key) && !!(HEVY[key] || ASSISTED[key.replace(ASSIST_SUFFIX, '')]) }))
+    .sort((a, b) => a.key.localeCompare(b.key));
+
+  return {
+    csv: lines.join('\n') + '\n',
+    workouts: workouts.length,
+    exercises: exNames.size,
+    sets: nSets,
+    first: workouts.length ? workouts[0].date : '',
+    last: workouts.length ? workouts[workouts.length - 1].date : '',
+    names,
+  };
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = { convert, parseCSV, HEVY, ASSISTED, KIND, STRONG_COLS, ASSIST_SUFFIX };
+}
+
+/* ══ page ════════════════════════════════════════════════════════════ */
+
+if (typeof document !== 'undefined') (() => {
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+  };
+  const $ = s => document.querySelector(s);
+  const USERS = { ikarus: 'Ikarus', johanna: 'Johanna' };
+
+  const state = {
+    sets: null, hr: [],
+    user: USERS[store.get('lb.user')] ? store.get('lb.user') : 'ikarus',   // the person this phone logs as
+    daily: false, utc: false,
+    map: (() => { try { return JSON.parse(store.get('lb.hevy.map') || '{}') || {}; } catch (e) { return {}; } })(),
+    out: null,
+  };
+
+  const setStatus = (t, tone) => { const s = $('#status'); s.textContent = t || ''; s.dataset.tone = tone || ''; };
+  const fmtDate = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+
+  function renderWho() {
+    const box = $('#who'); box.textContent = '';
+    for (const [k, label] of Object.entries(USERS)) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = label;
+      b.setAttribute('aria-pressed', String(k === state.user));
+      b.onclick = () => { state.user = k; renderWho(); run(true); };
+      box.appendChild(b);
+    }
+  }
+
+  function run(redrawNames) {
+    if (!state.sets) return;
+    state.out = convert(state.sets, state.hr, state);
+    const o = state.out;
+    $('#nW').textContent = o.workouts;
+    $('#nX').textContent = o.exercises;
+    $('#nS').textContent = o.sets;
+    $('#range').textContent = o.workouts
+      ? fmtDate(o.first) + ' to ' + fmtDate(o.last)
+      : 'Nothing logged for ' + USERS[state.user] + '.';
+    $('#dl').disabled = !o.workouts;
+    $('#share').hidden = !o.workouts || !canShare();
+    $('#preview').textContent = o.csv.split('\n').slice(0, 30).join('\n');
+    const custom = o.names.filter(n => !n.known && !state.map[n.key]).length;
+    $('#namesSum').textContent = '(' + o.names.length + (custom ? ', ' + custom + ' custom' : '') + ')';
+    if (redrawNames) renderNames();
+  }
+
+  function renderNames() {
+    const t = $('#map'); t.textContent = '';
+    for (const n of state.out.names) {
+      const tr = document.createElement('tr');
+      const a = document.createElement('td');
+      const label = n.key.endsWith(ASSIST_SUFFIX) ? n.key.replace(ASSIST_SUFFIX, '') : n.key;
+      a.textContent = label;
+      const em = document.createElement('em');
+      em.textContent = (n.key.endsWith(ASSIST_SUFFIX) ? 'assisted reps, ' : '') + n.sets + (n.sets === 1 ? ' set' : ' sets');
+      a.appendChild(em);
+      const b = document.createElement('td');
+      const inp = document.createElement('input');
+      inp.value = n.hevy;
+      inp.setAttribute('aria-label', 'Hevy name for ' + label);
+      inp.autocapitalize = 'words'; inp.spellcheck = false;
+      if (!n.known && !state.map[n.key]) inp.dataset.custom = '';
+      inp.oninput = () => {
+        const v = inp.value.trim();
+        const def = hevyName(n.key, {});
+        if (v && v !== def) state.map[n.key] = v; else delete state.map[n.key];
+        store.set('lb.hevy.map', JSON.stringify(state.map));
+        if (state.map[n.key] || n.known) delete inp.dataset.custom; else inp.dataset.custom = '';
+        run(false);
+      };
+      b.appendChild(inp);
+      tr.append(a, b);
+      t.appendChild(tr);
+    }
+  }
+
+  const fileName = () => 'hevy-import-' + state.user + '-' + new Date().toLocaleDateString('en-CA') + '.csv';
+  const makeFile = () => new File([state.out.csv], fileName(), { type: 'text/csv' });
+  function canShare() {
+    try { return !!(navigator.canShare && navigator.canShare({ files: [new File(['x'], 'x.csv', { type: 'text/csv' })] })); }
+    catch (e) { return false; }
+  }
+
+  $('#dl').onclick = () => {
+    if (!state.out) return;
+    const url = URL.createObjectURL(new Blob([state.out.csv], { type: 'text/csv' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = fileName();
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    setStatus('Saved as ' + fileName() + '. Import it in Hevy, steps below.', 'ok');
+  };
+  $('#share').onclick = async () => {
+    try { await navigator.share({ files: [makeFile()] }); }
+    catch (e) { if (e && e.name !== 'AbortError') setStatus('Sharing failed: ' + e.message, 'bad'); }
+  };
+  $('#daily').onchange = e => { state.daily = e.target.checked; run(true); };
+  $('#utc').onchange = e => { state.utc = e.target.checked; run(false); };
+  $('#reset').onclick = () => { state.map = {}; store.del('lb.hevy.map'); run(true); };
+
+  async function load() {
+    renderWho();
+    try {
+      const res = await fetch(ENDPOINT + '/?action=csv&table=sets', { cache: 'no-store' });
+      if (!res.ok) throw new Error('the Worker answered ' + res.status);
+      state.sets = parseCSV(await res.text());
+    } catch (e) {
+      $('#range').textContent = 'Could not read the log: ' + (e.message || e) + '.';
+      setStatus('Check the connection and reload.', 'bad');
+      return;
+    }
+    // Only for start times. Without it every session still exports.
+    try {
+      const res = await fetch(ENDPOINT + '/?action=csv&table=hr', { cache: 'no-store' });
+      if (res.ok) state.hr = parseCSV(await res.text());
+    } catch (e) {}
+    run(true);
+  }
+  load();
+})();
+</script>
+</body>
+</html>
