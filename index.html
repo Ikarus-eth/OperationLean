@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 20, at: '12 Oct 2026, 10:44' };
+const BUILD = { n: 21, at: '15 Oct 2026, 09:05' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -93,77 +93,49 @@ const SESSIONS_IKARUS = {
    Safari the phone happens to be on. */
 const SESSIONS_JOHANNA = JSON.parse(JSON.stringify(SESSIONS_IKARUS));
 
-/* ══ TEMPORARY — right 5th proximal phalanx, K-wire in situ ═══════
-   Fracture 12 Sep 2026, closed reduction and percutaneous K-wire
-   16 Sep. Wire out 7-21 Oct. DELETE THIS BLOCK once the wire is out
-   and the surgeon has cleared weight-bearing; nothing above it is
-   edited, so the revert is one deletion. Do not delete it early: the
-   dates below are the whole reason these two days look like this.
+/* ══ TEMPORARY — right 5th proximal phalanx fracture ═════════════
+   Fracture 12 Sep 2026, K-wire 16 Sep, wire out 9 Oct. The
+   orthopaedist cleared squats; anything that puts the right foot on
+   its toes (calf raises, jumps, split squats with the right foot
+   behind, sled, padel) waits for the 17 Nov x-ray. DELETE THIS BLOCK
+   after that x-ray clears full loading; nothing above it is edited,
+   so the revert is one deletion and brings back the normal program,
+   calves first.
 
-   The constraint is not pain and it is not the forefoot. It is a
-   metal wire crossing the fracture, with its bent end sitting under
-   the skin of the lateral border of the foot, and an open tract
-   running from that skin down to bone. So, in order:
-
-     1. Nothing presses on the lateral border of the right foot.
-        That rules out any shoe with a toe box, which is why the
-        earlier 'rigid shoe' line is gone.
-     2. No axial load through the right forefoot. A leg press plate
-        is the exact thing the wire cannot take.
-     3. No standing under load on the right leg at all.
-     4. Sweat into the pin dressing is the likeliest complication,
-        so sessions are short and seated and the dressing is changed
-        after, not before.
-
-   What that leaves is load entering at the shin or the hips, and a
-   left leg trained on its own. The left-only work is not filler —
-   training one limb holds strength in the other one, so it is the
-   most useful thing available for the next month.
-
-   Names are spelled exactly as they are above, so carry-over and
-   history run straight through. Single-Leg Leg Press and Dead Hang
-   are new and start empty, which is correct: they are not the
-   bilateral lifts and should never share their numbers.
-
-   12 Oct 2026: cleared to squat again. Perfect Squat and Belt Squat
-   are back, first on each day as in the normal program, and are the
-   only exception to rules 2 and 3. Everything else in this block
-   stands until the end condition in the header is met. Their first
-   pre-fill is from before the fracture, about four weeks old.
-
-   12 Oct 2026, later: Monday's leg press is the incline sled, both legs,
-   standard from now on (it is also the normal program's Monday press).
-   It shares a room with the Perfect Squat and the hip thrust machine,
-   so those three open the session together, in the order Ikarus had
-   already dragged them into. Lower 2 is unchanged.
+   15 Oct 2026: rewritten for the wire-out period. The left-only
+   single-leg leg press and calf raise, and the adductor machine, are
+   gone: they stood in for lifts the wire ruled out, and the lifts are
+   back. Hamstrings get hip extension on both days (45° back
+   extension) and three sets of curls each day. Copenhagen returns on
+   Thursday short-lever, knee on the bench, under its own name so its
+   numbers never mix with the long-lever plank; switch back to
+   Copenhagen Plank from about 29 Oct. Dead Hang replaces carries and
+   takes belt weight. Monday opens with the three machines in the
+   squat room: Perfect Squat, incline leg press, hip thrust.
    ══════════════════════════════════════════════════════════════════ */
 Object.assign(SESSIONS_IKARUS, {
     'Lower 1': [
-      { name: 'Perfect Squat',         target: '3 × 6-10',  sets: 3 },
+      { name: 'Perfect Squat',         target: '3 × 6-10',  sets: 3, hint: 'RIR 2-3 — add reps at the same weight before adding weight' },
       { name: 'Incline Leg Press',     target: '3 × 8-12',  sets: 3,
         hint: 'feet low, shoulder-width, toes out — stop the descent where the right heel starts to lift' },
       { name: 'Machine Hip Thrust',    target: '3 × 8-12',  sets: 3,
         hint: 'shins vertical at the top, knees at 90° — quads burning: feet further out; hamstrings cramping: feet closer. Push through the heels, right forefoot light' },
-      { name: 'Leg Extension',         target: '4 × 10-15', sets: 4 },
-      { name: 'Seated Leg Curl',       target: '4 × 8-12',  sets: 4 },
+      { name: 'Seated Leg Curl',       target: '3 × 8-12',  sets: 3 },
+      { name: '45° Back Extension',    target: '3 × 10-15', sets: 3, hint: 'DB at chest, round-back' },
       { name: 'Dead Hang',             target: '3 × 30-45 s', sets: 3, fields: ['w','r'],
         units: { w: 'belt kg', r: 'sec' }, progress: 'load',
-        hint: 'in place of carries — belt kg on top of bodyweight, blank for none; add weight once every set passes 45 s' },
-      { name: 'Adductor Machine',      target: '3 × 12-15', sets: 3 },
+        hint: 'in place of carries — same belt kg on all three sets; add weight once every set passes 45 s' },
     ],
     'Lower 2': [
-      { name: 'Belt Squat',            target: '3 × 8-12',  sets: 3 },
-      { name: 'Seated Leg Curl',       target: '4 × 8-12',  sets: 4 },
+      { name: 'Belt Squat',            target: '3 × 8-12',  sets: 3, hint: 'full depth — build back toward the pre-fracture 120 × 8' },
+      { name: '45° Back Extension',    target: '3 × 10-15', sets: 3, hint: 'DB at chest, round-back' },
       { name: 'Leg Extension',         target: '3 × 12-15', sets: 3 },
-      { name: 'Single-Leg Leg Press',  target: '3 × 8-12',  sets: 3,
-        hint: 'LEFT only — right foot stays off the sled and on the floor' },
-      { name: 'Machine Hip Thrust',    target: '3 × 8-12',  sets: 3,
-        hint: 'shins vertical at the top, knees at 90° — quads burning: feet further out; hamstrings cramping: feet closer. Push through the heels, right forefoot light' },
-      { name: 'Seated Calf Raise',     target: '3 × 10-15', sets: 3,
-        hint: 'LEFT only — right foot flat on the floor, clear of the block' },
+      { name: 'Seated Leg Curl',       target: '3 × 8-12',  sets: 3 },
+      { name: 'Short-Lever Copenhagen', target: '2 × 10-15 per side', sets: 4, fields: ['r','rir'],
+        hint: 'knee on the bench; sets go left, right, left, right. The bottom foot never touches the floor' },
       { name: 'Dead Hang',             target: '3 × 30-45 s', sets: 3, fields: ['w','r'],
         units: { w: 'belt kg', r: 'sec' }, progress: 'load',
-        hint: 'in place of carries — belt kg on top of bodyweight, blank for none; add weight once every set passes 45 s' },
+        hint: 'in place of carries — same belt kg on all three sets; add weight once every set passes 45 s' },
     ],
 });
 const PROGRAM = {
