@@ -210,6 +210,10 @@ function buildRoutines(PROGRAM, EX_CFG, HEVY, user, last, templateId, withWeight
           if (range) s.rep_range = range;
           if (type === 'weight_reps' && p) s.weight_kg = numOr(p.w);
         }
+        /* Hevy's update call rejects rep_range: null ("Expected object,
+           received null"), though create accepts it. A field left out
+           means the same as empty, so empty fields are left out. */
+        Object.keys(s).forEach(k => { if (s[k] == null) delete s[k]; });
         return s;
       });
       let superset_id = null;
