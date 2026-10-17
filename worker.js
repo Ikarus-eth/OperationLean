@@ -78,7 +78,7 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-10-17c';
+const VERSION  = '2026-10-17d';
 const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps', 'last-scoped', 'order', 'hevy', 'hevy-sync', 'hevy-pull', 'log'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
@@ -882,6 +882,17 @@ export default {
         return new Response(await logText(env, user, from, to), { headers: { ...CORS, 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
       }
 
+      /* One-off repair after the trailing-space pushes: names in hr are
+         trimmed and lower-cased, then every affected day is matched again. */
+      if (action === 'repair-hr') {
+        if (url.searchParams.get('secret') !== SECRET) return json({ ok: false, error: 'unauthorized' }, 401);
+        const bad = (await env.DB.prepare('SELECT DISTINCT user, date FROM hr WHERE user != LOWER(TRIM(user))').all()).results || [];
+        await env.DB.prepare('UPDATE hr SET user = LOWER(TRIM(user)) WHERE user != LOWER(TRIM(user))').run();
+        let attributed = 0;
+        for (const b of bad) attributed += await attributeDay(env, String(b.user).trim().toLowerCase(), b.date);
+        return json({ ok: true, fixed_days: bad.length, attributed });
+      }
+
       if (action === 'hevy-key' || action === 'hevy-sync' || action === 'hevy-pull') {
         if (url.searchParams.get('secret') !== SECRET) return json({ ok: false, error: 'unauthorized' }, 401);
         const user = str(url.searchParams.get('user')).toLowerCase();
@@ -1058,7 +1069,9 @@ export default {
       if (looksLikeWatch || looksLikeSimple || url.searchParams.get('action') === 'hr') {
         const given = request.headers.get('x-logbook-secret') || url.searchParams.get('secret') || '';
         if (given !== SECRET) return json({ ok: false, error: 'unauthorized' }, 401);
-        const user = str(url.searchParams.get('user')).toLowerCase();
+        // Trimmed: a URL typed on a phone picked up a trailing space, and every
+        // workout then belonged to "ikarus ", whom no set ever matched.
+        const user = str(url.searchParams.get('user')).trim().toLowerCase();
         if (!user) return json({ ok: false, error: 'add ?user=ikarus to the URL' }, 400);
         const payload = looksLikeWatch ? body : (normaliseSimple(body) || body);
         try {
