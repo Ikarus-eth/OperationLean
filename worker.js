@@ -27,6 +27,8 @@
  *                                            (secret; also every 30 min by cron)
  *   GET  ?action=log&user=&from=&to=          the log as compact text, one line
  *                                            per exercise, with heart rate (open)
+ *   GET  ?action=pushlog                      the last 30 phone pushes: when,
+ *                                            whose, how big, what came back (open)
  *
  * Reads are deliberately open: the log is training data and nothing here can
  * reach any other account. Writes still need the secret, so nobody can drop
@@ -76,7 +78,7 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-10-17b';
+const VERSION  = '2026-10-17c';
 const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps', 'last-scoped', 'order', 'hevy', 'hevy-sync', 'hevy-pull', 'log'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
@@ -765,6 +767,22 @@ async function logText(env, user, from, to) {
   return lines.join('\n');
 }
 
+/* ── push log ──────────────────────────────────────────────────────────
+ * One row per request that looks like it came from the phone rather than
+ * the app, with what it answered. Health Auto Export failing silently is
+ * otherwise invisible from here: no row in hr looks the same whether the
+ * automation never ran, sent the wrong header, or sent a shape the parser
+ * missed. Holds no health data, only sizes, keys and the reply. */
+async function logPush(env, row) {
+  try {
+    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS push_log (id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ts TEXT, user TEXT, header TEXT, bytes INTEGER, keys TEXT, status INTEGER, reply TEXT)`).run();
+    await env.DB.prepare('INSERT INTO push_log (ts,user,header,bytes,keys,status,reply) VALUES (?,?,?,?,?,?,?)')
+      .bind(new Date().toISOString(), row.user, row.header, row.bytes, row.keys, row.status, String(row.reply).slice(0, 400)).run();
+    await env.DB.prepare('DELETE FROM push_log WHERE id < (SELECT MAX(id) - 200 FROM push_log)').run();
+  } catch (e) {}
+}
+
 export default {
   /* Every 30 minutes (wrangler.toml): pull new Hevy workouts for everyone
      with a stored key. */
@@ -850,6 +868,12 @@ export default {
     /* ── read ──────────────────────────────────────────────────── */
     if (request.method === 'GET') {
       const action = url.searchParams.get('action');
+
+      if (action === 'pushlog') {
+        let rows = [];
+        try { rows = (await env.DB.prepare('SELECT ts,user,header,bytes,keys,status,reply FROM push_log ORDER BY id DESC LIMIT 30').all()).results || []; } catch (e) {}
+        return json({ ok: true, pushes: rows });
+      }
 
       if (action === 'log') {
         const user = str(url.searchParams.get('user')).toLowerCase() || 'ikarus';
@@ -986,6 +1010,27 @@ export default {
       const raw = await request.text();
       let body = null;
       try { body = JSON.parse(raw); } catch (e) { /* maybe not JSON at all */ }
+
+      // Anything addressed to a person by URL, or carrying the header, is the
+      // phone; log what it sent and what it got back.
+      const fromPhone = url.searchParams.get('user') || request.headers.get('x-logbook-secret');
+      if (fromPhone) {
+        const given = request.headers.get('x-logbook-secret') || url.searchParams.get('secret') || '';
+        const keysOf = o => {
+          if (!o || typeof o !== 'object') return typeof o;
+          const d = o.data && typeof o.data === 'object' ? o.data : null;
+          return Object.keys(o).join('|') + (d ? ' data:' + Object.keys(d).map(k => k + (Array.isArray(d[k]) ? '[' + d[k].length + ']' : '')).join('|') : '');
+        };
+        const meta = { user: str(url.searchParams.get('user')), header: given ? (given === SECRET ? 'ok' : 'wrong') : 'missing',
+          bytes: raw.length, keys: keysOf(body) };
+        const res = await handlePost();
+        const clone = res.clone();
+        await logPush(env, { ...meta, status: res.status, reply: await clone.text() });
+        return res;
+      }
+      return handlePost();
+
+      async function handlePost() {
 
       /* A bare list of numbers in the body, with everything else in the query
          string. Assembling JSON around a variable is the fiddliest step in
@@ -1213,6 +1258,7 @@ export default {
       } catch (e) { /* the sets are already safe; attribution retries next write */ }
 
       return json({ ok: true, written: rows.length, hr: !!hr, attributed });
+      }
     }
 
     return json({ ok: false, error: 'method not allowed' }, 405);
