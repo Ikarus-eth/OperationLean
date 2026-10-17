@@ -85,6 +85,7 @@ ol li{margin:4px 0}
 <main class="wrap">
   <a class="back" href="./">&larr; Logbook</a>
   <h1>Program to Hevy</h1>
+  <p class="lede" style="margin:0 0 4px;font-size:12px">Version 3 · 17 Oct</p>
   <p class="lede">The program on the Logbook, written into Hevy as one routine per session. Run it again after the program changes and the routines update in place.</p>
 
   <div class="row">
@@ -304,9 +305,11 @@ async function write(api, p, say){
   }
   const done = [];
   for (const rt of p.built) {
-    const exercises = rt.exercises.map(x => ({
-      ...x.body, exercise_template_id: x.body.exercise_template_id || p.byTitle.get(x.hevyName.toLowerCase()),
-    }));
+    const exercises = rt.exercises.map(x => {
+      const e = { ...x.body, exercise_template_id: x.body.exercise_template_id || p.byTitle.get(x.hevyName.toLowerCase()) };
+      Object.keys(e).forEach(k => { if (e[k] == null) delete e[k]; });   // same reason as the sets
+      return e;
+    });
     say(`${rt.id ? 'Updating' : 'Creating'} ${rt.title}…`);
     const r = rt.id
       ? await api('PUT', `/v1/routines/${rt.id}`, { routine: { title: rt.title, notes: rt.notes, exercises } })
