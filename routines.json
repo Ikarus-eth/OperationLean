@@ -1,5 +1,5 @@
 {
- "built": "2026-10-17T01:54:04.027Z",
+ "built": "2026-10-17T02:29:06.533Z",
  "users": {
   "ikarus": [
    {
@@ -1172,15 +1172,15 @@
       }
      },
      {
-      "name": "DB Curl",
-      "hevy": "Bicep Curl (Dumbbell)",
+      "name": "Hammer Curl",
+      "hevy": "Hammer Curl (Dumbbell)",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Bicep Curl (Dumbbell)",
+        "title": "Hammer Curl (Dumbbell)",
         "exercise_type": "weight_reps",
-        "equipment_category": "dumbbell",
+        "equipment_category": "machine",
         "muscle_group": "other",
         "other_muscles": []
        }
@@ -1216,13 +1216,13 @@
       }
      },
      {
-      "name": "Skullcrusher",
-      "hevy": "Skullcrusher (Dumbbell)",
+      "name": "Rope Pushdown",
+      "hevy": "Triceps Rope Pushdown",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Skullcrusher (Dumbbell)",
+        "title": "Triceps Rope Pushdown",
         "exercise_type": "weight_reps",
         "equipment_category": "none",
         "muscle_group": "other",
@@ -2502,15 +2502,15 @@
       }
      },
      {
-      "name": "DB Curl",
-      "hevy": "Bicep Curl (Dumbbell)",
+      "name": "Hammer Curl",
+      "hevy": "Hammer Curl (Dumbbell)",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Bicep Curl (Dumbbell)",
+        "title": "Hammer Curl (Dumbbell)",
         "exercise_type": "weight_reps",
-        "equipment_category": "dumbbell",
+        "equipment_category": "machine",
         "muscle_group": "other",
         "other_muscles": []
        }
@@ -2546,13 +2546,13 @@
       }
      },
      {
-      "name": "Skullcrusher",
-      "hevy": "Skullcrusher (Dumbbell)",
+      "name": "Rope Pushdown",
+      "hevy": "Triceps Rope Pushdown",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Skullcrusher (Dumbbell)",
+        "title": "Triceps Rope Pushdown",
         "exercise_type": "weight_reps",
         "equipment_category": "none",
         "muscle_group": "other",
