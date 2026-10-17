@@ -114,7 +114,7 @@ ol li{margin:4px 0}
       <li>One routine per session (Lower 1, Upper A, Lower 2, Upper B), in a folder called <i>Logbook</i>. A routine with the same title is updated, not duplicated. Edits made to these routines in Hevy are overwritten on the next run, so change the program in the Logbook.</li>
       <li>Names go through the same table as the history export, so routines and imported history land on the same Hevy exercises. A name Hevy does not have is created once as a custom exercise.</li>
       <li>Rep targets become Hevy's rep range; timed sets (dead hang) keep the seconds and belt kg from last time.</li>
-      <li>Superset pairs (A, B, C on the upper days) become Hevy supersets with 75 s rest. Every-day items (pulls, handstand) are left out.</li>
+      <li>Superset pairs (A, B, C on the upper days) become Hevy supersets with 75 s rest. Other exercises get a rest timer: 3 min for the squats and pull-ups, 2-2.5 min for leg press, hip thrust and dead hang, 90 s for curls, extensions and back extension, 30 s for the alternating Copenhagen. Every-day items (pulls, handstand) are left out.</li>
       <li>Target and hint from the Logbook go into each exercise's note.</li>
     </ol>
   </details>
@@ -129,6 +129,20 @@ ol li{margin:4px 0}
 const TITLES = { 'Lower 1': 'Lower 1 · Mon', 'Upper A': 'Upper A · Tue', 'Lower 2': 'Lower 2 · Thu', 'Upper B': 'Upper B · Fri' };
 const FOLDER = 'Logbook';
 const SUPERSET_REST = 75;
+
+/* Rest after each set, for exercises not in a superset. Heavy compound
+   lifts get the longest, since short rests cut the reps done on the next
+   set; isolation work recovers faster. Anything not listed gets REST_DEFAULT.
+   The Copenhagen alternates sides, so each side already rests while the
+   other works. */
+const REST = {
+  'Perfect Squat': 180, 'Belt Squat': 180, 'Pull-ups': 180,
+  'Incline Leg Press': 150, 'Leg Press': 150,
+  'Machine Hip Thrust': 120, 'Dead Hang': 120,
+  'Seated Leg Curl': 90, 'Leg Extension': 90, '45° Back Extension': 90,
+  'Short-Lever Copenhagen': 30, 'Copenhagen Plank': 30,
+};
+const REST_DEFAULT = 120;
 
 /* For a name Hevy does not have, what to create. Only the fields Hevy
    insists on; a wrong muscle group is cosmetic. */
@@ -210,7 +224,7 @@ function buildRoutines(PROGRAM, EX_CFG, HEVY, user, last, templateId, withWeight
         body: {
           exercise_template_id: templateId(HEVY[line.name] || line.name),
           superset_id,
-          rest_seconds: line.pair ? SUPERSET_REST : null,
+          rest_seconds: line.pair ? SUPERSET_REST : (REST[line.name] ?? REST_DEFAULT),
           notes: [cfg.target, cfg.hint].filter(Boolean).join(' — ') || null,
           sets,
         },
@@ -379,7 +393,8 @@ if (typeof document !== 'undefined') (function(){
           : `${sets.length} × ${s0.rep_range ? s0.rep_range.start + '-' + s0.rep_range.end : '—'}${s0.weight_kg != null ? ' @ ' + s0.weight_kg + ' kg' : ''}`;
         const custom = x.body.exercise_template_id ? '' : '<em>new custom exercise</em>';
         const ss = x.body.superset_id != null ? ` <span class="ss">superset ${'ABC'[x.body.superset_id] || x.body.superset_id + 1}</span>` : '';
-        return `<tr><td>${esc(x.name)}${ss}<br><span class="ss">${esc(x.hevyName)}</span>${custom}</td><td>${esc(what)}</td></tr>`;
+        const rest = x.body.rest_seconds ? `, rest ${x.body.rest_seconds} s` : '';
+        return `<tr><td>${esc(x.name)}${ss}<br><span class="ss">${esc(x.hevyName)}</span>${custom}</td><td>${esc(what + rest)}</td></tr>`;
       }).join('');
       return `<section class="rt"><h2>${esc(rt.title)}</h2><p class="act">${rt.id ? 'Updates the existing routine' : 'New routine'}${p.folderId == null && !rt.id ? ', in a new Logbook folder' : ''}</p><table>${rows}</table></section>`;
     }).join('');
