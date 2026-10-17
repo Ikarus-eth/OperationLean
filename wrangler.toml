@@ -18,5 +18,9 @@ binding = "DB"
 database_name = "workoutlog"
 database_id = "eae746b8-c815-4733-a44b-b64c4e6fed71"
 
+# Pulls new Hevy workouts into the log (scheduled() in worker.js).
+[triggers]
+crons = ["*/30 * * * *"]
+
 [observability]
 enabled = true

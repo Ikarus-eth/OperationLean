@@ -23,6 +23,10 @@
  *   GET  ?action=hevy-key&user=&key=&secret=  store a person's Hevy key (secret)
  *   GET  ?action=hevy-sync&user=&secret=      write routines.json into that
  *                                            person's Hevy as routines (secret)
+ *   GET  ?action=hevy-pull&user=&secret=      read new Hevy workouts into the log
+ *                                            (secret; also every 30 min by cron)
+ *   GET  ?action=log&user=&from=&to=          the log as compact text, one line
+ *                                            per exercise, with heart rate (open)
  *
  * Reads are deliberately open: the log is training data and nothing here can
  * reach any other account. Writes still need the secret, so nobody can drop
@@ -72,8 +76,8 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-10-17a';
-const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps', 'last-scoped', 'order', 'hevy', 'hevy-sync'];
+const VERSION  = '2026-10-17b';
+const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps', 'last-scoped', 'order', 'hevy', 'hevy-sync', 'hevy-pull', 'log'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
 const SET_WINDOW_S = 90;      // seconds before a tick that count as "the set"
@@ -406,6 +410,7 @@ const SCHEMA_COLUMNS = [
   ['sets', 'reps_assist',  'REAL'],   // reps finished on the assist machine
   ['hr',   'workout_id',   'TEXT'],
   ['hr',   'workout_type', 'TEXT'],
+  ['sets', 'ts_source',    'TEXT'],   // how set_ts was got: blank = ticked, else estimated (hevy-peak, hevy-even)
 ];
 
 const SCHEMA_INDEXES = [
@@ -596,7 +601,183 @@ async function hevySync(env, user) {
   return report;
 }
 
+/* ── Hevy workouts into the log ────────────────────────────────────────
+ * Sessions logged in Hevy on the watch come back here, so the log stays the
+ * one place all training lives: carry-over, history, the CSV and ?action=log
+ * all see them. Each workout is one batch ('hevy:' + id), replaced whole when
+ * Hevy says it changed and removed when Hevy says it was deleted. A session
+ * already logged in the Logbook for the same day is left alone, so logging
+ * in both never doubles a day.
+ *
+ * Hevy keeps no time per set, so heart rate per set is estimated: each hard
+ * set leaves a peak in the watch trace, and the peaks are matched to the sets
+ * in order. When the trace has too few clear peaks, the sets are spread
+ * evenly across the workout instead. ts_source says which was used. */
+const HEVY_TZ = '+08:00';               // the day a workout belongs to; Bali
+
+function peakTimes(hrRow, fromMs, toMs, n) {
+  const t0 = parseHRDate(hrRow.start);
+  const v = String(hrRow.series_10s || '').split(',').map(Number);
+  const cand = [];
+  for (let i = 0; i < v.length; i++) {
+    const t = t0 + i * 10000;
+    if (t < fromMs || t > toMs + 60000 || !(v[i] > 0)) continue;
+    let top = true;
+    for (let k = Math.max(0, i - 3); k <= Math.min(v.length - 1, i + 3); k++) {
+      if (k !== i && v[k] > v[i]) { top = false; break; }
+      if (k > i && v[k] === v[i]) { top = false; break; }      // a plateau counts once, at its end
+    }
+    if (!top) continue;
+    let low = v[i];
+    for (let k = Math.max(0, i - 9); k < i; k++) if (v[k] > 0 && v[k] < low) low = v[k];
+    if (v[i] - low >= 8) cand.push({ t: t + 10000, rise: v[i] - low });
+  }
+  if (cand.length < n) return null;
+  return cand.sort((a, b) => b.rise - a.rise).slice(0, n).map(c => c.t).sort((a, b) => a - b);
+}
+
+async function importHevyWorkout(env, user, w, names, routineNotes) {
+  const batch = 'hevy:' + w.id;
+  const startMs = Date.parse(w.start_time), endMs = Date.parse(w.end_time);
+  if (!Number.isFinite(startMs)) return { id: w.id, skipped: 'no start time' };
+  const date = dayInZone(startMs, HEVY_TZ);
+  const session = String(w.title || 'Hevy').split(' · ')[0].trim();
+
+  const clash = await env.DB.prepare(
+    "SELECT 1 FROM sets WHERE user = ?1 AND date = ?2 AND session = ?3 AND (batch_id IS NULL OR batch_id NOT LIKE 'hevy:%') LIMIT 1"
+  ).bind(user, date, session).first();
+  if (clash) return { id: w.id, date, session, skipped: 'already logged in the Logbook' };
+
+  const rows = [];
+  for (const ex of (w.exercises || [])) {
+    const name = names[ex.title] || ex.title;
+    const exNote = ex.notes && !routineNotes.has(String(ex.notes).trim()) ? String(ex.notes) : '';
+    let n = 0;
+    for (const s of (ex.sets || [])) {
+      if (s.type === 'warmup') continue;
+      n++;
+      const timed = s.duration_seconds != null && s.reps == null;
+      rows.push({
+        name, set_no: n,
+        weight: s.weight_kg ?? null,
+        reps: timed ? s.duration_seconds : (s.reps ?? null),
+        rir: Number.isFinite(Number(s.rpe)) && s.rpe != null ? Math.max(0, 10 - Number(s.rpe)) : null,
+        exNote,
+      });
+    }
+  }
+  if (!rows.length) return { id: w.id, date, session, skipped: 'no working sets' };
+
+  // When each set ended: from the heart-rate trace if it shows them, else even.
+  let times = null, source = 'hevy-even';
+  const hrRows = (await env.DB.prepare('SELECT start, finish, series_10s FROM hr WHERE user = ?1 AND date = ?2')
+    .bind(user, date).all()).results || [];
+  const hrRow = hrRows.find(h => parseHRDate(h.start) <= endMs && parseHRDate(h.finish) >= startMs);
+  if (hrRow && Number.isFinite(endMs)) {
+    times = peakTimes(hrRow, startMs, endMs, rows.length);
+    if (times) source = 'hevy-peak';
+  }
+  if (!times) {
+    const end = Number.isFinite(endMs) ? endMs : startMs + 3600000;
+    const step = (end - startMs) / (rows.length + 1);
+    times = rows.map((_, i) => Math.round(startMs + step * (i + 1)));
+  }
+
+  const now = new Date().toISOString();
+  const ins = env.DB.prepare(`INSERT INTO sets (ts,date,user,session,exercise,set_no,weight,reps,rir,notes,ex_notes,batch_id,set_ts,ts_source)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+  const stmts = [env.DB.prepare('DELETE FROM sets WHERE batch_id = ?').bind(batch)];
+  rows.forEach((r, i) => stmts.push(ins.bind(now, date, user, session, r.name, r.set_no, r.weight, r.reps, r.rir,
+    str(w.description || ''), r.exNote, batch, new Date(times[i]).toISOString(), source)));
+  await env.DB.batch(stmts);
+  if (hrRow) await env.DB.prepare("UPDATE hr SET session = ?1 WHERE user = ?2 AND start = ?3 AND (session IS NULL OR session = '')")
+    .bind(session, user, hrRow.start).run();
+  const attributed = await attributeDay(env, user, date);
+  return { id: w.id, date, session, sets: rows.length, timing: source, attributed };
+}
+
+async function hevyPull(env, user) {
+  const key = await getSetting(env, 'hevy_key.' + user);
+  if (!key) return { ok: false, user, error: 'no Hevy key stored' };
+  const since = (await getSetting(env, 'hevy_since.' + user)) || '2026-10-17T00:00:00Z';
+  const startedAt = new Date().toISOString();
+  const h = hevyClient(key);
+
+  let plan = { names: {}, users: {} };
+  try { plan = await (await fetch(ROUTINES_URL + '?t=' + Date.now(), { cf: { cacheTtl: 0 } })).json(); } catch (e) {}
+  const names = (plan.names || {})[user] || {};
+  const routineNotes = new Set();
+  ((plan.users || {})[user] || []).forEach(rt => rt.exercises.forEach(x => x.body.notes && routineNotes.add(String(x.body.notes).trim())));
+
+  const events = [];
+  for (let page = 1; page < 100; page++) {
+    const r = await h('GET', `/v1/workouts/events?page=${page}&pageSize=10&since=${encodeURIComponent(since)}`);
+    if (r.status === 404) break;
+    if (!r.ok) return { ok: false, user, error: `events: ${r.status} ${r.text.slice(0, 200)}` };
+    events.push(...(r.json.events || []));
+    if (!r.json.page_count || page >= r.json.page_count) break;
+  }
+
+  const out = { ok: true, user, since, imported: [], deleted: [] };
+  for (const e of events) {
+    if (e.type === 'deleted') {
+      const id = e.id || (e.workout && e.workout.id);
+      if (id) { await env.DB.prepare('DELETE FROM sets WHERE batch_id = ?').bind('hevy:' + id).run(); out.deleted.push(id); }
+    } else if (e.workout) {
+      out.imported.push(await importHevyWorkout(env, user, e.workout, names, routineNotes));
+    }
+  }
+  await setSetting(env, 'hevy_since.' + user, startedAt);
+  return out;
+}
+
+/* The log as text a person or a model can read in one go: one line per
+   exercise per session, every set as weight×reps, RIR, and the peak heart
+   rate of the set, plus the session's heart-rate summary from the watch. */
+async function logText(env, user, from, to) {
+  const sets = (await env.DB.prepare(`SELECT date, session, exercise, set_no, weight, reps, reps_assist, rir, hr_peak, ts_source, ex_notes
+    FROM sets WHERE user = ?1 AND date >= ?2 AND date <= ?3 ORDER BY date, id`).bind(user, from, to).all()).results || [];
+  const hr = (await env.DB.prepare(`SELECT date, duration_min, avg_hr, max_hr, min_above_80, z1, z2, z3, z4, z5, workout_type
+    FROM hr WHERE user = ?1 AND date >= ?2 AND date <= ?3 ORDER BY date, start`).bind(user, from, to).all()).results || [];
+  const lines = [`# ${user} ${from}..${to}  set = kg×reps (s = seconds) rRIR @peak bpm; ~ = bpm from estimated set times`];
+  const byDay = {};
+  for (const s of sets) {
+    const d = (byDay[s.date] = byDay[s.date] || {});
+    const k = s.session + '\u0000' + s.exercise;
+    (d[k] = d[k] || []).push(s);
+  }
+  const days = [...new Set(sets.map(s => s.date).concat(hr.map(h => h.date)))].sort();
+  for (const day of days) {
+    for (const h of hr.filter(x => x.date === day))
+      lines.push(`${day} HR ${h.workout_type || 'workout'}: ${h.duration_min} min, avg ${h.avg_hr}, max ${h.max_hr}, >80% ${h.min_above_80} min, zones ${[h.z1, h.z2, h.z3, h.z4, h.z5].join('/')}`);
+    for (const [k, ss] of Object.entries(byDay[day] || {})) {
+      const [session, exercise] = k.split('\u0000');
+      const parts = ss.map(s => {
+        let p = (s.weight != null && s.weight !== '' ? s.weight + '×' : '') + (s.reps ?? '');
+        if (s.reps_assist) p += '+' + s.reps_assist + 'a';
+        if (s.rir != null && s.rir !== '') p += ' r' + s.rir;
+        if (s.hr_peak) p += ' @' + (s.ts_source ? '~' : '') + s.hr_peak;
+        return p;
+      });
+      lines.push(`${day} ${session} | ${exercise}: ${parts.join(', ')}${ss[0].ex_notes ? '  // ' + String(ss[0].ex_notes).replace(/\s+/g, ' ') : ''}`);
+    }
+  }
+  return lines.join('\n');
+}
+
 export default {
+  /* Every 30 minutes (wrangler.toml): pull new Hevy workouts for everyone
+     with a stored key. */
+  async scheduled(event, env, ctx) {
+    if (!env.DB) return;
+    try { await ensureSchema(env); } catch (e) {}
+    await settingsTable(env);
+    const keys = (await env.DB.prepare("SELECT k FROM settings WHERE k LIKE 'hevy_key.%'").all()).results || [];
+    for (const { k } of keys) {
+      try { await hevyPull(env, k.slice('hevy_key.'.length)); } catch (e) { console.log('hevy pull', k, e.message); }
+    }
+  },
+
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
 
@@ -670,7 +851,14 @@ export default {
     if (request.method === 'GET') {
       const action = url.searchParams.get('action');
 
-      if (action === 'hevy-key' || action === 'hevy-sync') {
+      if (action === 'log') {
+        const user = str(url.searchParams.get('user')).toLowerCase() || 'ikarus';
+        const to = url.searchParams.get('to') || '9999-12-31';
+        const from = url.searchParams.get('from') || new Date(Date.now() - 28 * 86400000).toISOString().slice(0, 10);
+        return new Response(await logText(env, user, from, to), { headers: { ...CORS, 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
+      }
+
+      if (action === 'hevy-key' || action === 'hevy-sync' || action === 'hevy-pull') {
         if (url.searchParams.get('secret') !== SECRET) return json({ ok: false, error: 'unauthorized' }, 401);
         const user = str(url.searchParams.get('user')).toLowerCase();
         if (!/^[a-z]+$/.test(user)) return json({ ok: false, error: 'add &user=ikarus' }, 400);
@@ -681,6 +869,10 @@ export default {
           if (!check.ok && check.status !== 404) return json({ ok: false, error: 'Hevy refused the key: ' + check.status + ' ' + check.text.slice(0, 200) }, 400);
           await setSetting(env, 'hevy_key.' + user, key);
           return json({ ok: true, stored: user });
+        }
+        if (action === 'hevy-pull') {
+          try { return json(await hevyPull(env, user)); }
+          catch (e) { return json({ ok: false, error: e.message }, 502); }
         }
         try { return json(await hevySync(env, user)); }
         catch (e) { return json({ ok: false, error: e.message }, 502); }

@@ -38,5 +38,18 @@ for (const user of Object.keys(PROGRAM)) {
     })),
   }));
 }
+/* Hevy title → Logbook name, for reading workouts back. A person's own
+   program names win, so the incline sled comes back as Incline Leg Press;
+   the rest of the HEVY table fills in, first name kept where two Logbook
+   names share one Hevy exercise. */
+out.names = {};
+for (const user of Object.keys(out.users)) {
+  const own = {};
+  out.users[user].forEach(rt => rt.exercises.forEach(x => { own[x.hevy] = own[x.hevy] || x.name; }));
+  const all = {};
+  Object.entries(HEVY).forEach(([log, hevy]) => { if (!(hevy in all)) all[hevy] = log; });
+  out.names[user] = { ...all, ...own };
+}
+
 fs.writeFileSync(path.join(root, 'routines.json'), JSON.stringify(out, null, 1) + '\n');
 console.log('routines.json:', Object.entries(out.users).map(([u, r]) => u + ' ' + r.length + ' routines').join(', '));
