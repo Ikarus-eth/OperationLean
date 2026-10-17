@@ -89,6 +89,8 @@ Hevy allows one import per account. A wrong one can be reverted from the same sc
 
 `hevy-routines.html` writes the current program into Hevy as routines, one per session, in a folder called Logbook. It needs Hevy Pro and an API key (Hevy ▸ Settings ▸ Developer), kept on the device that pastes it. It reads the program out of `index.html` and the names out of `hevy.html`, so it never drifts from either. Check shows what a write would do; Write creates the routines, or updates them in place when a routine of the same title exists. Run it again after any program change. Calls go through the Worker's `?action=hevy`, which passes them to Hevy with the caller's key and reaches only exercise templates, routines and routine folders.
 
+The Worker can also do it on its own. `?action=hevy-key&user=&key=&secret=` stores a person's key in D1 (checked against Hevy first); `?action=hevy-sync&user=&secret=` reads `routines.json` from this repository, adds weights from the log and Hevy's exercise ids, and writes the routines. `routines.json` is built from the program by `node tools/build-routines.js`, using the same code as the page; rebuild and commit it whenever the program changes, then call the sync.
+
 ## Logging a session
 
 Every field arrives pre-filled with what you did last time — weight, reps and RIR.

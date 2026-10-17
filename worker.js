@@ -20,6 +20,9 @@
  *   GET|POST|PUT ?action=hevy&path=/v1/…     pass-through to Hevy's API with
  *                                            the caller's own key in x-hevy-key,
  *                                            for hevy-routines.html
+ *   GET  ?action=hevy-key&user=&key=&secret=  store a person's Hevy key (secret)
+ *   GET  ?action=hevy-sync&user=&secret=      write routines.json into that
+ *                                            person's Hevy as routines (secret)
  *
  * Reads are deliberately open: the log is training data and nothing here can
  * reach any other account. Writes still need the secret, so nobody can drop
@@ -69,8 +72,8 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-10-15a';
-const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps', 'last-scoped', 'order', 'hevy'];
+const VERSION  = '2026-10-17a';
+const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps', 'last-scoped', 'order', 'hevy', 'hevy-sync'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
 const SET_WINDOW_S = 90;      // seconds before a tick that count as "the set"
@@ -464,6 +467,135 @@ async function hevyProxy(request, url) {
   });
 }
 
+/* ── Hevy sync, run by the Worker itself ───────────────────────────────
+ * The same routines hevy-routines.html writes, without a phone in the loop:
+ * the key is stored once in D1, the routines come from routines.json in
+ * the repository (built from the program by tools/build-routines.js), the
+ * weights come from the log. Calling ?action=hevy-sync again after a
+ * program change updates the routines in place. Both calls are GETs so
+ * they can be made from anywhere a URL can be opened. */
+const ROUTINES_URL = 'https://raw.githubusercontent.com/Ikarus-eth/OperationLean/main/routines.json';
+
+async function settingsTable(env) {
+  await env.DB.prepare('CREATE TABLE IF NOT EXISTS settings (k TEXT PRIMARY KEY, v TEXT, ts TEXT)').run();
+}
+async function getSetting(env, k) {
+  await settingsTable(env);
+  const r = await env.DB.prepare('SELECT v FROM settings WHERE k = ?1').bind(k).first();
+  return r ? r.v : null;
+}
+async function setSetting(env, k, v) {
+  await settingsTable(env);
+  await env.DB.prepare('INSERT INTO settings (k, v, ts) VALUES (?1, ?2, ?3) ON CONFLICT(k) DO UPDATE SET v = ?2, ts = ?3')
+    .bind(k, v, new Date().toISOString()).run();
+}
+
+function hevyClient(key) {
+  return async (method, path, body) => {
+    const init = { method, headers: { 'api-key': key, accept: 'application/json' } };
+    if (body) { init.headers['content-type'] = 'application/json'; init.body = JSON.stringify(body); }
+    const res = await fetch('https://api.hevyapp.com' + path, init);
+    const text = await res.text();
+    let j = null; try { j = JSON.parse(text); } catch (e) {}
+    return { ok: res.ok, status: res.status, text, json: j || {} };
+  };
+}
+function findIdIn(o) {
+  if (!o || typeof o !== 'object') return null;
+  if (o.id != null && (typeof o.id === 'string' || typeof o.id === 'number')) return o.id;
+  for (const v of Object.values(o)) {
+    const hit = Array.isArray(v) ? (v.length ? findIdIn(v[0]) : null) : findIdIn(v);
+    if (hit != null) return hit;
+  }
+  return null;
+}
+async function hevyListAll(h, path, key, size) {
+  const out = [];
+  for (let page = 1; page < 200; page++) {
+    const r = await h('GET', `${path}?page=${page}&pageSize=${size}`);
+    if (r.status === 404) break;
+    if (!r.ok) throw new Error(`${path}: ${r.status} ${r.text.slice(0, 200)}`);
+    out.push(...(r.json[key] || []));
+    if (!r.json.page_count || page >= r.json.page_count) break;
+  }
+  return out;
+}
+const dropNulls = o => { Object.keys(o).forEach(k => { if (o[k] == null) delete o[k]; }); return o; };
+
+async function hevySync(env, user) {
+  const key = await getSetting(env, 'hevy_key.' + user);
+  if (!key) return { ok: false, error: 'no Hevy key stored for ' + user };
+  const res = await fetch(ROUTINES_URL + '?t=' + Date.now(), { cf: { cacheTtl: 0 } });
+  if (!res.ok) return { ok: false, error: 'routines.json: ' + res.status };
+  const plan = await res.json();
+  const routines = (plan.users || {})[user];
+  if (!routines) return { ok: false, error: 'routines.json has nothing for ' + user };
+
+  // Last logged sets per exercise, to open each routine set at that weight.
+  const lastRows = await env.DB.prepare(`
+    SELECT s.exercise, s.set_no, s.weight, s.reps FROM sets s
+    JOIN (SELECT exercise, MAX(date) AS d FROM sets WHERE user = ?1 AND session != 'Daily' GROUP BY exercise) m
+      ON s.exercise = m.exercise AND s.date = m.d
+    WHERE s.user = ?1 ORDER BY s.exercise, s.set_no`).bind(user).all();
+  const last = {};
+  for (const r of lastRows.results || []) (last[r.exercise] = last[r.exercise] || []).push(r);
+
+  const h = hevyClient(key);
+  const report = { ok: true, user, built: plan.built, customs: [], routines: [] };
+  const [templates, existing, folders] = await Promise.all([
+    hevyListAll(h, '/v1/exercise_templates', 'exercise_templates', 100),
+    hevyListAll(h, '/v1/routines', 'routines', 10),
+    hevyListAll(h, '/v1/routine_folders', 'routine_folders', 10),
+  ]);
+  const ids = new Map(templates.map(t => [String(t.title).toLowerCase(), t.id]));
+
+  for (const rt of routines) for (const x of rt.exercises) {
+    if (ids.has(x.hevy.toLowerCase()) || !x.custom) continue;
+    const r = await h('POST', '/v1/exercise_templates', x.custom);
+    if (!r.ok) throw new Error(`custom ${x.hevy}: ${r.status} ${r.text.slice(0, 200)}`);
+    let id = findIdIn(r.json);
+    if (id == null) id = r.text.trim().replace(/"/g, '') || null;
+    ids.set(x.hevy.toLowerCase(), String(id));
+    report.customs.push(x.hevy);
+  }
+
+  let folder = folders.find(f => f.title === 'Logbook');
+  let folderId = folder ? folder.id : null;
+
+  for (const rt of routines) {
+    const exercises = rt.exercises.map(x => {
+      const prev = last[x.name] || [];
+      const sets = x.body.sets.map((s, i) => {
+        const p = prev[i] || prev[prev.length - 1];
+        const out = { ...s };
+        if (p) {
+          const w = Number(p.weight), r = Number(p.reps);
+          if ((x.type === 'weight_reps' || x.type === 'weight_duration') && Number.isFinite(w) && p.weight !== null && p.weight !== '') out.weight_kg = w;
+          if ((x.type === 'duration' || x.type === 'weight_duration') && Number.isFinite(r) && r > 0) out.duration_seconds = Math.round(r * (x.timedUnit === 'min' ? 60 : 1));
+        }
+        return dropNulls(out);
+      });
+      return dropNulls({ ...x.body, exercise_template_id: ids.get(x.hevy.toLowerCase()), sets });
+    });
+    const missing = rt.exercises.filter((x, i) => !exercises[i].exercise_template_id).map(x => x.hevy);
+    if (missing.length) { report.routines.push({ title: rt.title, ok: false, error: 'no Hevy exercise for ' + missing.join(', ') }); report.ok = false; continue; }
+    const have = existing.find(e => e.title === rt.title);
+    let r;
+    if (have) {
+      r = await h('PUT', `/v1/routines/${have.id}`, { routine: { title: rt.title, notes: rt.notes, exercises } });
+    } else {
+      if (folderId == null) {
+        const f = await h('POST', '/v1/routine_folders', { routine_folder: { title: 'Logbook' } });
+        folderId = f.ok ? findIdIn(f.json) : null;
+      }
+      r = await h('POST', '/v1/routines', { routine: { title: rt.title, folder_id: folderId, notes: rt.notes, exercises } });
+    }
+    report.routines.push({ title: rt.title, action: have ? 'updated' : 'created', ok: r.ok, status: r.status, error: r.ok ? undefined : r.text.slice(0, 300) });
+    if (!r.ok) report.ok = false;
+  }
+  return report;
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
@@ -537,6 +669,22 @@ export default {
     /* ── read ──────────────────────────────────────────────────── */
     if (request.method === 'GET') {
       const action = url.searchParams.get('action');
+
+      if (action === 'hevy-key' || action === 'hevy-sync') {
+        if (url.searchParams.get('secret') !== SECRET) return json({ ok: false, error: 'unauthorized' }, 401);
+        const user = str(url.searchParams.get('user')).toLowerCase();
+        if (!/^[a-z]+$/.test(user)) return json({ ok: false, error: 'add &user=ikarus' }, 400);
+        if (action === 'hevy-key') {
+          const key = str(url.searchParams.get('key')).trim();
+          if (!/^[0-9a-fA-F-]{20,64}$/.test(key)) return json({ ok: false, error: 'that does not look like a Hevy API key' }, 400);
+          const check = await hevyClient(key)('GET', '/v1/routines?page=1&pageSize=1');
+          if (!check.ok && check.status !== 404) return json({ ok: false, error: 'Hevy refused the key: ' + check.status + ' ' + check.text.slice(0, 200) }, 400);
+          await setSetting(env, 'hevy_key.' + user, key);
+          return json({ ok: true, stored: user });
+        }
+        try { return json(await hevySync(env, user)); }
+        catch (e) { return json({ ok: false, error: e.message }, 502); }
+      }
 
       if (action === 'last') {
         const user = url.searchParams.get('user') || '';

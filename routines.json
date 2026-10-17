@@ -1,0 +1,2596 @@
+{
+ "built": "2026-10-17T01:47:28.145Z",
+ "users": {
+  "ikarus": [
+   {
+    "title": "Lower 1 · Mon",
+    "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
+    "exercises": [
+     {
+      "name": "Perfect Squat",
+      "hevy": "Perfect Squat",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Perfect Squat",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "quadriceps",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 180,
+       "notes": "3 × 6-10 — RIR 2-3 — add reps at the same weight before adding weight",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 6,
+          "end": 10
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 6,
+          "end": 10
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 6,
+          "end": 10
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Incline Leg Press",
+      "hevy": "Leg Press (Machine)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Leg Press (Machine)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 150,
+       "notes": "3 × 8-12 — feet low, shoulder-width, toes out — stop the descent where the right heel starts to lift",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Machine Hip Thrust",
+      "hevy": "Hip Thrust (Machine)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Hip Thrust (Machine)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 120,
+       "notes": "3 × 8-12 — shins vertical at the top, knees at 90° — quads burning: feet further out; hamstrings cramping: feet closer. Push through the heels, right forefoot light",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Seated Leg Curl",
+      "hevy": "Seated Leg Curl (Machine)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Seated Leg Curl (Machine)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 90,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "45° Back Extension",
+      "hevy": "Back Extension (Weighted Hyperextension)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Back Extension (Weighted Hyperextension)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 90,
+       "notes": "3 × 10-15 — DB at chest, round-back",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Dead Hang",
+      "hevy": "Dead Hang",
+      "type": "weight_duration",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Dead Hang",
+        "exercise_type": "weight_duration",
+        "equipment_category": "none",
+        "muscle_group": "forearms",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 120,
+       "notes": "3 × 30-45 s — in place of carries — same belt kg on all three sets; add weight once every set passes 45 s",
+       "sets": [
+        {
+         "type": "normal",
+         "duration_seconds": 30
+        },
+        {
+         "type": "normal",
+         "duration_seconds": 30
+        },
+        {
+         "type": "normal",
+         "duration_seconds": 30
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Upper A · Tue",
+    "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
+    "exercises": [
+     {
+      "name": "Pull-ups",
+      "hevy": "Pull Up",
+      "type": "bodyweight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Pull Up",
+        "exercise_type": "bodyweight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 180,
+       "notes": "3 × 10 — bodyweight to failure, then fill to ten on the machine — full rest",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 10
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 10
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 10
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Incline DB Press",
+      "hevy": "Incline Bench Press (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Incline Bench Press (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Chest-Supported Row",
+      "hevy": "Chest Supported Incline Row (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Chest Supported Incline Row (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Flat DB Press",
+      "hevy": "Bench Press (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Bench Press (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 1,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Rear Delt Fly",
+      "hevy": "Rear Delt Reverse Fly (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Rear Delt Reverse Fly (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 1,
+       "rest_seconds": 75,
+       "notes": "3 × 12-20",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Lateral Raise",
+      "hevy": "Lateral Raise (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Lateral Raise (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "4 × 12-20",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Incline DB Curl",
+      "hevy": "Seated Incline Curl (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Seated Incline Curl (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Overhead Triceps Ext",
+      "hevy": "Triceps Extension (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Triceps Extension (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "3 × 10-15",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Lower 2 · Thu",
+    "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
+    "exercises": [
+     {
+      "name": "Belt Squat",
+      "hevy": "Belt Squat (Machine)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Belt Squat (Machine)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "quadriceps",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 180,
+       "notes": "3 × 8-12 — full depth — build back toward the pre-fracture 120 × 8",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "45° Back Extension",
+      "hevy": "Back Extension (Weighted Hyperextension)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Back Extension (Weighted Hyperextension)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 90,
+       "notes": "3 × 10-15 — DB at chest, round-back",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Leg Extension",
+      "hevy": "Leg Extension (Machine)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Leg Extension (Machine)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 90,
+       "notes": "3 × 12-15",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 15
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Seated Leg Curl",
+      "hevy": "Seated Leg Curl (Machine)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Seated Leg Curl (Machine)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 90,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Short-Lever Copenhagen",
+      "hevy": "Short-Lever Copenhagen",
+      "type": "reps_only",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Short-Lever Copenhagen",
+        "exercise_type": "reps_only",
+        "equipment_category": "none",
+        "muscle_group": "adductors",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 30,
+       "notes": "2 × 10-15 per side — knee on the bench; sets go left, right, left, right. The bottom foot never touches the floor",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Dead Hang",
+      "hevy": "Dead Hang",
+      "type": "weight_duration",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Dead Hang",
+        "exercise_type": "weight_duration",
+        "equipment_category": "none",
+        "muscle_group": "forearms",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 120,
+       "notes": "3 × 30-45 s — in place of carries — same belt kg on all three sets; add weight once every set passes 45 s",
+       "sets": [
+        {
+         "type": "normal",
+         "duration_seconds": 30
+        },
+        {
+         "type": "normal",
+         "duration_seconds": 30
+        },
+        {
+         "type": "normal",
+         "duration_seconds": 30
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Upper B · Fri",
+    "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
+    "exercises": [
+     {
+      "name": "Pull-ups",
+      "hevy": "Pull Up",
+      "type": "bodyweight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Pull Up",
+        "exercise_type": "bodyweight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 180,
+       "notes": "3 × 10 — bodyweight to failure, then fill to ten on the machine — volume day",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 10
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 10
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 10
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Lat Pulldown",
+      "hevy": "Lat Pulldown (Cable)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Lat Pulldown (Cable)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Incline DB Press",
+      "hevy": "Incline Bench Press (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Incline Bench Press (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Single-Arm DB Row",
+      "hevy": "Dumbbell Row",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Dumbbell Row",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 1,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "DB Fly",
+      "hevy": "Chest Fly (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Chest Fly (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 1,
+       "rest_seconds": 75,
+       "notes": "3 × 10-15",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Lateral Raise",
+      "hevy": "Lateral Raise (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Lateral Raise (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "4 × 12-20",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "DB Curl",
+      "hevy": "Bicep Curl (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Bicep Curl (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "3 × 10-15",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Skullcrusher",
+      "hevy": "Skullcrusher (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Skullcrusher (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "3 × 10-15",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     }
+    ]
+   }
+  ],
+  "johanna": [
+   {
+    "title": "Lower 1 · Mon",
+    "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
+    "exercises": [
+     {
+      "name": "Jumps",
+      "hevy": "Box Jump",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Box Jump",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 120,
+       "notes": "3-4 × 3-5 — box height in inches, then reps",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 3,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 3,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 3,
+          "end": 4
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Perfect Squat",
+      "hevy": "Perfect Squat",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Perfect Squat",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "quadriceps",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 180,
+       "notes": "3 × 6-10",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 6,
+          "end": 10
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 6,
+          "end": 10
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 6,
+          "end": 10
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Hip Thrust",
+      "hevy": "Hip Thrust (Barbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Hip Thrust (Barbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 120,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Incline Leg Press",
+      "hevy": "Leg Press (Machine)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Leg Press (Machine)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 150,
+       "notes": "3 × 8-12 — deep, feet low, shoulder-width, toes out",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Seated Leg Curl",
+      "hevy": "Seated Leg Curl (Machine)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Seated Leg Curl (Machine)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 90,
+       "notes": "4 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Standing Calf Raise",
+      "hevy": "Standing Calf Raise (Machine)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Standing Calf Raise (Machine)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 120,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Carries",
+      "hevy": "Farmers Walk",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Farmers Walk",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 120,
+       "notes": "2 sets — log seconds in the reps box",
+       "sets": [
+        {
+         "type": "normal"
+        },
+        {
+         "type": "normal"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Upper A · Tue",
+    "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
+    "exercises": [
+     {
+      "name": "Pull-ups",
+      "hevy": "Pull Up",
+      "type": "bodyweight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Pull Up",
+        "exercise_type": "bodyweight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 180,
+       "notes": "3 × 10 — bodyweight to failure, then fill to ten on the machine — full rest",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 10
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 10
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 10
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Incline DB Press",
+      "hevy": "Incline Bench Press (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Incline Bench Press (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Chest-Supported Row",
+      "hevy": "Chest Supported Incline Row (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Chest Supported Incline Row (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Flat DB Press",
+      "hevy": "Bench Press (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Bench Press (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 1,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Rear Delt Fly",
+      "hevy": "Rear Delt Reverse Fly (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Rear Delt Reverse Fly (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 1,
+       "rest_seconds": 75,
+       "notes": "3 × 12-20",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Lateral Raise",
+      "hevy": "Lateral Raise (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Lateral Raise (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "4 × 12-20",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Incline DB Curl",
+      "hevy": "Seated Incline Curl (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Seated Incline Curl (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Overhead Triceps Ext",
+      "hevy": "Triceps Extension (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Triceps Extension (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "3 × 10-15",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Lower 2 · Thu",
+    "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
+    "exercises": [
+     {
+      "name": "Belt Squat",
+      "hevy": "Belt Squat (Machine)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Belt Squat (Machine)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "quadriceps",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 180,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "45° Back Extension",
+      "hevy": "Back Extension (Weighted Hyperextension)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Back Extension (Weighted Hyperextension)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 90,
+       "notes": "3 × 10-15 — DB at chest, round-back",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Leg Extension",
+      "hevy": "Leg Extension (Machine)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Leg Extension (Machine)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 90,
+       "notes": "3 × 12-15",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 15
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Seated Leg Curl",
+      "hevy": "Seated Leg Curl (Machine)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Seated Leg Curl (Machine)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 90,
+       "notes": "4 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Seated Calf Raise",
+      "hevy": "Seated Calf Raise",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Seated Calf Raise",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 120,
+       "notes": "2 × 10-15",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Copenhagen Plank",
+      "hevy": "Copenhagen Plank",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Copenhagen Plank",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "adductors",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 30,
+       "notes": "2 × 10-15",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Carries",
+      "hevy": "Farmers Walk",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Farmers Walk",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 120,
+       "notes": "2 sets — log seconds in the reps box",
+       "sets": [
+        {
+         "type": "normal"
+        },
+        {
+         "type": "normal"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Upper B · Fri",
+    "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
+    "exercises": [
+     {
+      "name": "Pull-ups",
+      "hevy": "Pull Up",
+      "type": "bodyweight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Pull Up",
+        "exercise_type": "bodyweight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 180,
+       "notes": "3 × 10 — bodyweight to failure, then fill to ten on the machine — volume day",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 10
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 10
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 10
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Lat Pulldown",
+      "hevy": "Lat Pulldown (Cable)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Lat Pulldown (Cable)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Incline DB Press",
+      "hevy": "Incline Bench Press (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Incline Bench Press (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Single-Arm DB Row",
+      "hevy": "Dumbbell Row",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Dumbbell Row",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 1,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "DB Fly",
+      "hevy": "Chest Fly (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Chest Fly (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 1,
+       "rest_seconds": 75,
+       "notes": "3 × 10-15",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Lateral Raise",
+      "hevy": "Lateral Raise (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Lateral Raise (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "4 × 12-20",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "DB Curl",
+      "hevy": "Bicep Curl (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Bicep Curl (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "3 × 10-15",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Skullcrusher",
+      "hevy": "Skullcrusher (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Skullcrusher (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "3 × 10-15",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     }
+    ]
+   }
+  ]
+ }
+}
