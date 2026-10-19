@@ -78,7 +78,7 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-10-19a';
+const VERSION  = '2026-10-19b';
 const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps', 'last-scoped', 'order', 'hevy', 'hevy-sync', 'hevy-pull', 'log'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
@@ -652,8 +652,10 @@ async function importHevyWorkout(env, user, w, names, routineNotes) {
   ).bind(user, date, session).first();
   if (clash) return { id: w.id, date, session, skipped: 'already logged in the Logbook' };
 
-  const rows = [];
+  const perEx = [];
   for (const ex of (w.exercises || [])) {
+    const rows = [];
+    perEx.push({ superset: ex.superset_id ?? null, rows });
     const name = names[ex.title] || ex.title;
     const exNote = ex.notes && !routineNotes.has(String(ex.notes).trim()) ? String(ex.notes) : '';
     let n = 0;
@@ -669,6 +671,18 @@ async function importHevyWorkout(env, user, w, names, routineNotes) {
         exNote,
       });
     }
+  }
+  /* The order the sets were done in, which the heart-rate peaks follow:
+     straight down for a lone exercise, round-robin for a superset (A1, B1,
+     A2, B2…), since the watch walks a superset that way. */
+  const rows = [];
+  for (let i = 0; i < perEx.length; ) {
+    let j = i + 1;
+    if (perEx[i].superset != null) while (j < perEx.length && perEx[j].superset === perEx[i].superset) j++;
+    const group = perEx.slice(i, j);
+    const most = Math.max(...group.map(g => g.rows.length));
+    for (let k = 0; k < most; k++) group.forEach(g => { if (g.rows[k]) rows.push(g.rows[k]); });
+    i = j;
   }
   if (!rows.length) return { id: w.id, date, session, skipped: 'no working sets' };
 

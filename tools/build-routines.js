@@ -24,13 +24,14 @@ const { PROGRAM, EX_CFG } = new Function(progBlock + '\nreturn { PROGRAM, EX_CFG
 const HEVY = new Function(/const HEVY = \{[\s\S]*?\n\};/.exec(read('hevy.html'))[0] + '\nreturn HEVY;')();
 
 /* The every-day pulls belong in Hevy too, or they go unlogged on the
-   watch: at the end of both lower days (the upper days have pull-ups),
+   watch: at the start of both lower days (the upper days have pull-ups),
    and as a routine of their own for Wednesday, Saturday and Sunday.
    Handstand is left out while the toe keeps it off the program. */
 const DAILY_PULLS = { name: 'Pulls', target: '3 × 4', sets: 3, fields: ['r'], fixed: { r: '4' } };
 for (const user of Object.keys(PROGRAM)) {
   const s = PROGRAM[user].sessions;
-  ['Lower 1', 'Lower 2'].forEach(k => { if (s[k] && !s[k].some(l => l.name === 'Pulls')) s[k] = s[k].concat([DAILY_PULLS]); });
+  // First, as Ikarus does them: before the squats, while the grip is fresh.
+  ['Lower 1', 'Lower 2'].forEach(k => { if (s[k] && !s[k].some(l => l.name === 'Pulls')) s[k] = [DAILY_PULLS].concat(s[k]); });
   s['Pulls'] = [DAILY_PULLS];
 }
 

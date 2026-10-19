@@ -1,11 +1,55 @@
 {
- "built": "2026-10-19T01:57:29.013Z",
+ "built": "2026-10-19T02:07:39.071Z",
  "users": {
   "ikarus": [
    {
     "title": "Lower 1 · Mon",
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
+     {
+      "name": "Pulls",
+      "hevy": "Pulls",
+      "type": "reps_only",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Pulls",
+        "exercise_type": "reps_only",
+        "equipment_category": "none",
+        "muscle_group": "lats",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 60,
+       "notes": "3 × 4",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        }
+       ]
+      }
+     },
      {
       "name": "Perfect Squat",
       "hevy": "Perfect Squat",
@@ -154,8 +198,8 @@
       },
       "body": {
        "exercise_template_id": null,
-       "superset_id": null,
-       "rest_seconds": 90,
+       "superset_id": 0,
+       "rest_seconds": 75,
        "notes": "3 × 8-12",
        "sets": [
         {
@@ -178,6 +222,41 @@
           "start": 8,
           "end": 12
          }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Dead Hang",
+      "hevy": "Dead Hang (Weighted)",
+      "type": "weight_duration",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Dead Hang (Weighted)",
+        "exercise_type": "weight_duration",
+        "equipment_category": "none",
+        "muscle_group": "forearms",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 30-45 s — in place of carries — same belt kg on all three sets; add weight once every set passes 45 s",
+       "sets": [
+        {
+         "type": "normal",
+         "duration_seconds": 30
+        },
+        {
+         "type": "normal",
+         "duration_seconds": 30
+        },
+        {
+         "type": "normal",
+         "duration_seconds": 30
         }
        ]
       }
@@ -221,85 +300,6 @@
          "rep_range": {
           "start": 10,
           "end": 15
-         }
-        }
-       ]
-      }
-     },
-     {
-      "name": "Dead Hang",
-      "hevy": "Dead Hang (Weighted)",
-      "type": "weight_duration",
-      "timedUnit": "sec",
-      "custom": {
-       "exercise": {
-        "title": "Dead Hang (Weighted)",
-        "exercise_type": "weight_duration",
-        "equipment_category": "none",
-        "muscle_group": "forearms",
-        "other_muscles": []
-       }
-      },
-      "body": {
-       "exercise_template_id": null,
-       "superset_id": null,
-       "rest_seconds": 120,
-       "notes": "3 × 30-45 s — in place of carries — same belt kg on all three sets; add weight once every set passes 45 s",
-       "sets": [
-        {
-         "type": "normal",
-         "duration_seconds": 30
-        },
-        {
-         "type": "normal",
-         "duration_seconds": 30
-        },
-        {
-         "type": "normal",
-         "duration_seconds": 30
-        }
-       ]
-      }
-     },
-     {
-      "name": "Pulls",
-      "hevy": "Pulls",
-      "type": "reps_only",
-      "timedUnit": "sec",
-      "custom": {
-       "exercise": {
-        "title": "Pulls",
-        "exercise_type": "reps_only",
-        "equipment_category": "none",
-        "muscle_group": "lats",
-        "other_muscles": []
-       }
-      },
-      "body": {
-       "exercise_template_id": null,
-       "superset_id": null,
-       "rest_seconds": 60,
-       "notes": "3 × 4",
-       "sets": [
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 4,
-          "end": 4
-         }
-        },
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 4,
-          "end": 4
-         }
-        },
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 4,
-          "end": 4
          }
         }
        ]
@@ -677,6 +677,50 @@
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
      {
+      "name": "Pulls",
+      "hevy": "Pulls",
+      "type": "reps_only",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Pulls",
+        "exercise_type": "reps_only",
+        "equipment_category": "none",
+        "muscle_group": "lats",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 60,
+       "notes": "3 × 4",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        }
+       ]
+      }
+     },
+     {
       "name": "Belt Squat",
       "hevy": "Belt Squat (Machine)",
       "type": "weight_reps",
@@ -824,8 +868,8 @@
       },
       "body": {
        "exercise_template_id": null,
-       "superset_id": null,
-       "rest_seconds": 90,
+       "superset_id": 0,
+       "rest_seconds": 75,
        "notes": "3 × 8-12",
        "sets": [
         {
@@ -848,6 +892,41 @@
           "start": 8,
           "end": 12
          }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Dead Hang",
+      "hevy": "Dead Hang (Weighted)",
+      "type": "weight_duration",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Dead Hang (Weighted)",
+        "exercise_type": "weight_duration",
+        "equipment_category": "none",
+        "muscle_group": "forearms",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 30-45 s — in place of carries — same belt kg on all three sets; add weight once every set passes 45 s",
+       "sets": [
+        {
+         "type": "normal",
+         "duration_seconds": 30
+        },
+        {
+         "type": "normal",
+         "duration_seconds": 30
+        },
+        {
+         "type": "normal",
+         "duration_seconds": 30
         }
        ]
       }
@@ -898,85 +977,6 @@
          "rep_range": {
           "start": 10,
           "end": 15
-         }
-        }
-       ]
-      }
-     },
-     {
-      "name": "Dead Hang",
-      "hevy": "Dead Hang (Weighted)",
-      "type": "weight_duration",
-      "timedUnit": "sec",
-      "custom": {
-       "exercise": {
-        "title": "Dead Hang (Weighted)",
-        "exercise_type": "weight_duration",
-        "equipment_category": "none",
-        "muscle_group": "forearms",
-        "other_muscles": []
-       }
-      },
-      "body": {
-       "exercise_template_id": null,
-       "superset_id": null,
-       "rest_seconds": 120,
-       "notes": "3 × 30-45 s — in place of carries — same belt kg on all three sets; add weight once every set passes 45 s",
-       "sets": [
-        {
-         "type": "normal",
-         "duration_seconds": 30
-        },
-        {
-         "type": "normal",
-         "duration_seconds": 30
-        },
-        {
-         "type": "normal",
-         "duration_seconds": 30
-        }
-       ]
-      }
-     },
-     {
-      "name": "Pulls",
-      "hevy": "Pulls",
-      "type": "reps_only",
-      "timedUnit": "sec",
-      "custom": {
-       "exercise": {
-        "title": "Pulls",
-        "exercise_type": "reps_only",
-        "equipment_category": "none",
-        "muscle_group": "lats",
-        "other_muscles": []
-       }
-      },
-      "body": {
-       "exercise_template_id": null,
-       "superset_id": null,
-       "rest_seconds": 60,
-       "notes": "3 × 4",
-       "sets": [
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 4,
-          "end": 4
-         }
-        },
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 4,
-          "end": 4
-         }
-        },
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 4,
-          "end": 4
          }
         }
        ]
@@ -1406,6 +1406,50 @@
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
      {
+      "name": "Pulls",
+      "hevy": "Pulls",
+      "type": "reps_only",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Pulls",
+        "exercise_type": "reps_only",
+        "equipment_category": "none",
+        "muscle_group": "lats",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 60,
+       "notes": "3 × 4",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        }
+       ]
+      }
+     },
+     {
       "name": "Jumps",
       "hevy": "Box Jump",
       "type": "weight_reps",
@@ -1701,50 +1745,6 @@
         },
         {
          "type": "normal"
-        }
-       ]
-      }
-     },
-     {
-      "name": "Pulls",
-      "hevy": "Pulls",
-      "type": "reps_only",
-      "timedUnit": "sec",
-      "custom": {
-       "exercise": {
-        "title": "Pulls",
-        "exercise_type": "reps_only",
-        "equipment_category": "none",
-        "muscle_group": "lats",
-        "other_muscles": []
-       }
-      },
-      "body": {
-       "exercise_template_id": null,
-       "superset_id": null,
-       "rest_seconds": 60,
-       "notes": "3 × 4",
-       "sets": [
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 4,
-          "end": 4
-         }
-        },
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 4,
-          "end": 4
-         }
-        },
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 4,
-          "end": 4
-         }
         }
        ]
       }
@@ -2121,6 +2121,50 @@
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
      {
+      "name": "Pulls",
+      "hevy": "Pulls",
+      "type": "reps_only",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Pulls",
+        "exercise_type": "reps_only",
+        "equipment_category": "none",
+        "muscle_group": "lats",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 60,
+       "notes": "3 × 4",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        }
+       ]
+      }
+     },
+     {
       "name": "Belt Squat",
       "hevy": "Belt Squat (Machine)",
       "type": "weight_reps",
@@ -2402,50 +2446,6 @@
         },
         {
          "type": "normal"
-        }
-       ]
-      }
-     },
-     {
-      "name": "Pulls",
-      "hevy": "Pulls",
-      "type": "reps_only",
-      "timedUnit": "sec",
-      "custom": {
-       "exercise": {
-        "title": "Pulls",
-        "exercise_type": "reps_only",
-        "equipment_category": "none",
-        "muscle_group": "lats",
-        "other_muscles": []
-       }
-      },
-      "body": {
-       "exercise_template_id": null,
-       "superset_id": null,
-       "rest_seconds": 60,
-       "notes": "3 × 4",
-       "sets": [
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 4,
-          "end": 4
-         }
-        },
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 4,
-          "end": 4
-         }
-        },
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 4,
-          "end": 4
-         }
         }
        ]
       }

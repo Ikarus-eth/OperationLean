@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 23, at: '17 Oct 2026, 10:30' };
+const BUILD = { n: 24, at: '19 Oct 2026, 10:12' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -112,6 +112,9 @@ const SESSIONS_JOHANNA = JSON.parse(JSON.stringify(SESSIONS_IKARUS));
    Copenhagen Plank from about 29 Oct. Dead Hang replaces carries and
    takes belt weight. Monday opens with the three machines in the
    squat room: Perfect Squat, incline leg press, hip thrust.
+
+   19 Oct 2026: dead hangs go between the leg-curl sets (pair A), the
+   way Ikarus trains them: grip work while the hamstrings rest.
    ══════════════════════════════════════════════════════════════════ */
 Object.assign(SESSIONS_IKARUS, {
     'Lower 1': [
@@ -120,22 +123,22 @@ Object.assign(SESSIONS_IKARUS, {
         hint: 'feet low, shoulder-width, toes out — stop the descent where the right heel starts to lift' },
       { name: 'Machine Hip Thrust',    target: '3 × 8-12',  sets: 3,
         hint: 'shins vertical at the top, knees at 90° — quads burning: feet further out; hamstrings cramping: feet closer. Push through the heels, right forefoot light' },
-      { name: 'Seated Leg Curl',       target: '3 × 8-12',  sets: 3 },
-      { name: '45° Back Extension',    target: '3 × 10-15', sets: 3, hint: 'DB at chest, round-back' },
-      { name: 'Dead Hang',             target: '3 × 30-45 s', sets: 3, fields: ['w','r'],
+      { name: 'Seated Leg Curl',       target: '3 × 8-12',  sets: 3, pair: 'A' },
+      { name: 'Dead Hang',             target: '3 × 30-45 s', sets: 3, pair: 'A', fields: ['w','r'],
         units: { w: 'belt kg', r: 'sec' }, progress: 'load',
         hint: 'in place of carries — same belt kg on all three sets; add weight once every set passes 45 s' },
+      { name: '45° Back Extension',    target: '3 × 10-15', sets: 3, hint: 'DB at chest, round-back' },
     ],
     'Lower 2': [
       { name: 'Belt Squat',            target: '3 × 8-12',  sets: 3, hint: 'full depth — build back toward the pre-fracture 120 × 8' },
       { name: '45° Back Extension',    target: '3 × 10-15', sets: 3, hint: 'DB at chest, round-back' },
       { name: 'Leg Extension',         target: '3 × 12-15', sets: 3 },
-      { name: 'Seated Leg Curl',       target: '3 × 8-12',  sets: 3 },
-      { name: 'Short-Lever Copenhagen', target: '2 × 10-15 per side', sets: 4, fields: ['r','rir'],
-        hint: 'knee on the bench; sets go left, right, left, right. The bottom foot never touches the floor' },
-      { name: 'Dead Hang',             target: '3 × 30-45 s', sets: 3, fields: ['w','r'],
+      { name: 'Seated Leg Curl',       target: '3 × 8-12',  sets: 3, pair: 'A' },
+      { name: 'Dead Hang',             target: '3 × 30-45 s', sets: 3, pair: 'A', fields: ['w','r'],
         units: { w: 'belt kg', r: 'sec' }, progress: 'load',
         hint: 'in place of carries — same belt kg on all three sets; add weight once every set passes 45 s' },
+      { name: 'Short-Lever Copenhagen', target: '2 × 10-15 per side', sets: 4, fields: ['r','rir'],
+        hint: 'knee on the bench; sets go left, right, left, right. The bottom foot never touches the floor' },
     ],
 });
 const PROGRAM = {
