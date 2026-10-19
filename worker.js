@@ -78,7 +78,7 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-10-17d';
+const VERSION  = '2026-10-19a';
 const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps', 'last-scoped', 'order', 'hevy', 'hevy-sync', 'hevy-pull', 'log'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
@@ -615,7 +615,9 @@ async function hevySync(env, user) {
  * set leaves a peak in the watch trace, and the peaks are matched to the sets
  * in order. When the trace has too few clear peaks, the sets are spread
  * evenly across the workout instead. ts_source says which was used. */
-const HEVY_TZ = '+08:00';               // the day a workout belongs to; Bali
+const HEVY_TZ = '+08:00';
+// Every-day items are logged under session 'Daily', as the app does.
+const DAILY_NAMES = new Set(['Pulls', 'Handstand']);               // the day a workout belongs to; Bali
 
 function peakTimes(hrRow, fromMs, toMs, n) {
   const t0 = parseHRDate(hrRow.start);
@@ -660,7 +662,7 @@ async function importHevyWorkout(env, user, w, names, routineNotes) {
       n++;
       const timed = s.duration_seconds != null && s.reps == null;
       rows.push({
-        name, set_no: n,
+        name, set_no: n, session: DAILY_NAMES.has(name) || session === 'Pulls' ? 'Daily' : session,
         weight: s.weight_kg ?? null,
         reps: timed ? s.duration_seconds : (s.reps ?? null),
         rir: Number.isFinite(Number(s.rpe)) && s.rpe != null ? Math.max(0, 10 - Number(s.rpe)) : null,
@@ -689,7 +691,7 @@ async function importHevyWorkout(env, user, w, names, routineNotes) {
   const ins = env.DB.prepare(`INSERT INTO sets (ts,date,user,session,exercise,set_no,weight,reps,rir,notes,ex_notes,batch_id,set_ts,ts_source)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
   const stmts = [env.DB.prepare('DELETE FROM sets WHERE batch_id = ?').bind(batch)];
-  rows.forEach((r, i) => stmts.push(ins.bind(now, date, user, session, r.name, r.set_no, r.weight, r.reps, r.rir,
+  rows.forEach((r, i) => stmts.push(ins.bind(now, date, user, r.session, r.name, r.set_no, r.weight, r.reps, r.rir,
     str(w.description || ''), r.exNote, batch, new Date(times[i]).toISOString(), source)));
   await env.DB.batch(stmts);
   if (hrRow) await env.DB.prepare("UPDATE hr SET session = ?1 WHERE user = ?2 AND start = ?3 AND (session IS NULL OR session = '')")

@@ -127,7 +127,7 @@ ol li{margin:4px 0}
 /* ══ pure part: program in, routines out ════════════════════════════
    No DOM and no network, so it runs under node for a test. */
 
-const TITLES = { 'Lower 1': 'Lower 1 · Mon', 'Upper A': 'Upper A · Tue', 'Lower 2': 'Lower 2 · Thu', 'Upper B': 'Upper B · Fri' };
+const TITLES = { 'Lower 1': 'Lower 1 · Mon', 'Upper A': 'Upper A · Tue', 'Lower 2': 'Lower 2 · Thu', 'Upper B': 'Upper B · Fri', 'Pulls': 'Pulls · daily' };
 const FOLDER = 'Logbook';
 const SUPERSET_REST = 75;
 
@@ -141,7 +141,7 @@ const REST = {
   'Incline Leg Press': 150, 'Leg Press': 150,
   'Machine Hip Thrust': 120, 'Dead Hang': 120,
   'Seated Leg Curl': 90, 'Leg Extension': 90, '45° Back Extension': 90,
-  'Short-Lever Copenhagen': 30, 'Copenhagen Plank': 30,
+  'Short-Lever Copenhagen': 30, 'Copenhagen Plank': 30, 'Pulls': 60,
 };
 const REST_DEFAULT = 120;
 
@@ -150,7 +150,7 @@ const REST_DEFAULT = 120;
 const CUSTOM_MUSCLE = {
   'Perfect Squat': 'quadriceps', 'Belt Squat': 'quadriceps',
   'Short-Lever Copenhagen': 'adductors', 'Copenhagen Plank': 'adductors',
-  'Dead Hang': 'forearms',
+  'Dead Hang': 'forearms', 'Pulls': 'lats',
 };
 
 /* A program line carries its own boxes, as it does in the app: EX_CFG is

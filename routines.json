@@ -1,5 +1,5 @@
 {
- "built": "2026-10-17T02:29:06.533Z",
+ "built": "2026-10-19T01:57:29.013Z",
  "users": {
   "ikarus": [
    {
@@ -228,12 +228,12 @@
      },
      {
       "name": "Dead Hang",
-      "hevy": "Dead Hang",
+      "hevy": "Dead Hang (Weighted)",
       "type": "weight_duration",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Dead Hang",
+        "title": "Dead Hang (Weighted)",
         "exercise_type": "weight_duration",
         "equipment_category": "none",
         "muscle_group": "forearms",
@@ -257,6 +257,50 @@
         {
          "type": "normal",
          "duration_seconds": 30
+        }
+       ]
+      }
+     },
+     {
+      "name": "Pulls",
+      "hevy": "Pulls",
+      "type": "reps_only",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Pulls",
+        "exercise_type": "reps_only",
+        "equipment_category": "none",
+        "muscle_group": "lats",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 60,
+       "notes": "3 × 4",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
         }
        ]
       }
@@ -861,12 +905,12 @@
      },
      {
       "name": "Dead Hang",
-      "hevy": "Dead Hang",
+      "hevy": "Dead Hang (Weighted)",
       "type": "weight_duration",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Dead Hang",
+        "title": "Dead Hang (Weighted)",
         "exercise_type": "weight_duration",
         "equipment_category": "none",
         "muscle_group": "forearms",
@@ -890,6 +934,50 @@
         {
          "type": "normal",
          "duration_seconds": 30
+        }
+       ]
+      }
+     },
+     {
+      "name": "Pulls",
+      "hevy": "Pulls",
+      "type": "reps_only",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Pulls",
+        "exercise_type": "reps_only",
+        "equipment_category": "none",
+        "muscle_group": "lats",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 60,
+       "notes": "3 × 4",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
         }
        ]
       }
@@ -1260,6 +1348,56 @@
       }
      }
     ]
+   },
+   {
+    "title": "Pulls · daily",
+    "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
+    "exercises": [
+     {
+      "name": "Pulls",
+      "hevy": "Pulls",
+      "type": "reps_only",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Pulls",
+        "exercise_type": "reps_only",
+        "equipment_category": "none",
+        "muscle_group": "lats",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 60,
+       "notes": "3 × 4",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        }
+       ]
+      }
+     }
+    ]
    }
   ],
   "johanna": [
@@ -1563,6 +1701,50 @@
         },
         {
          "type": "normal"
+        }
+       ]
+      }
+     },
+     {
+      "name": "Pulls",
+      "hevy": "Pulls",
+      "type": "reps_only",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Pulls",
+        "exercise_type": "reps_only",
+        "equipment_category": "none",
+        "muscle_group": "lats",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 60,
+       "notes": "3 × 4",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
         }
        ]
       }
@@ -2223,6 +2405,50 @@
         }
        ]
       }
+     },
+     {
+      "name": "Pulls",
+      "hevy": "Pulls",
+      "type": "reps_only",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Pulls",
+        "exercise_type": "reps_only",
+        "equipment_category": "none",
+        "muscle_group": "lats",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 60,
+       "notes": "3 × 4",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        }
+       ]
+      }
      }
     ]
    },
@@ -2590,6 +2816,56 @@
       }
      }
     ]
+   },
+   {
+    "title": "Pulls · daily",
+    "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
+    "exercises": [
+     {
+      "name": "Pulls",
+      "hevy": "Pulls",
+      "type": "reps_only",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Pulls",
+        "exercise_type": "reps_only",
+        "equipment_category": "none",
+        "muscle_group": "lats",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 60,
+       "notes": "3 × 4",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 4,
+          "end": 4
+         }
+        }
+       ]
+      }
+     }
+    ]
    }
   ]
  },
@@ -2617,7 +2893,7 @@
    "Copenhagen Plank": "Copenhagen Plank",
    "Box Jump": "Jumps",
    "Farmers Walk": "Carries",
-   "Dead Hang": "Dead Hang",
+   "Dead Hang (Weighted)": "Dead Hang",
    "Pull Up": "Pull-ups",
    "Chin Up": "Chin-ups",
    "Lat Pulldown (Cable)": "Lat Pulldown",
@@ -2648,6 +2924,7 @@
    "Skullcrusher (Dumbbell)": "Skullcrusher",
    "Triceps Rope Pushdown": "Rope Pushdown",
    "Triceps Pushdown": "Bar Pushdown",
+   "Pulls": "Pulls",
    "Handstand Hold": "Handstand",
    "Short-Lever Copenhagen": "Short-Lever Copenhagen"
   },
@@ -2674,7 +2951,7 @@
    "Copenhagen Plank": "Copenhagen Plank",
    "Box Jump": "Jumps",
    "Farmers Walk": "Carries",
-   "Dead Hang": "Dead Hang",
+   "Dead Hang (Weighted)": "Dead Hang",
    "Pull Up": "Pull-ups",
    "Chin Up": "Chin-ups",
    "Lat Pulldown (Cable)": "Lat Pulldown",
@@ -2705,6 +2982,7 @@
    "Skullcrusher (Dumbbell)": "Skullcrusher",
    "Triceps Rope Pushdown": "Rope Pushdown",
    "Triceps Pushdown": "Bar Pushdown",
+   "Pulls": "Pulls",
    "Handstand Hold": "Handstand"
   }
  }
