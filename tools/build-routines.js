@@ -60,7 +60,10 @@ for (const user of Object.keys(out.users)) {
   out.users[user].forEach(rt => rt.exercises.forEach(x => { own[x.hevy] = own[x.hevy] || x.name; }));
   const all = {};
   Object.entries(HEVY).forEach(([log, hevy]) => { if (!(hevy in all)) all[hevy] = log; });
-  out.names[user] = { ...all, ...own };
+  // Hevy names used before a custom replaced them, so a workout logged
+  // under the old name still comes back as the right exercise.
+  const legacy = { 'Leg Press (Machine)': 'Incline Leg Press' };
+  out.names[user] = { ...legacy, ...all, ...own };
 }
 
 fs.writeFileSync(path.join(root, 'routines.json'), JSON.stringify(out, null, 1) + '\n');

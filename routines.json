@@ -1,5 +1,5 @@
 {
- "built": "2026-10-19T02:07:39.071Z",
+ "built": "2026-10-19T02:24:41.624Z",
  "users": {
   "ikarus": [
    {
@@ -96,15 +96,15 @@
      },
      {
       "name": "Incline Leg Press",
-      "hevy": "Leg Press (Machine)",
+      "hevy": "Incline Leg Press (Machine)",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Leg Press (Machine)",
+        "title": "Incline Leg Press (Machine)",
         "exercise_type": "weight_reps",
         "equipment_category": "machine",
-        "muscle_group": "other",
+        "muscle_group": "quadriceps",
         "other_muscles": []
        }
       },
@@ -1583,15 +1583,15 @@
      },
      {
       "name": "Incline Leg Press",
-      "hevy": "Leg Press (Machine)",
+      "hevy": "Incline Leg Press (Machine)",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Leg Press (Machine)",
+        "title": "Incline Leg Press (Machine)",
         "exercise_type": "weight_reps",
         "equipment_category": "machine",
-        "muscle_group": "other",
+        "muscle_group": "quadriceps",
         "other_muscles": []
        }
       },
@@ -2871,10 +2871,11 @@
  },
  "names": {
   "ikarus": {
+   "Leg Press (Machine)": "Incline Leg Press",
    "Perfect Squat": "Perfect Squat",
    "Belt Squat (Machine)": "Belt Squat",
    "Leg Press Horizontal (Machine)": "Leg Press",
-   "Leg Press (Machine)": "Incline Leg Press",
+   "Incline Leg Press (Machine)": "Incline Leg Press",
    "Single Leg Press (Machine)": "Single-Leg Leg Press",
    "Hack Squat (Machine)": "Hack Squat",
    "Goblet Squat": "Goblet Squat",
@@ -2929,10 +2930,11 @@
    "Short-Lever Copenhagen": "Short-Lever Copenhagen"
   },
   "johanna": {
+   "Leg Press (Machine)": "Incline Leg Press",
    "Perfect Squat": "Perfect Squat",
    "Belt Squat (Machine)": "Belt Squat",
    "Leg Press Horizontal (Machine)": "Leg Press",
-   "Leg Press (Machine)": "Incline Leg Press",
+   "Incline Leg Press (Machine)": "Incline Leg Press",
    "Single Leg Press (Machine)": "Single-Leg Leg Press",
    "Hack Squat (Machine)": "Hack Squat",
    "Goblet Squat": "Goblet Squat",
