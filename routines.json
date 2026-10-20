@@ -1,5 +1,5 @@
 {
- "built": "2026-10-19T02:24:41.624Z",
+ "built": "2026-10-20T01:49:21.048Z",
  "users": {
   "ikarus": [
    {
@@ -400,15 +400,15 @@
       }
      },
      {
-      "name": "Chest-Supported Row",
-      "hevy": "Chest Supported Incline Row (Dumbbell)",
+      "name": "Single-Arm DB Row",
+      "hevy": "Dumbbell Row",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Chest Supported Incline Row (Dumbbell)",
+        "title": "Dumbbell Row",
         "exercise_type": "weight_reps",
-        "equipment_category": "none",
+        "equipment_category": "dumbbell",
         "muscle_group": "other",
         "other_muscles": []
        }
@@ -627,13 +627,13 @@
       }
      },
      {
-      "name": "Overhead Triceps Ext",
-      "hevy": "Triceps Extension (Dumbbell)",
+      "name": "Cable Overhead Ext",
+      "hevy": "Triceps Extension (Cable)",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Triceps Extension (Dumbbell)",
+        "title": "Triceps Extension (Cable)",
         "exercise_type": "weight_reps",
         "equipment_category": "none",
         "muscle_group": "other",
@@ -1844,15 +1844,15 @@
       }
      },
      {
-      "name": "Chest-Supported Row",
-      "hevy": "Chest Supported Incline Row (Dumbbell)",
+      "name": "Single-Arm DB Row",
+      "hevy": "Dumbbell Row",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Chest Supported Incline Row (Dumbbell)",
+        "title": "Dumbbell Row",
         "exercise_type": "weight_reps",
-        "equipment_category": "none",
+        "equipment_category": "dumbbell",
         "muscle_group": "other",
         "other_muscles": []
        }
@@ -2071,13 +2071,13 @@
       }
      },
      {
-      "name": "Overhead Triceps Ext",
-      "hevy": "Triceps Extension (Dumbbell)",
+      "name": "Cable Overhead Ext",
+      "hevy": "Triceps Extension (Cable)",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Triceps Extension (Dumbbell)",
+        "title": "Triceps Extension (Cable)",
         "exercise_type": "weight_reps",
         "equipment_category": "none",
         "muscle_group": "other",
