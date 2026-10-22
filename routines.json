@@ -1,5 +1,5 @@
 {
- "built": "2026-10-20T02:19:33.084Z",
+ "built": "2026-10-22T02:15:02.498Z",
  "users": {
   "ikarus": [
    {
@@ -932,13 +932,13 @@
       }
      },
      {
-      "name": "Short-Lever Copenhagen",
-      "hevy": "Short-Lever Copenhagen",
+      "name": "Copenhagen Plank",
+      "hevy": "Copenhagen Plank",
       "type": "reps_only",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Short-Lever Copenhagen",
+        "title": "Copenhagen Plank",
         "exercise_type": "reps_only",
         "equipment_category": "none",
         "muscle_group": "adductors",
@@ -949,7 +949,7 @@
        "exercise_template_id": null,
        "superset_id": null,
        "rest_seconds": 30,
-       "notes": "2 × 10-15 per side — knee on the bench; sets go left, right, left, right. The bottom foot never touches the floor",
+       "notes": "2 × 10-15 per side — long lever, foot on the bench; sets go left, right, left, right. Shoes on; the bottom foot never touches the floor",
        "sets": [
         {
          "type": "normal",
@@ -2927,8 +2927,7 @@
    "Triceps Rope Pushdown": "Rope Pushdown",
    "Triceps Pushdown": "Bar Pushdown",
    "Pulls": "Pulls",
-   "Handstand Hold": "Handstand",
-   "Short-Lever Copenhagen": "Short-Lever Copenhagen"
+   "Handstand Hold": "Handstand"
   },
   "johanna": {
    "Leg Press (Machine)": "Incline Leg Press",

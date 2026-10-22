@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 26, at: '20 Oct 2026, 10:21' };
+const BUILD = { n: 27, at: '22 Oct 2026, 10:15' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -113,6 +113,9 @@ const SESSIONS_JOHANNA = JSON.parse(JSON.stringify(SESSIONS_IKARUS));
    takes belt weight. Monday opens with the three machines in the
    squat room: Perfect Squat, incline leg press, hip thrust.
 
+   22 Oct 2026: Copenhagen back to the long lever (Copenhagen Plank),
+   at Ikarus's call after a week short-lever.
+
    19 Oct 2026: dead hangs go between the leg-curl sets (pair A), the
    way Ikarus trains them: grip work while the hamstrings rest.
    ══════════════════════════════════════════════════════════════════ */
@@ -137,8 +140,8 @@ Object.assign(SESSIONS_IKARUS, {
       { name: 'Dead Hang',             target: '3 × 30-45 s', sets: 3, pair: 'A', fields: ['w','r'],
         units: { w: 'belt kg', r: 'sec' }, progress: 'load',
         hint: 'in place of carries — same belt kg on all three sets; add weight once every set passes 45 s' },
-      { name: 'Short-Lever Copenhagen', target: '2 × 10-15 per side', sets: 4, fields: ['r','rir'],
-        hint: 'knee on the bench; sets go left, right, left, right. The bottom foot never touches the floor' },
+      { name: 'Copenhagen Plank',      target: '2 × 10-15 per side', sets: 4, fields: ['r','rir'],
+        hint: 'long lever, foot on the bench; sets go left, right, left, right. Shoes on; the bottom foot never touches the floor' },
     ],
 });
 const PROGRAM = {
