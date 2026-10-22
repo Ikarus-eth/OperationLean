@@ -78,7 +78,7 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-10-19b';
+const VERSION  = '2026-10-22a';
 const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps', 'last-scoped', 'order', 'hevy', 'hevy-sync', 'hevy-pull', 'log'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
@@ -482,6 +482,20 @@ async function hevyProxy(request, url) {
  * program change updates the routines in place. Both calls are GETs so
  * they can be made from anywhere a URL can be opened. */
 const ROUTINES_URL = 'https://raw.githubusercontent.com/Ikarus-eth/OperationLean/main/routines.json';
+/* raw.githubusercontent caches for about five minutes whatever the query
+   string, so a sync right after a push wrote the previous program. The
+   contents API answers with the current commit; raw stays as the fallback
+   if the API is rate-limited (60 calls an hour without a token). */
+async function fetchRoutines() {
+  try {
+    const r = await fetch('https://api.github.com/repos/Ikarus-eth/OperationLean/contents/routines.json?ref=main',
+      { headers: { accept: 'application/vnd.github.raw', 'user-agent': 'logbook-worker' }, cf: { cacheTtl: 0 } });
+    if (r.ok) return await r.json();
+  } catch (e) {}
+  const r = await fetch(ROUTINES_URL + '?t=' + Date.now(), { cf: { cacheTtl: 0 } });
+  if (!r.ok) throw new Error('routines.json: ' + r.status);
+  return r.json();
+}
 
 async function settingsTable(env) {
   await env.DB.prepare('CREATE TABLE IF NOT EXISTS settings (k TEXT PRIMARY KEY, v TEXT, ts TEXT)').run();
@@ -532,9 +546,8 @@ const dropNulls = o => { Object.keys(o).forEach(k => { if (o[k] == null) delete 
 async function hevySync(env, user) {
   const key = await getSetting(env, 'hevy_key.' + user);
   if (!key) return { ok: false, error: 'no Hevy key stored for ' + user };
-  const res = await fetch(ROUTINES_URL + '?t=' + Date.now(), { cf: { cacheTtl: 0 } });
-  if (!res.ok) return { ok: false, error: 'routines.json: ' + res.status };
-  const plan = await res.json();
+  let plan;
+  try { plan = await fetchRoutines(); } catch (e) { return { ok: false, error: e.message }; }
   const routines = (plan.users || {})[user];
   if (!routines) return { ok: false, error: 'routines.json has nothing for ' + user };
 
@@ -722,7 +735,7 @@ async function hevyPull(env, user) {
   const h = hevyClient(key);
 
   let plan = { names: {}, users: {} };
-  try { plan = await (await fetch(ROUTINES_URL + '?t=' + Date.now(), { cf: { cacheTtl: 0 } })).json(); } catch (e) {}
+  try { plan = await fetchRoutines(); } catch (e) {}
   const names = (plan.names || {})[user] || {};
   const routineNotes = new Set();
   ((plan.users || {})[user] || []).forEach(rt => rt.exercises.forEach(x => x.body.notes && routineNotes.add(String(x.body.notes).trim())));
