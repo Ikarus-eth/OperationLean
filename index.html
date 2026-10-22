@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 27, at: '22 Oct 2026, 10:15' };
+const BUILD = { n: 28, at: '22 Oct 2026, 10:19' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -114,7 +114,8 @@ const SESSIONS_JOHANNA = JSON.parse(JSON.stringify(SESSIONS_IKARUS));
    squat room: Perfect Squat, incline leg press, hip thrust.
 
    22 Oct 2026: Copenhagen back to the long lever (Copenhagen Plank),
-   at Ikarus's call after a week short-lever.
+   at Ikarus's call after a week short-lever, and done as a superset with
+   the back extension (pair B), as he trains it.
 
    19 Oct 2026: dead hangs go between the leg-curl sets (pair A), the
    way Ikarus trains them: grip work while the hamstrings rest.
@@ -134,14 +135,14 @@ Object.assign(SESSIONS_IKARUS, {
     ],
     'Lower 2': [
       { name: 'Belt Squat',            target: '3 × 8-12',  sets: 3, hint: 'full depth — build back toward the pre-fracture 120 × 8' },
-      { name: '45° Back Extension',    target: '3 × 10-15', sets: 3, hint: 'DB at chest, round-back' },
+      { name: '45° Back Extension',    target: '3 × 10-15', sets: 3, pair: 'B', hint: 'DB at chest, round-back' },
+      { name: 'Copenhagen Plank',      target: '2 × 10-15 per side', sets: 4, pair: 'B', fields: ['r','rir'],
+        hint: 'long lever, foot on the bench; sets go left, right, left, right. Shoes on; the bottom foot never touches the floor' },
       { name: 'Leg Extension',         target: '3 × 12-15', sets: 3 },
       { name: 'Seated Leg Curl',       target: '3 × 8-12',  sets: 3, pair: 'A' },
       { name: 'Dead Hang',             target: '3 × 30-45 s', sets: 3, pair: 'A', fields: ['w','r'],
         units: { w: 'belt kg', r: 'sec' }, progress: 'load',
         hint: 'in place of carries — same belt kg on all three sets; add weight once every set passes 45 s' },
-      { name: 'Copenhagen Plank',      target: '2 × 10-15 per side', sets: 4, fields: ['r','rir'],
-        hint: 'long lever, foot on the bench; sets go left, right, left, right. Shoes on; the bottom foot never touches the floor' },
     ],
 });
 const PROGRAM = {
