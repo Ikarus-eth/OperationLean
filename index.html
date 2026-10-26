@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 28, at: '22 Oct 2026, 10:19' };
+const BUILD = { n: 29, at: '26 Oct 2026, 10:50' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -32,15 +32,25 @@ const BUILD = { n: 28, at: '22 Oct 2026, 10:19' };
    Sharing the object rather than copying it means a change to one is a change
    to both — which is the point, and the thing to remember when it stops being
    true. Give her her own object at that point; nothing else needs touching. */
+/* 26 Oct 2026: the lower days brought up to the program as it now runs
+   (pec deck era, block v2 changes made since the fracture): machine hip
+   thrust, back extension on both days, curls 3 sets paired with belted
+   dead hangs in place of carries, Copenhagen paired with the back
+   extension. Jumps and calf raises stay here because Johanna trains
+   them and Ikarus gets them back when the fracture block below is
+   deleted after the 17 Nov x-ray. */
 const SESSIONS_IKARUS = {
     'Lower 1': [
       { name: 'Jumps',               target: '3-4 × 3-5',  sets: 3, units: { w: 'in' }, hint: 'box height in inches, then reps' },
-      { name: 'Perfect Squat',       target: '3 × 6-10',   sets: 3 },
-      { name: 'Hip Thrust',          target: '3 × 8-12',   sets: 3 },
+      { name: 'Perfect Squat',       target: '3 × 6-10',   sets: 3, hint: 'RIR 2-3 — add reps at the same weight before adding weight' },
       { name: 'Incline Leg Press',   target: '3 × 8-12',   sets: 3, hint: 'deep, feet low, shoulder-width, toes out' },
-      { name: 'Seated Leg Curl',     target: '4 × 8-12',   sets: 4 },
+      { name: 'Machine Hip Thrust',  target: '3 × 8-12',   sets: 3, hint: 'shins vertical at the top, knees at 90° — quads burning: feet further out; hamstrings cramping: feet closer. Push through the heels' },
+      { name: 'Seated Leg Curl',     target: '3 × 8-12',   sets: 3, pair: 'A' },
+      { name: 'Dead Hang',           target: '3 × 30-45 s', sets: 3, pair: 'A', fields: ['w','r'],
+        units: { w: 'belt kg', r: 'sec' }, progress: 'load',
+        hint: 'between the curl sets — same belt kg on all three; add weight once every set passes 45 s' },
+      { name: '45° Back Extension',  target: '3 × 10-15',  sets: 3, hint: 'DB at chest, round-back' },
       { name: 'Standing Calf Raise', target: '3 × 8-12',   sets: 3 },
-      { name: 'Carries',             target: '2 sets',     sets: 2, hint: 'log seconds in the reps box' },
     ],
     'Upper A': [
       { name: 'Pull-ups', target: '3 × 10', sets: 3,
@@ -61,12 +71,15 @@ const SESSIONS_IKARUS = {
     ],
     'Lower 2': [
       { name: 'Belt Squat',         target: '3 × 8-12',  sets: 3 },
-      { name: '45° Back Extension', target: '3 × 10-15', sets: 3, hint: 'DB at chest, round-back' },
+      { name: '45° Back Extension', target: '3 × 10-15', sets: 3, pair: 'B', hint: 'DB at chest, round-back' },
+      { name: 'Copenhagen Plank',   target: '2 × 10-15 per side', sets: 4, pair: 'B', fields: ['r','rir'],
+        hint: 'long lever, foot on the bench; sets go left, right, left, right' },
       { name: 'Leg Extension',      target: '3 × 12-15', sets: 3 },
-      { name: 'Seated Leg Curl',    target: '4 × 8-12',  sets: 4 },
-      { name: 'Seated Calf Raise',  target: '2 × 10-15', sets: 2 },
-      { name: 'Copenhagen Plank',   target: '2 × 10-15', sets: 2 },
-      { name: 'Carries',            target: '2 sets',    sets: 2, hint: 'log seconds in the reps box' },
+      { name: 'Seated Leg Curl',    target: '3 × 8-12',  sets: 3, pair: 'A' },
+      { name: 'Dead Hang',          target: '3 × 30-45 s', sets: 3, pair: 'A', fields: ['w','r'],
+        units: { w: 'belt kg', r: 'sec' }, progress: 'load',
+        hint: 'between the curl sets — same belt kg on all three; add weight once every set passes 45 s' },
+      { name: 'Seated Calf Raise',  target: '3 × 10-15', sets: 3 },
     ],
     'Upper B': [
       { name: 'Pull-ups', target: '3 × 10', sets: 3,

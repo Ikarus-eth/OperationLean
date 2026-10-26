@@ -1,5 +1,5 @@
 {
- "built": "2026-10-22T02:19:14.785Z",
+ "built": "2026-10-26T02:46:33.213Z",
  "users": {
   "ikarus": [
    {
@@ -1511,7 +1511,7 @@
        "exercise_template_id": null,
        "superset_id": null,
        "rest_seconds": 180,
-       "notes": "3 × 6-10",
+       "notes": "3 × 6-10 — RIR 2-3 — add reps at the same weight before adding weight",
        "sets": [
         {
          "type": "normal",
@@ -1532,50 +1532,6 @@
          "rep_range": {
           "start": 6,
           "end": 10
-         }
-        }
-       ]
-      }
-     },
-     {
-      "name": "Hip Thrust",
-      "hevy": "Hip Thrust (Barbell)",
-      "type": "weight_reps",
-      "timedUnit": "sec",
-      "custom": {
-       "exercise": {
-        "title": "Hip Thrust (Barbell)",
-        "exercise_type": "weight_reps",
-        "equipment_category": "machine",
-        "muscle_group": "other",
-        "other_muscles": []
-       }
-      },
-      "body": {
-       "exercise_template_id": null,
-       "superset_id": null,
-       "rest_seconds": 120,
-       "notes": "3 × 8-12",
-       "sets": [
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 8,
-          "end": 12
-         }
-        },
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 8,
-          "end": 12
-         }
-        },
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 8,
-          "end": 12
          }
         }
        ]
@@ -1626,13 +1582,13 @@
       }
      },
      {
-      "name": "Seated Leg Curl",
-      "hevy": "Seated Leg Curl (Machine)",
+      "name": "Machine Hip Thrust",
+      "hevy": "Hip Thrust (Machine)",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Seated Leg Curl (Machine)",
+        "title": "Hip Thrust (Machine)",
         "exercise_type": "weight_reps",
         "equipment_category": "machine",
         "muscle_group": "other",
@@ -1642,8 +1598,8 @@
       "body": {
        "exercise_template_id": null,
        "superset_id": null,
-       "rest_seconds": 90,
-       "notes": "4 × 8-12",
+       "rest_seconds": 120,
+       "notes": "3 × 8-12 — shins vertical at the top, knees at 90° — quads burning: feet further out; hamstrings cramping: feet closer. Push through the heels",
        "sets": [
         {
          "type": "normal",
@@ -1665,12 +1621,128 @@
           "start": 8,
           "end": 12
          }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Seated Leg Curl",
+      "hevy": "Seated Leg Curl (Machine)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Seated Leg Curl (Machine)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
         },
         {
          "type": "normal",
          "rep_range": {
           "start": 8,
           "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Dead Hang",
+      "hevy": "Dead Hang (Weighted)",
+      "type": "weight_duration",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Dead Hang (Weighted)",
+        "exercise_type": "weight_duration",
+        "equipment_category": "none",
+        "muscle_group": "forearms",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 30-45 s — between the curl sets — same belt kg on all three; add weight once every set passes 45 s",
+       "sets": [
+        {
+         "type": "normal",
+         "duration_seconds": 30
+        },
+        {
+         "type": "normal",
+         "duration_seconds": 30
+        },
+        {
+         "type": "normal",
+         "duration_seconds": 30
+        }
+       ]
+      }
+     },
+     {
+      "name": "45° Back Extension",
+      "hevy": "Back Extension (Weighted Hyperextension)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Back Extension (Weighted Hyperextension)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 90,
+       "notes": "3 × 10-15 — DB at chest, round-back",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
          }
         }
        ]
@@ -1716,35 +1788,6 @@
           "start": 8,
           "end": 12
          }
-        }
-       ]
-      }
-     },
-     {
-      "name": "Carries",
-      "hevy": "Farmers Walk",
-      "type": "weight_reps",
-      "timedUnit": "sec",
-      "custom": {
-       "exercise": {
-        "title": "Farmers Walk",
-        "exercise_type": "weight_reps",
-        "equipment_category": "none",
-        "muscle_group": "other",
-        "other_muscles": []
-       }
-      },
-      "body": {
-       "exercise_template_id": null,
-       "superset_id": null,
-       "rest_seconds": 120,
-       "notes": "2 sets — log seconds in the reps box",
-       "sets": [
-        {
-         "type": "normal"
-        },
-        {
-         "type": "normal"
         }
        ]
       }
@@ -2224,10 +2267,61 @@
       },
       "body": {
        "exercise_template_id": null,
-       "superset_id": null,
-       "rest_seconds": 90,
+       "superset_id": 0,
+       "rest_seconds": 75,
        "notes": "3 × 10-15 — DB at chest, round-back",
        "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Copenhagen Plank",
+      "hevy": "Copenhagen Plank",
+      "type": "reps_only",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Copenhagen Plank",
+        "exercise_type": "reps_only",
+        "equipment_category": "none",
+        "muscle_group": "adductors",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "2 × 10-15 per side — long lever, foot on the bench; sets go left, right, left, right",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
         {
          "type": "normal",
          "rep_range": {
@@ -2312,9 +2406,9 @@
       },
       "body": {
        "exercise_template_id": null,
-       "superset_id": null,
-       "rest_seconds": 90,
-       "notes": "4 × 8-12",
+       "superset_id": 1,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12",
        "sets": [
         {
          "type": "normal",
@@ -2336,13 +2430,41 @@
           "start": 8,
           "end": 12
          }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Dead Hang",
+      "hevy": "Dead Hang (Weighted)",
+      "type": "weight_duration",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Dead Hang (Weighted)",
+        "exercise_type": "weight_duration",
+        "equipment_category": "none",
+        "muscle_group": "forearms",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 1,
+       "rest_seconds": 75,
+       "notes": "3 × 30-45 s — between the curl sets — same belt kg on all three; add weight once every set passes 45 s",
+       "sets": [
+        {
+         "type": "normal",
+         "duration_seconds": 30
         },
         {
          "type": "normal",
-         "rep_range": {
-          "start": 8,
-          "end": 12
-         }
+         "duration_seconds": 30
+        },
+        {
+         "type": "normal",
+         "duration_seconds": 30
         }
        ]
       }
@@ -2365,7 +2487,7 @@
        "exercise_template_id": null,
        "superset_id": null,
        "rest_seconds": 120,
-       "notes": "2 × 10-15",
+       "notes": "3 × 10-15",
        "sets": [
         {
          "type": "normal",
@@ -2380,36 +2502,6 @@
           "start": 10,
           "end": 15
          }
-        }
-       ]
-      }
-     },
-     {
-      "name": "Copenhagen Plank",
-      "hevy": "Copenhagen Plank",
-      "type": "weight_reps",
-      "timedUnit": "sec",
-      "custom": {
-       "exercise": {
-        "title": "Copenhagen Plank",
-        "exercise_type": "weight_reps",
-        "equipment_category": "none",
-        "muscle_group": "adductors",
-        "other_muscles": []
-       }
-      },
-      "body": {
-       "exercise_template_id": null,
-       "superset_id": null,
-       "rest_seconds": 30,
-       "notes": "2 × 10-15",
-       "sets": [
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 10,
-          "end": 15
-         }
         },
         {
          "type": "normal",
@@ -2417,35 +2509,6 @@
           "start": 10,
           "end": 15
          }
-        }
-       ]
-      }
-     },
-     {
-      "name": "Carries",
-      "hevy": "Farmers Walk",
-      "type": "weight_reps",
-      "timedUnit": "sec",
-      "custom": {
-       "exercise": {
-        "title": "Farmers Walk",
-        "exercise_type": "weight_reps",
-        "equipment_category": "none",
-        "muscle_group": "other",
-        "other_muscles": []
-       }
-      },
-      "body": {
-       "exercise_template_id": null,
-       "superset_id": null,
-       "rest_seconds": 120,
-       "notes": "2 sets — log seconds in the reps box",
-       "sets": [
-        {
-         "type": "normal"
-        },
-        {
-         "type": "normal"
         }
        ]
       }
