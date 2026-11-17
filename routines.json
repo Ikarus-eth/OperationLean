@@ -1,5 +1,5 @@
 {
- "built": "2026-10-26T02:46:33.213Z",
+ "built": "2026-11-17T03:30:47.434Z",
  "users": {
   "ikarus": [
    {
@@ -635,7 +635,7 @@
        "exercise": {
         "title": "Triceps Extension (Cable)",
         "exercise_type": "weight_reps",
-        "equipment_category": "none",
+        "equipment_category": "machine",
         "muscle_group": "other",
         "other_muscles": []
        }
@@ -1041,7 +1041,7 @@
        "exercise": {
         "title": "Lat Pulldown (Cable)",
         "exercise_type": "weight_reps",
-        "equipment_category": "none",
+        "equipment_category": "machine",
         "muscle_group": "other",
         "other_muscles": []
        }
@@ -1322,6 +1322,655 @@
        "superset_id": 2,
        "rest_seconds": 75,
        "notes": "3 × 10-15",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Upper A uni · alt Tue",
+    "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
+    "exercises": [
+     {
+      "name": "Single-Arm Incline DB Press",
+      "hevy": "Single Arm Incline Press (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Single Arm Incline Press (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "chest",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12 per side — left first, right matches the left’s reps; free hand holds the bench, hips stay square",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Single-Arm DB Row",
+      "hevy": "Dumbbell Row",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Dumbbell Row",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12 per side — left first; reach long at the bottom, elbow to the hip",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Single-Arm Cable Fly",
+      "hevy": "Single Arm Cable Fly",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Single Arm Cable Fly",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "chest",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 1,
+       "rest_seconds": 75,
+       "notes": "3 × 10-15 per side — pulley at shoulder height, staggered stance; stretch at the back, squeeze 1 s",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Single-Arm Cable Rear Delt Fly",
+      "hevy": "Single Arm Rear Delt Fly (Cable)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Single Arm Rear Delt Fly (Cable)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "shoulders",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 1,
+       "rest_seconds": 75,
+       "notes": "3 × 12-20 per side — pulley at shoulder height, cross-body; arm long, lead with the elbow",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Cable Lateral Raise",
+      "hevy": "Single Arm Lateral Raise (Cable)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Single Arm Lateral Raise (Cable)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "4 × 12-20 per side — pulley at the hip, cable behind the body; left first",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Single-Arm Cable Curl",
+      "hevy": "Single Arm Curl (Cable)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Single Arm Curl (Cable)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "biceps",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12 per side — face away from a low pulley, arm slightly behind the body",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Single-Arm Cable Overhead Ext",
+      "hevy": "Single Arm Overhead Triceps Extension (Cable)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Single Arm Overhead Triceps Extension (Cable)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "triceps",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "3 × 10-15 per side — face away from a low pulley, elbow by the ear; full stretch",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "title": "Upper B uni · alt Fri",
+    "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
+    "exercises": [
+     {
+      "name": "Single-Arm Lat Pulldown",
+      "hevy": "Single Arm Lat Pulldown",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Single Arm Lat Pulldown",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "lats",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "4 × 8-12 per side — half-kneeling under a high pulley, D-handle; in place of pull-ups. Left first, reach to a full stretch",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Single-Arm DB Shoulder Press",
+      "hevy": "Single Arm Shoulder Press (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Single Arm Shoulder Press (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "shoulders",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12 per side — seated, back supported; free hand on the thigh, no lean away from the working side",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Single-Arm Cable Row",
+      "hevy": "Single Arm Cable Row",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Single Arm Cable Row",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "upper_back",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 1,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12 per side — seated or half-kneeling, pulley at chest height; let the shoulder blade travel forward",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Single-Arm Cable Chest Press",
+      "hevy": "Single Arm Chest Press (Cable)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Single Arm Chest Press (Cable)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "chest",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 1,
+       "rest_seconds": 75,
+       "notes": "3 × 10-12 per side — split stance, pulley at chest height; trunk does not rotate",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Cable Lateral Raise",
+      "hevy": "Single Arm Lateral Raise (Cable)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Single Arm Lateral Raise (Cable)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "4 × 12-20 per side — pulley at the hip, cable behind the body; left first",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 12,
+          "end": 20
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Hammer Curl",
+      "hevy": "Hammer Curl (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Hammer Curl (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "3 × 10-15 per side — one arm at a time, left first",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 10,
+          "end": 15
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Single-Arm Cable Pushdown",
+      "hevy": "Single Arm Triceps Pushdown (Cable)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Single Arm Triceps Pushdown (Cable)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "triceps",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 2,
+       "rest_seconds": 75,
+       "notes": "3 × 10-15 per side — D-handle, elbow pinned; left first",
        "sets": [
         {
          "type": "normal",
@@ -2122,7 +2771,7 @@
        "exercise": {
         "title": "Triceps Extension (Cable)",
         "exercise_type": "weight_reps",
-        "equipment_category": "none",
+        "equipment_category": "machine",
         "muscle_group": "other",
         "other_muscles": []
        }
@@ -2572,7 +3221,7 @@
        "exercise": {
         "title": "Lat Pulldown (Cable)",
         "exercise_type": "weight_reps",
-        "equipment_category": "none",
+        "equipment_category": "machine",
         "muscle_group": "other",
         "other_muscles": []
        }
@@ -2988,6 +3637,16 @@
    "Triceps Extension (Cable)": "Cable Overhead Ext",
    "Skullcrusher (Dumbbell)": "Skullcrusher",
    "Triceps Rope Pushdown": "Rope Pushdown",
+   "Single Arm Incline Press (Dumbbell)": "Single-Arm Incline DB Press",
+   "Single Arm Cable Fly": "Single-Arm Cable Fly",
+   "Single Arm Rear Delt Fly (Cable)": "Single-Arm Cable Rear Delt Fly",
+   "Single Arm Curl (Cable)": "Single-Arm Cable Curl",
+   "Single Arm Overhead Triceps Extension (Cable)": "Single-Arm Cable Overhead Ext",
+   "Single Arm Lat Pulldown": "Single-Arm Lat Pulldown",
+   "Single Arm Shoulder Press (Dumbbell)": "Single-Arm DB Shoulder Press",
+   "Single Arm Cable Row": "Single-Arm Cable Row",
+   "Single Arm Chest Press (Cable)": "Single-Arm Cable Chest Press",
+   "Single Arm Triceps Pushdown (Cable)": "Single-Arm Cable Pushdown",
    "Triceps Pushdown": "Bar Pushdown",
    "Pulls": "Pulls",
    "Handstand Hold": "Handstand"
@@ -3047,6 +3706,16 @@
    "Triceps Extension (Cable)": "Cable Overhead Ext",
    "Skullcrusher (Dumbbell)": "Skullcrusher",
    "Triceps Rope Pushdown": "Rope Pushdown",
+   "Single Arm Incline Press (Dumbbell)": "Single-Arm Incline DB Press",
+   "Single Arm Cable Fly": "Single-Arm Cable Fly",
+   "Single Arm Rear Delt Fly (Cable)": "Single-Arm Cable Rear Delt Fly",
+   "Single Arm Curl (Cable)": "Single-Arm Cable Curl",
+   "Single Arm Overhead Triceps Extension (Cable)": "Single-Arm Cable Overhead Ext",
+   "Single Arm Lat Pulldown": "Single-Arm Lat Pulldown",
+   "Single Arm Shoulder Press (Dumbbell)": "Single-Arm DB Shoulder Press",
+   "Single Arm Cable Row": "Single-Arm Cable Row",
+   "Single Arm Chest Press (Cable)": "Single-Arm Cable Chest Press",
+   "Single Arm Triceps Pushdown (Cable)": "Single-Arm Cable Pushdown",
    "Triceps Pushdown": "Bar Pushdown",
    "Pulls": "Pulls",
    "Handstand Hold": "Handstand"

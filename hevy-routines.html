@@ -127,7 +127,7 @@ ol li{margin:4px 0}
 /* ══ pure part: program in, routines out ════════════════════════════
    No DOM and no network, so it runs under node for a test. */
 
-const TITLES = { 'Lower 1': 'Lower 1 · Mon', 'Upper A': 'Upper A · Tue', 'Lower 2': 'Lower 2 · Thu', 'Upper B': 'Upper B · Fri', 'Pulls': 'Pulls · daily' };
+const TITLES = { 'Lower 1': 'Lower 1 · Mon', 'Upper A': 'Upper A · Tue', 'Lower 2': 'Lower 2 · Thu', 'Upper B': 'Upper B · Fri', 'Upper A uni': 'Upper A uni · alt Tue', 'Upper B uni': 'Upper B uni · alt Fri', 'Pulls': 'Pulls · daily' };
 const FOLDER = 'Logbook';
 const SUPERSET_REST = 75;
 
@@ -151,6 +151,10 @@ const CUSTOM_MUSCLE = {
   'Perfect Squat': 'quadriceps', 'Belt Squat': 'quadriceps', 'Incline Leg Press': 'quadriceps',
   'Short-Lever Copenhagen': 'adductors', 'Copenhagen Plank': 'adductors',
   'Dead Hang': 'forearms', 'Pulls': 'lats',
+  'Single-Arm Incline DB Press': 'chest', 'Single-Arm Cable Fly': 'chest', 'Single-Arm Cable Chest Press': 'chest',
+  'Single-Arm Cable Rear Delt Fly': 'shoulders', 'Single-Arm DB Shoulder Press': 'shoulders',
+  'Single-Arm Cable Curl': 'biceps', 'Single-Arm Cable Overhead Ext': 'triceps', 'Single-Arm Cable Pushdown': 'triceps',
+  'Single-Arm Lat Pulldown': 'lats', 'Single-Arm Cable Row': 'upper_back',
 };
 
 /* A program line carries its own boxes, as it does in the app: EX_CFG is
@@ -170,7 +174,7 @@ function hevyTypeOf(cfg){
 
 function customBody(name, hevyName, cfg){
   const equipment = /DB|Dumbbell/i.test(name) ? 'dumbbell'
-    : /Machine|Press|Squat|Curl|Extension|Thrust/i.test(name) ? 'machine' : 'none';
+    : /Machine|Cable|Pulldown|Press|Squat|Curl|Extension|Thrust/i.test(name) ? 'machine' : 'none';
   return { exercise: {
     title: hevyName, exercise_type: hevyTypeOf(cfg), equipment_category: equipment,
     muscle_group: CUSTOM_MUSCLE[name] || 'other', other_muscles: [],

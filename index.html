@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 29, at: '26 Oct 2026, 10:50' };
+const BUILD = { n: 30, at: '17 Nov 2026, 12:00' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -158,6 +158,46 @@ Object.assign(SESSIONS_IKARUS, {
         hint: 'in place of carries — same belt kg on all three sets; add weight once every set passes 45 s' },
     ],
 });
+/* 17 Nov 2026: unilateral upper days, Ikarus only, as alternatives to
+   Upper A and Upper B (those stay as they are). The right shoulder has been
+   covering for the left; one arm at a time leaves nothing to cover with.
+   No pull-ups. Every exercise: left first, the right does the left's reps
+   and no more, same weight, and each side's set is the other's rest. Log
+   the left side's reps. Lat work is single-arm cable in place of pull-ups. */
+Object.assign(SESSIONS_IKARUS, {
+    'Upper A uni': [
+      { name: 'Single-Arm Incline DB Press', target: '3 × 8-12 per side', sets: 3, pair: 'A',
+        hint: 'left first, right matches the left’s reps; free hand holds the bench, hips stay square' },
+      { name: 'Single-Arm DB Row',           target: '3 × 8-12 per side', sets: 3, pair: 'A',
+        hint: 'left first; reach long at the bottom, elbow to the hip' },
+      { name: 'Single-Arm Cable Fly',        target: '3 × 10-15 per side', sets: 3, pair: 'B',
+        hint: 'pulley at shoulder height, staggered stance; stretch at the back, squeeze 1 s' },
+      { name: 'Single-Arm Cable Rear Delt Fly', target: '3 × 12-20 per side', sets: 3, pair: 'B',
+        hint: 'pulley at shoulder height, cross-body; arm long, lead with the elbow' },
+      { name: 'Cable Lateral Raise',         target: '4 × 12-20 per side', sets: 4, pair: 'C',
+        hint: 'pulley at the hip, cable behind the body; left first' },
+      { name: 'Single-Arm Cable Curl',       target: '3 × 8-12 per side', sets: 3, pair: 'C',
+        hint: 'face away from a low pulley, arm slightly behind the body' },
+      { name: 'Single-Arm Cable Overhead Ext', target: '3 × 10-15 per side', sets: 3, pair: 'C',
+        hint: 'face away from a low pulley, elbow by the ear; full stretch' },
+    ],
+    'Upper B uni': [
+      { name: 'Single-Arm Lat Pulldown',     target: '4 × 8-12 per side', sets: 4, pair: 'A',
+        hint: 'half-kneeling under a high pulley, D-handle; in place of pull-ups. Left first, reach to a full stretch' },
+      { name: 'Single-Arm DB Shoulder Press', target: '3 × 8-12 per side', sets: 3, pair: 'A',
+        hint: 'seated, back supported; free hand on the thigh, no lean away from the working side' },
+      { name: 'Single-Arm Cable Row',        target: '3 × 8-12 per side', sets: 3, pair: 'B',
+        hint: 'seated or half-kneeling, pulley at chest height; let the shoulder blade travel forward' },
+      { name: 'Single-Arm Cable Chest Press', target: '3 × 10-12 per side', sets: 3, pair: 'B',
+        hint: 'split stance, pulley at chest height; trunk does not rotate' },
+      { name: 'Cable Lateral Raise',         target: '4 × 12-20 per side', sets: 4, pair: 'C',
+        hint: 'pulley at the hip, cable behind the body; left first' },
+      { name: 'Hammer Curl',                 target: '3 × 10-15 per side', sets: 3, pair: 'C',
+        hint: 'one arm at a time, left first' },
+      { name: 'Single-Arm Cable Pushdown',   target: '3 × 10-15 per side', sets: 3, pair: 'C',
+        hint: 'D-handle, elbow pinned; left first' },
+    ],
+});
 const PROGRAM = {
   ikarus:  { label: 'Ikarus',  sessions: SESSIONS_IKARUS },
   johanna: { label: 'Johanna', sessions: SESSIONS_JOHANNA },   // same program, own copy
@@ -175,7 +215,7 @@ const WEEKDAY_SESSION = { 1:'Lower 1', 2:'Upper A', 4:'Lower 2', 5:'Upper B' };
    ══════════════════════════════════════════════════════════════════ */
 const DAILY_IKARUS = [
   { name: 'Pulls',     target: '3 × 4',   sets: 3, fields: ['r'], fixed: { r: '4' },
-    except: ['Upper A', 'Upper B'],      // those sessions already have pull-ups
+    except: ['Upper A', 'Upper B', 'Upper A uni', 'Upper B uni'],  // pull-ups already in A/B; none on the uni days
     hint: 'adjust the reps, tick each set you actually did' },
   { name: 'Handstand', target: '10+ min', sets: 1, fields: ['r'], units: { r: 'min' }, fixed: { r: '10' },
     hint: 'tick only if you practised ten minutes or more' },
@@ -213,18 +253,19 @@ const VARIANTS = [
   ['Carries','Farmer\u2019s Walk','Suitcase Carry','Trap Bar Carry','Overhead Carry','Sled Push','Dead Hang'],
 
   // pulling
-  ['Pull-ups','Lat Pulldown','Chin-ups','Neutral-Grip Pulldown','Assisted Pull-up Machine','Kneeling Cable Pulldown'],
-  ['Chest-Supported Row','Single-Arm DB Row','Seated Cable Row','Machine Row','Inverted Row','Barbell Row'],
+  ['Pull-ups','Lat Pulldown','Chin-ups','Neutral-Grip Pulldown','Assisted Pull-up Machine','Kneeling Cable Pulldown','Single-Arm Lat Pulldown'],
+  ['Chest-Supported Row','Single-Arm DB Row','Seated Cable Row','Machine Row','Inverted Row','Barbell Row','Single-Arm Cable Row'],
 
   // pushing
-  ['Incline DB Press','Flat DB Press','Machine Chest Press','Incline Barbell Press','Cable Chest Press','Push-ups','Dips'],
-  ['DB Fly','Cable Crossover','Pec Deck','Incline DB Fly','Low-to-High Cable Fly','Band Fly'],
+  ['Incline DB Press','Flat DB Press','Machine Chest Press','Incline Barbell Press','Cable Chest Press','Push-ups','Dips','Single-Arm Incline DB Press','Single-Arm Cable Chest Press'],
+  ['DB Fly','Cable Crossover','Pec Deck','Incline DB Fly','Low-to-High Cable Fly','Band Fly','Single-Arm Cable Fly'],
+  ['Single-Arm DB Shoulder Press','Seated DB Shoulder Press','Half-Kneeling Landmine Press','Machine Shoulder Press'],
 
   // shoulders and arms
-  ['Rear Delt Fly','Reverse Pec Deck','Cable Face Pull','Bent-Over DB Fly','Band Pull-Apart','Rope Rear Delt Row'],
+  ['Rear Delt Fly','Reverse Pec Deck','Cable Face Pull','Bent-Over DB Fly','Band Pull-Apart','Rope Rear Delt Row','Single-Arm Cable Rear Delt Fly'],
   ['Lateral Raise','Cable Lateral Raise','Machine Lateral Raise','Leaning DB Lateral Raise','Band Lateral Raise','Upright Row'],
-  ['Incline DB Curl','DB Curl','Hammer Curl','Cable Curl','Preacher Curl','Barbell Curl'],
-  ['Overhead Triceps Ext','Cable Overhead Ext','Skullcrusher','Rope Pushdown','Bar Pushdown','Bench Dip'],
+  ['Incline DB Curl','DB Curl','Hammer Curl','Cable Curl','Preacher Curl','Barbell Curl','Single-Arm Cable Curl'],
+  ['Overhead Triceps Ext','Cable Overhead Ext','Skullcrusher','Rope Pushdown','Bar Pushdown','Bench Dip','Single-Arm Cable Overhead Ext','Single-Arm Cable Pushdown'],
 
   // daily habits
   ['Pulls','Chin-ups','Inverted Row','Ring Row','Band Pulldown','Negative Pull-up'],
