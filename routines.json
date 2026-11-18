@@ -1,9 +1,10 @@
 {
- "built": "2026-11-17T03:30:47.434Z",
+ "built": "2026-11-18T00:49:51.380Z",
  "users": {
   "ikarus": [
    {
     "title": "Lower 1 · Mon",
+    "formerly": [],
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
      {
@@ -309,6 +310,7 @@
    },
    {
     "title": "Upper A · Tue",
+    "formerly": [],
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
      {
@@ -674,6 +676,7 @@
    },
    {
     "title": "Lower 2 · Thu",
+    "formerly": [],
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
      {
@@ -986,6 +989,7 @@
    },
    {
     "title": "Upper B · Fri",
+    "formerly": [],
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
      {
@@ -1350,20 +1354,67 @@
     ]
    },
    {
-    "title": "Upper A uni · alt Tue",
+    "title": "Upper A alt · Tue",
+    "formerly": [
+     "Upper A uni · alt Tue"
+    ],
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
      {
-      "name": "Single-Arm Incline DB Press",
-      "hevy": "Single Arm Incline Press (Dumbbell)",
+      "name": "Single-Arm Lat Pulldown",
+      "hevy": "Single Arm Lat Pulldown",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Single Arm Incline Press (Dumbbell)",
+        "title": "Single Arm Lat Pulldown",
+        "exercise_type": "weight_reps",
+        "equipment_category": "machine",
+        "muscle_group": "lats",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": null,
+       "rest_seconds": 120,
+       "notes": "3 × 8-12 per side — in place of pull-ups — half-kneeling, D-handle, full stretch at the top; left first, right matches",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Incline DB Press",
+      "hevy": "Incline Bench Press (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Incline Bench Press (Dumbbell)",
         "exercise_type": "weight_reps",
         "equipment_category": "dumbbell",
-        "muscle_group": "chest",
+        "muscle_group": "other",
         "other_muscles": []
        }
       },
@@ -1371,7 +1422,7 @@
        "exercise_template_id": null,
        "superset_id": 0,
        "rest_seconds": 75,
-       "notes": "3 × 8-12 per side — left first, right matches the left’s reps; free hand holds the bench, hips stay square",
+       "notes": "3 × 8-12",
        "sets": [
         {
          "type": "normal",
@@ -1415,7 +1466,7 @@
        "exercise_template_id": null,
        "superset_id": 0,
        "rest_seconds": 75,
-       "notes": "3 × 8-12 per side — left first; reach long at the bottom, elbow to the hip",
+       "notes": "3 × 8-12 — left first",
        "sets": [
         {
          "type": "normal",
@@ -1442,16 +1493,16 @@
       }
      },
      {
-      "name": "Single-Arm Cable Fly",
-      "hevy": "Single Arm Cable Fly",
+      "name": "Pec Deck",
+      "hevy": "Butterfly (Pec Deck)",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Single Arm Cable Fly",
+        "title": "Butterfly (Pec Deck)",
         "exercise_type": "weight_reps",
-        "equipment_category": "machine",
-        "muscle_group": "chest",
+        "equipment_category": "none",
+        "muscle_group": "other",
         "other_muscles": []
        }
       },
@@ -1459,7 +1510,7 @@
        "exercise_template_id": null,
        "superset_id": 1,
        "rest_seconds": 75,
-       "notes": "3 × 10-15 per side — pulley at shoulder height, staggered stance; stretch at the back, squeeze 1 s",
+       "notes": "3 × 10-15 — only if the two arms move independently; linked arms: DB fly instead",
        "sets": [
         {
          "type": "normal",
@@ -1486,16 +1537,16 @@
       }
      },
      {
-      "name": "Single-Arm Cable Rear Delt Fly",
-      "hevy": "Single Arm Rear Delt Fly (Cable)",
+      "name": "Reverse Pec Deck",
+      "hevy": "Rear Delt Reverse Fly (Machine)",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Single Arm Rear Delt Fly (Cable)",
+        "title": "Rear Delt Reverse Fly (Machine)",
         "exercise_type": "weight_reps",
-        "equipment_category": "machine",
-        "muscle_group": "shoulders",
+        "equipment_category": "none",
+        "muscle_group": "other",
         "other_muscles": []
        }
       },
@@ -1503,7 +1554,7 @@
        "exercise_template_id": null,
        "superset_id": 1,
        "rest_seconds": 75,
-       "notes": "3 × 12-20 per side — pulley at shoulder height, cross-body; arm long, lead with the elbow",
+       "notes": "3 × 12-20 — only if the two arms move independently; linked arms: DB rear delt fly instead",
        "sets": [
         {
          "type": "normal",
@@ -1530,15 +1581,15 @@
       }
      },
      {
-      "name": "Cable Lateral Raise",
-      "hevy": "Single Arm Lateral Raise (Cable)",
+      "name": "Lateral Raise",
+      "hevy": "Lateral Raise (Dumbbell)",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Single Arm Lateral Raise (Cable)",
+        "title": "Lateral Raise (Dumbbell)",
         "exercise_type": "weight_reps",
-        "equipment_category": "machine",
+        "equipment_category": "none",
         "muscle_group": "other",
         "other_muscles": []
        }
@@ -1547,7 +1598,7 @@
        "exercise_template_id": null,
        "superset_id": 2,
        "rest_seconds": 75,
-       "notes": "4 × 12-20 per side — pulley at the hip, cable behind the body; left first",
+       "notes": "4 × 12-20",
        "sets": [
         {
          "type": "normal",
@@ -1581,16 +1632,16 @@
       }
      },
      {
-      "name": "Single-Arm Cable Curl",
-      "hevy": "Single Arm Curl (Cable)",
+      "name": "Incline DB Curl",
+      "hevy": "Seated Incline Curl (Dumbbell)",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Single Arm Curl (Cable)",
+        "title": "Seated Incline Curl (Dumbbell)",
         "exercise_type": "weight_reps",
-        "equipment_category": "machine",
-        "muscle_group": "biceps",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
         "other_muscles": []
        }
       },
@@ -1598,7 +1649,7 @@
        "exercise_template_id": null,
        "superset_id": 2,
        "rest_seconds": 75,
-       "notes": "3 × 8-12 per side — face away from a low pulley, arm slightly behind the body",
+       "notes": "3 × 8-12",
        "sets": [
         {
          "type": "normal",
@@ -1642,7 +1693,7 @@
        "exercise_template_id": null,
        "superset_id": 2,
        "rest_seconds": 75,
-       "notes": "3 × 10-15 per side — face away from a low pulley, elbow by the ear; full stretch",
+       "notes": "3 × 10-15 per side — in place of the rope — D-handle, face away from a low pulley, elbow by the ear; left first",
        "sets": [
         {
          "type": "normal",
@@ -1671,7 +1722,10 @@
     ]
    },
    {
-    "title": "Upper B uni · alt Fri",
+    "title": "Upper B alt · Fri",
+    "formerly": [
+     "Upper B uni · alt Fri"
+    ],
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
      {
@@ -1690,17 +1744,10 @@
       },
       "body": {
        "exercise_template_id": null,
-       "superset_id": 0,
-       "rest_seconds": 75,
-       "notes": "4 × 8-12 per side — half-kneeling under a high pulley, D-handle; in place of pull-ups. Left first, reach to a full stretch",
+       "superset_id": null,
+       "rest_seconds": 120,
+       "notes": "3 × 8-12 per side — in place of pull-ups — half-kneeling, D-handle, full stretch at the top; left first, right matches",
        "sets": [
-        {
-         "type": "normal",
-         "rep_range": {
-          "start": 8,
-          "end": 12
-         }
-        },
         {
          "type": "normal",
          "rep_range": {
@@ -1726,16 +1773,60 @@
       }
      },
      {
-      "name": "Single-Arm DB Shoulder Press",
-      "hevy": "Single Arm Shoulder Press (Dumbbell)",
+      "name": "Chest-Supported Row",
+      "hevy": "Chest Supported Incline Row (Dumbbell)",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Single Arm Shoulder Press (Dumbbell)",
+        "title": "Chest Supported Incline Row (Dumbbell)",
+        "exercise_type": "weight_reps",
+        "equipment_category": "none",
+        "muscle_group": "other",
+        "other_muscles": []
+       }
+      },
+      "body": {
+       "exercise_template_id": null,
+       "superset_id": 0,
+       "rest_seconds": 75,
+       "notes": "3 × 8-12 — dumbbells on an incline bench, in place of the lat pulldown bar",
+       "sets": [
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        },
+        {
+         "type": "normal",
+         "rep_range": {
+          "start": 8,
+          "end": 12
+         }
+        }
+       ]
+      }
+     },
+     {
+      "name": "Incline DB Press",
+      "hevy": "Incline Bench Press (Dumbbell)",
+      "type": "weight_reps",
+      "timedUnit": "sec",
+      "custom": {
+       "exercise": {
+        "title": "Incline Bench Press (Dumbbell)",
         "exercise_type": "weight_reps",
         "equipment_category": "dumbbell",
-        "muscle_group": "shoulders",
+        "muscle_group": "other",
         "other_muscles": []
        }
       },
@@ -1743,7 +1834,7 @@
        "exercise_template_id": null,
        "superset_id": 0,
        "rest_seconds": 75,
-       "notes": "3 × 8-12 per side — seated, back supported; free hand on the thigh, no lean away from the working side",
+       "notes": "3 × 8-12",
        "sets": [
         {
          "type": "normal",
@@ -1770,16 +1861,16 @@
       }
      },
      {
-      "name": "Single-Arm Cable Row",
-      "hevy": "Single Arm Cable Row",
+      "name": "Single-Arm DB Row",
+      "hevy": "Dumbbell Row",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Single Arm Cable Row",
+        "title": "Dumbbell Row",
         "exercise_type": "weight_reps",
-        "equipment_category": "machine",
-        "muscle_group": "upper_back",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
         "other_muscles": []
        }
       },
@@ -1787,7 +1878,7 @@
        "exercise_template_id": null,
        "superset_id": 1,
        "rest_seconds": 75,
-       "notes": "3 × 8-12 per side — seated or half-kneeling, pulley at chest height; let the shoulder blade travel forward",
+       "notes": "3 × 8-12 — left first",
        "sets": [
         {
          "type": "normal",
@@ -1814,16 +1905,16 @@
       }
      },
      {
-      "name": "Single-Arm Cable Chest Press",
-      "hevy": "Single Arm Chest Press (Cable)",
+      "name": "DB Fly",
+      "hevy": "Chest Fly (Dumbbell)",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Single Arm Chest Press (Cable)",
+        "title": "Chest Fly (Dumbbell)",
         "exercise_type": "weight_reps",
-        "equipment_category": "machine",
-        "muscle_group": "chest",
+        "equipment_category": "dumbbell",
+        "muscle_group": "other",
         "other_muscles": []
        }
       },
@@ -1831,42 +1922,42 @@
        "exercise_template_id": null,
        "superset_id": 1,
        "rest_seconds": 75,
-       "notes": "3 × 10-12 per side — split stance, pulley at chest height; trunk does not rotate",
+       "notes": "3 × 10-15",
        "sets": [
         {
          "type": "normal",
          "rep_range": {
           "start": 10,
-          "end": 12
+          "end": 15
          }
         },
         {
          "type": "normal",
          "rep_range": {
           "start": 10,
-          "end": 12
+          "end": 15
          }
         },
         {
          "type": "normal",
          "rep_range": {
           "start": 10,
-          "end": 12
+          "end": 15
          }
         }
        ]
       }
      },
      {
-      "name": "Cable Lateral Raise",
-      "hevy": "Single Arm Lateral Raise (Cable)",
+      "name": "Lateral Raise",
+      "hevy": "Lateral Raise (Dumbbell)",
       "type": "weight_reps",
       "timedUnit": "sec",
       "custom": {
        "exercise": {
-        "title": "Single Arm Lateral Raise (Cable)",
+        "title": "Lateral Raise (Dumbbell)",
         "exercise_type": "weight_reps",
-        "equipment_category": "machine",
+        "equipment_category": "none",
         "muscle_group": "other",
         "other_muscles": []
        }
@@ -1875,7 +1966,7 @@
        "exercise_template_id": null,
        "superset_id": 2,
        "rest_seconds": 75,
-       "notes": "4 × 12-20 per side — pulley at the hip, cable behind the body; left first",
+       "notes": "4 × 12-20",
        "sets": [
         {
          "type": "normal",
@@ -1926,7 +2017,7 @@
        "exercise_template_id": null,
        "superset_id": 2,
        "rest_seconds": 75,
-       "notes": "3 × 10-15 per side — one arm at a time, left first",
+       "notes": "3 × 10-15",
        "sets": [
         {
          "type": "normal",
@@ -1970,7 +2061,7 @@
        "exercise_template_id": null,
        "superset_id": 2,
        "rest_seconds": 75,
-       "notes": "3 × 10-15 per side — D-handle, elbow pinned; left first",
+       "notes": "3 × 10-15 per side — in place of the rope — D-handle, elbow pinned; left first",
        "sets": [
         {
          "type": "normal",
@@ -2000,6 +2091,7 @@
    },
    {
     "title": "Pulls · daily",
+    "formerly": [],
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
      {
@@ -2052,6 +2144,7 @@
   "johanna": [
    {
     "title": "Lower 1 · Mon",
+    "formerly": [],
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
      {
@@ -2445,6 +2538,7 @@
    },
    {
     "title": "Upper A · Tue",
+    "formerly": [],
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
      {
@@ -2810,6 +2904,7 @@
    },
    {
     "title": "Lower 2 · Thu",
+    "formerly": [],
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
      {
@@ -3166,6 +3261,7 @@
    },
    {
     "title": "Upper B · Fri",
+    "formerly": [],
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
      {
@@ -3531,6 +3627,7 @@
    },
    {
     "title": "Pulls · daily",
+    "formerly": [],
     "notes": "Written from the Logbook program. Change the program there; the next run overwrites edits made here.",
     "exercises": [
      {

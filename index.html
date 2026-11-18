@@ -21,7 +21,7 @@ const SET_WINDOW_S = 90;                        // seconds before a tick counted
    "is this phone running the version I just shipped?" is answerable by looking,
    rather than by guessing at caches. GitHub Pages serves this file with a ten
    minute max-age, so a phone can sit on an old copy for a while. */
-const BUILD = { n: 30, at: '17 Nov 2026, 12:00' };
+const BUILD = { n: 31, at: '18 Nov 2026, 09:00' };
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -158,44 +158,37 @@ Object.assign(SESSIONS_IKARUS, {
         hint: 'in place of carries — same belt kg on all three sets; add weight once every set passes 45 s' },
     ],
 });
-/* 17 Nov 2026: unilateral upper days, Ikarus only, as alternatives to
-   Upper A and Upper B (those stay as they are). The right shoulder has been
-   covering for the left; one arm at a time leaves nothing to cover with.
-   No pull-ups. Every exercise: left first, the right does the left's reps
-   and no more, same weight, and each side's set is the other's rest. Log
-   the left side's reps. Lat work is single-arm cable in place of pull-ups. */
+/* 17 Nov 2026, revised 18 Nov: alternatives to Upper A and Upper B, Ikarus
+   only; those two stay as they are. The right shoulder has been covering for
+   the left. Dumbbells already stop that, since each arm moves its own load,
+   so the days are unchanged except where both hands share one bar, rope or
+   linked handle: pull-ups, the lat pulldown bar, the rope pushdown and the
+   rope overhead extension become one-arm cable work. Left first on the
+   one-arm lifts; the right does the left's reps, same weight. */
 Object.assign(SESSIONS_IKARUS, {
-    'Upper A uni': [
-      { name: 'Single-Arm Incline DB Press', target: '3 × 8-12 per side', sets: 3, pair: 'A',
-        hint: 'left first, right matches the left’s reps; free hand holds the bench, hips stay square' },
-      { name: 'Single-Arm DB Row',           target: '3 × 8-12 per side', sets: 3, pair: 'A',
-        hint: 'left first; reach long at the bottom, elbow to the hip' },
-      { name: 'Single-Arm Cable Fly',        target: '3 × 10-15 per side', sets: 3, pair: 'B',
-        hint: 'pulley at shoulder height, staggered stance; stretch at the back, squeeze 1 s' },
-      { name: 'Single-Arm Cable Rear Delt Fly', target: '3 × 12-20 per side', sets: 3, pair: 'B',
-        hint: 'pulley at shoulder height, cross-body; arm long, lead with the elbow' },
-      { name: 'Cable Lateral Raise',         target: '4 × 12-20 per side', sets: 4, pair: 'C',
-        hint: 'pulley at the hip, cable behind the body; left first' },
-      { name: 'Single-Arm Cable Curl',       target: '3 × 8-12 per side', sets: 3, pair: 'C',
-        hint: 'face away from a low pulley, arm slightly behind the body' },
+    'Upper A alt': [
+      { name: 'Single-Arm Lat Pulldown', target: '3 × 8-12 per side', sets: 3,
+        hint: 'in place of pull-ups — half-kneeling, D-handle, full stretch at the top; left first, right matches' },
+      { name: 'Incline DB Press',     target: '3 × 8-12',  sets: 3, pair: 'A' },
+      { name: 'Single-Arm DB Row',    target: '3 × 8-12',  sets: 3, pair: 'A', hint: 'left first' },
+      { name: 'Pec Deck',             target: '3 × 10-15', sets: 3, pair: 'B', hint: 'only if the two arms move independently; linked arms: DB fly instead' },
+      { name: 'Reverse Pec Deck',     target: '3 × 12-20', sets: 3, pair: 'B', hint: 'only if the two arms move independently; linked arms: DB rear delt fly instead' },
+      { name: 'Lateral Raise',        target: '4 × 12-20', sets: 4, pair: 'C' },
+      { name: 'Incline DB Curl',      target: '3 × 8-12',  sets: 3, pair: 'C' },
       { name: 'Single-Arm Cable Overhead Ext', target: '3 × 10-15 per side', sets: 3, pair: 'C',
-        hint: 'face away from a low pulley, elbow by the ear; full stretch' },
+        hint: 'in place of the rope — D-handle, face away from a low pulley, elbow by the ear; left first' },
     ],
-    'Upper B uni': [
-      { name: 'Single-Arm Lat Pulldown',     target: '4 × 8-12 per side', sets: 4, pair: 'A',
-        hint: 'half-kneeling under a high pulley, D-handle; in place of pull-ups. Left first, reach to a full stretch' },
-      { name: 'Single-Arm DB Shoulder Press', target: '3 × 8-12 per side', sets: 3, pair: 'A',
-        hint: 'seated, back supported; free hand on the thigh, no lean away from the working side' },
-      { name: 'Single-Arm Cable Row',        target: '3 × 8-12 per side', sets: 3, pair: 'B',
-        hint: 'seated or half-kneeling, pulley at chest height; let the shoulder blade travel forward' },
-      { name: 'Single-Arm Cable Chest Press', target: '3 × 10-12 per side', sets: 3, pair: 'B',
-        hint: 'split stance, pulley at chest height; trunk does not rotate' },
-      { name: 'Cable Lateral Raise',         target: '4 × 12-20 per side', sets: 4, pair: 'C',
-        hint: 'pulley at the hip, cable behind the body; left first' },
-      { name: 'Hammer Curl',                 target: '3 × 10-15 per side', sets: 3, pair: 'C',
-        hint: 'one arm at a time, left first' },
-      { name: 'Single-Arm Cable Pushdown',   target: '3 × 10-15 per side', sets: 3, pair: 'C',
-        hint: 'D-handle, elbow pinned; left first' },
+    'Upper B alt': [
+      { name: 'Single-Arm Lat Pulldown', target: '3 × 8-12 per side', sets: 3,
+        hint: 'in place of pull-ups — half-kneeling, D-handle, full stretch at the top; left first, right matches' },
+      { name: 'Chest-Supported Row',  target: '3 × 8-12',  sets: 3, pair: 'A', hint: 'dumbbells on an incline bench, in place of the lat pulldown bar' },
+      { name: 'Incline DB Press',     target: '3 × 8-12',  sets: 3, pair: 'A' },
+      { name: 'Single-Arm DB Row',    target: '3 × 8-12',  sets: 3, pair: 'B', hint: 'left first' },
+      { name: 'DB Fly',               target: '3 × 10-15', sets: 3, pair: 'B' },
+      { name: 'Lateral Raise',        target: '4 × 12-20', sets: 4, pair: 'C' },
+      { name: 'Hammer Curl',          target: '3 × 10-15', sets: 3, pair: 'C' },
+      { name: 'Single-Arm Cable Pushdown', target: '3 × 10-15 per side', sets: 3, pair: 'C',
+        hint: 'in place of the rope — D-handle, elbow pinned; left first' },
     ],
 });
 const PROGRAM = {
@@ -215,7 +208,7 @@ const WEEKDAY_SESSION = { 1:'Lower 1', 2:'Upper A', 4:'Lower 2', 5:'Upper B' };
    ══════════════════════════════════════════════════════════════════ */
 const DAILY_IKARUS = [
   { name: 'Pulls',     target: '3 × 4',   sets: 3, fields: ['r'], fixed: { r: '4' },
-    except: ['Upper A', 'Upper B', 'Upper A uni', 'Upper B uni'],  // pull-ups already in A/B; none on the uni days
+    except: ['Upper A', 'Upper B', 'Upper A alt', 'Upper B alt'],  // pull-ups already in A/B; none on the alt days
     hint: 'adjust the reps, tick each set you actually did' },
   { name: 'Handstand', target: '10+ min', sets: 1, fields: ['r'], units: { r: 'min' }, fixed: { r: '10' },
     hint: 'tick only if you practised ten minutes or more' },

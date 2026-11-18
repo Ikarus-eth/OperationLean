@@ -35,10 +35,18 @@ for (const user of Object.keys(PROGRAM)) {
   s['Pulls'] = [DAILY_PULLS];
 }
 
+/* Titles a routine had before, so the sync renames the old Hevy routine
+   in place instead of leaving it next to a new one. */
+const FORMERLY = {
+  'Upper A alt · Tue': ['Upper A uni · alt Tue'],
+  'Upper B alt · Fri': ['Upper B uni · alt Fri'],
+};
+
 const out = { built: new Date().toISOString(), users: {} };
 for (const user of Object.keys(PROGRAM)) {
   out.users[user] = buildRoutines(PROGRAM, EX_CFG, HEVY, user, {}, () => null, false).map(rt => ({
     title: rt.title,
+    formerly: FORMERLY[rt.title] || [],
     notes: rt.notes,
     exercises: rt.exercises.map(x => ({
       name: x.name,

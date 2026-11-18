@@ -78,7 +78,7 @@ const str = v => (v === null || v === undefined) ? '' : String(v);
    Worker takes a sync payload, ignores the sync flag, sees rows and appends
    them — once a second, with no batch id to deduplicate on. Bump VERSION when
    the wire format changes; add to FEATURES when a new call is added. */
-const VERSION  = '2026-10-22a';
+const VERSION  = '2026-11-18a';
 const FEATURES = ['sync', 'day', 'watch-push', 'self-migrate', 'assist-reps', 'last-scoped', 'order', 'hevy', 'hevy-sync', 'hevy-pull', 'log'];
 
 const MAX_HR = { ikarus: 182, johanna: 185 };
@@ -599,7 +599,8 @@ async function hevySync(env, user) {
     });
     const missing = rt.exercises.filter((x, i) => !exercises[i].exercise_template_id).map(x => x.hevy);
     if (missing.length) { report.routines.push({ title: rt.title, ok: false, error: 'no Hevy exercise for ' + missing.join(', ') }); report.ok = false; continue; }
-    const have = existing.find(e => e.title === rt.title);
+    const have = existing.find(e => e.title === rt.title)
+      || existing.find(e => (rt.formerly || []).includes(e.title));   // renamed in the program
     let r;
     if (have) {
       r = await h('PUT', `/v1/routines/${have.id}`, { routine: { title: rt.title, notes: rt.notes, exercises } });
